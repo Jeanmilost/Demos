@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_MD2 ----------------------------------------------------------------*
- ******************************************************************************
- * Description : MD2 model                                                    *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_MD2 --------------------------------------------------------------*
+ ****************************************************************************
+ * Description : MD2 model                                                  *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_MD2H
 #define QR_MD2H
@@ -13,11 +34,10 @@
 
 // qr engine
 #include "QR_Types.h"
-#include "QR_Color.h"
 #include "QR_Vector3D.h"
 #include "QR_Vertex.h"
-#include "QR_MD2Parser.h"
 #include "QR_FramedModel.h"
+#include "QR_MD2Parser.h"
 
 /**
 * MD2 model
@@ -28,118 +48,73 @@ class QR_MD2 : public QR_FramedModel
 {
     public:
         /**
-        * Lightning mode
+        * Constructor
         */
-        enum IELightningMode
-        {
-            IE_LM_None = 0,
-            IE_LM_Precalculated,
-        };
+        QR_MD2();
 
         /**
-        * Precalculated light
+        * Destructor
         */
-        struct ILight
-        {
-            QR_Color     m_Ambient;
-            QR_Color     m_Light;
-            QR_Vector3DP m_Direction;
-
-            ILight();
-
-            /**
-            * Constructor
-            *@param ambient - ambient light color
-            *@param light - light color
-            *@param direction - light direction
-            */
-            ILight(const QR_Color&     ambient,
-                   const QR_Color&     light,
-                   const QR_Vector3DP& direction);
-
-            virtual ~ILight();
-        };
-
-        QR_MD2();
         virtual ~QR_MD2();
+
+        /**
+        * Clears model
+        */
+        virtual void Clear();
+
+        /**
+        * Copies content from another model
+        *@param other - other model to copy from
+        */
+        virtual void Copy(const QR_Model& other);
 
         /**
         * Loads MD2 from file
         *@param fileName - file name
-        *@return 0 on success, otherwise warning (positive value) or error (negative value) code
+        *@return true on success, otherwise false
         */
-        virtual QR_Int32 Load(const std::string&  fileName);
-        virtual QR_Int32 Load(const std::wstring& fileName);
+        virtual bool Load(const std::string&  fileName);
+        virtual bool Load(const std::wstring& fileName);
 
         /**
         * Loads MD2 from buffer
         *@param buffer - buffer
         *@param length - length to read in buffer, in bytes
-        *@return 0 on success, otherwise warning (positive value) or error (negative value) code
+        *@return true on success, otherwise false
         *@note Read will begin from current offset
         */
-        virtual QR_Int32 Load(      QR_Buffer&            buffer,
-                              const QR_Buffer::ISizeType& length);
+        virtual bool Load(      QR_Buffer&            buffer,
+                          const QR_Buffer::ISizeType& length);
 
         /**
         * Loads normals table from file
         *@param fileName - file name
-        *@return 0 on success, otherwise warning (positive value) or error (negative value) code
+        *@return true on success, otherwise false
         */
-        virtual QR_Int32 LoadNormals(const std::string&  fileName);
-        virtual QR_Int32 LoadNormals(const std::wstring& fileName);
+        virtual bool LoadNormals(const std::string&  fileName);
+        virtual bool LoadNormals(const std::wstring& fileName);
 
         /**
         * Loads normals table from buffer
         *@param buffer - buffer
         *@param length - length to read in buffer, in bytes (not used here, can be 0)
-        *@return 0 on success, otherwise warning (positive value) or error (negative value) code
+        *@return true on success, otherwise false
         */
-        virtual QR_Int32 LoadNormals(      QR_Buffer&            buffer,
-                                     const QR_Buffer::ISizeType& length);
+        virtual bool LoadNormals(      QR_Buffer&            buffer,
+                                 const QR_Buffer::ISizeType& length);
 
         /**
-        * Checks if left hand to right hand conversion mode is enabled
-        *@return true if left hand to right hand conversion is enabled, otherwise false
+        * Gets MD2 parser
+        *@return MD2 parser
         */
-        virtual bool IsRHLHConversionEnabled() const;
-
-        /**
-        * Enables or disables left hand to right hand conversion mode
-        *@param value - if true, conversion mode is enabled, disabled otherwise
-        */
-        virtual void EnableRHLHConversion(bool value);
-
-        /**
-        * Sets color
-        *@param color - color
-        */
-        virtual void SetColor(const QR_Color& color);
-
-        /**
-        * Gets lightning mode
-        *@return lightning mode
-        */
-        virtual IELightningMode GetLightningMode() const;
-
-        /**
-        * Sets lightning mode
-        *@param mode - lightning mode
-        */
-        virtual void SetLightningMode(IELightningMode mode);
-
-        /**
-        * Sets pre-calculated light
-        *@param light - pre-calculated light
-        *@note Lightning mode should be set to IE_LM_Precalculated
-        */
-        virtual void SetLight(const ILight& light);
+        const QR_MD2Parser* GetParser() const;
 
         /**
         * Gets mesh
         *@param index - mesh index to get
         *@param[out] mesh - mesh
-        *@return 0 on success, otherwise warning (positive value) or error (negative value) code
+        *@param[out] pAABBTree - aligned-axis bounding box tree
+        *@return true on success, otherwise false
         *@note vertex buffer content is organized as follow:
         *      [1]x [2]y [3]z [4]nx [5]ny [6]nz [7]tu [8]tv [9]r [10]g [11]b [12]a
         *      where:
@@ -150,28 +125,13 @@ class QR_MD2 : public QR_FramedModel
         *@note Mesh content should be deleted when useless. WARNING, the output mesh should
         *      be deleted even if function failed
         */
-        virtual QR_Int32 GetMesh(QR_SizeT index, QR_Mesh& mesh) const;
+        virtual bool GetMesh(QR_SizeT index, QR_Mesh& mesh, QR_AABBTree* pAABBTree) const;
 
         /**
         * Gets mesh count
         *@return mesh count
         */
         virtual QR_SizeT GetMeshCount() const;
-
-        /**
-        * Interpolates mesh
-        *@param position - interpolation position, in percent (between 0.0f and 1.0f)
-        *@param mesh1 - first mesh to interpolate
-        *@param mesh2 - second mesh to interpolate
-        *@param[out] result -resulting interpolated mesh
-        *@return 0 on success, otherwise warning (positive value) or error (negative value) code
-        *@note This function should only be used for compatibility with old OpenGL 1.x versions, as
-        *      normally interpolation should be done in vertex shader
-        */
-        static QR_Int32 Interpolate(const QR_Float& position,
-                                    const QR_Mesh&  mesh1,
-                                    const QR_Mesh&  mesh2,
-                                          QR_Mesh&  result);
 
     protected:
         /**
@@ -183,23 +143,11 @@ class QR_MD2 : public QR_FramedModel
         virtual QR_Vector3DP UncompressVertex(const QR_MD2Parser::IFrame*  pFrame,
                                               const QR_MD2Parser::IVertex* pVertex) const;
 
-        /**
-        * Gets vertex pre-calculated light color
-        *@param normal - vertex normal
-        *@param light - pre-calculated light
-        *@return vertex color
-        */
-        virtual QR_Color GetPreCalculatedLight(const QR_Vector3DP& normal,
-                                               const ILight&       light) const;
-
     private:
-        typedef std::vector<QR_Vector3DP> IVectors3D;
+        typedef std::vector<QR_Vector3DP> INormals;
 
-        QR_MD2Parser    m_Model;        IVectors3D      m_Normals;
-        QR_Color        m_Color;
-        IELightningMode m_LightningMode;
-        ILight          m_Light;
-        bool            m_DoConvertRHLH;
+        QR_MD2Parser m_Model;
+        INormals     m_Normals;
 };
 
-#endif // QR_MD2H
+#endif

@@ -1,18 +1,39 @@
-/*****************************************************************************
- * ==> QR_Exception ---------------------------------------------------------*
- * ***************************************************************************
- * Description : Engine exception class                                      *
- * Developer   : Jean-Milost Reymond                                         *
- *****************************************************************************/
+/****************************************************************************
+ * ==> QR_Exception --------------------------------------------------------*
+ * **************************************************************************
+ * Description : Engine exception class                                     *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #include "QR_Exception.h"
 
 // std
 #include <sstream>
 
-//------------------------------------------------------------------------------
-// QR_ExceptionFormatter - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_ExceptionFormatter
+//---------------------------------------------------------------------------
 std::string QR_ExceptionFormatter::Format(const std::string& type,
                                           const std::string& message,
                                           const std::string& file,
@@ -41,7 +62,7 @@ std::string QR_ExceptionFormatter::Format(const std::string& type,
 
     return sstr.str();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_ExceptionFormatter::Format_HTML(const std::string& type,
                                                const std::string& message,
                                                const std::string& file,
@@ -70,7 +91,7 @@ std::string QR_ExceptionFormatter::Format_HTML(const std::string& type,
 
     return sstr.str();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_ExceptionFormatter::Format_HTML_Private(const std::string& type,
                                                        const std::string& message,
                                                        const std::string& file,
@@ -99,7 +120,7 @@ std::string QR_ExceptionFormatter::Format_HTML_Private(const std::string& type,
 
     return sstr.str();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_ExceptionFormatter::Message(const std::string& message,
                                            const std::string& function,
                                            QR_SizeT           line)
@@ -118,7 +139,7 @@ std::string QR_ExceptionFormatter::Message(const std::string& message,
 
     return sstr.str();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_ExceptionFormatter::Message_HTML(const std::string& message,
                                                 const std::string& function,
                                                 QR_SizeT           line)
@@ -137,12 +158,12 @@ std::string QR_ExceptionFormatter::Message_HTML(const std::string& message,
 
     return sstr.str();
 }
-//------------------------------------------------------------------------------
-// QR_Exception - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_Exception
+//---------------------------------------------------------------------------
 QR_Exception::QR_Exception() throw()
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Exception::QR_Exception(const std::string& message,
                            const std::string& file,
                            const std::string& function,
@@ -153,15 +174,15 @@ QR_Exception::QR_Exception(const std::string& message,
     m_Function = function;
     m_Line     = line;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Exception::~QR_Exception() throw()
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 const QR_Char* QR_Exception::what() const throw()
 {
     return Format();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 const QR_Char* QR_Exception::Format() const
 {
     std::ostringstream sstr;
@@ -179,7 +200,7 @@ const QR_Char* QR_Exception::Format() const
 
     return sstr.str().c_str();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_Exception::Format_HTML() const
 {
     std::ostringstream sstr;
@@ -197,7 +218,7 @@ std::string QR_Exception::Format_HTML() const
 
     return sstr.str().c_str();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_Exception::Format_HTML_Private() const
 {
     std::ostringstream sstr;
@@ -215,10 +236,9 @@ std::string QR_Exception::Format_HTML_Private() const
 
     return sstr.str().c_str();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 const std::string& QR_Exception::Message() const
 {
     return m_Message;
 }
-//------------------------------------------------------------------------------
-
+//---------------------------------------------------------------------------

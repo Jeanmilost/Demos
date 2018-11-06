@@ -1,9 +1,31 @@
-/******************************************************************************
- * ==> QR_Vertex -------------------------------------------------------------*
- ******************************************************************************
- * Description : Vertex global enumeration and types                          *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_Vertex -----------------------------------------------------------*
+ ****************************************************************************
+ * Description : Provides the classes required to manage the vertices and   *
+ *               meshes                                                     *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #include "QR_Vertex.h"
 
@@ -13,30 +35,31 @@
 // qr engine
 #include "QR_Exception.h"
 
-//------------------------------------------------------------------------------
-// Class QR_Vertex - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_Vertex
+//---------------------------------------------------------------------------
 QR_Vertex::QR_Vertex() :
     m_Stride(0),
     m_Type(IE_VT_Unknown),
     m_Format(IE_VF_None),
     m_CoordType(IE_VC_XYZ)
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Vertex::~QR_Vertex()
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Vertex* QR_Vertex::Clone() const
 {
     // clone vertex
     std::auto_ptr<QR_Vertex> pClone(new QR_Vertex());
+    pClone->m_Name      = m_Name;
     pClone->m_Stride    = m_Stride;
     pClone->m_Type      = m_Type;
     pClone->m_Format    = m_Format;
     pClone->m_CoordType = m_CoordType;
     return pClone.release();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_SizeT QR_Vertex::CalculateStride() const
 {
     QR_SizeT stride;
@@ -70,7 +93,7 @@ QR_SizeT QR_Vertex::CalculateStride() const
 
     return stride;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_Vertex::CompareFormat(const QR_Vertex& other) const
 {
     return (m_Stride    == other.m_Stride &&
@@ -78,10 +101,10 @@ bool QR_Vertex::CompareFormat(const QR_Vertex& other) const
             m_Format    == other.m_Format &&
             m_CoordType == other.m_CoordType);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_Vertex::VerifyAlignment()
 {
-    #if defined(__BORLANDC__) || defined(__CODEGEARC__)
+    #if defined(CP_EMBARCADERO)
         #pragma warn -8008
         #pragma warn -8066
     #endif
@@ -89,65 +112,9 @@ bool QR_Vertex::VerifyAlignment()
     // check if vertex buffer data type is 4 bytes aligned (to avoid slow draw)
     return !(sizeof(M_Precision) % 4);
 
-    #if defined(__BORLANDC__) || defined(__CODEGEARC__)
+    #if defined(CP_EMBARCADERO)
         #pragma warn .8066
         #pragma warn .8008
     #endif
 }
-//------------------------------------------------------------------------------
-// Class QR_IndexBuffer - c++ cross-platform
-//------------------------------------------------------------------------------
-QR_IndexBuffer::QR_IndexBuffer() :
-    m_pVertex(NULL)
-{}
-//------------------------------------------------------------------------------
-QR_IndexBuffer::QR_IndexBuffer(QR_Vertex* pVertex) :
-    m_pVertex(NULL)
-{
-    Populate(pVertex);
-}
-//------------------------------------------------------------------------------
-QR_IndexBuffer::~QR_IndexBuffer()
-{}
-//------------------------------------------------------------------------------
-void QR_IndexBuffer::Populate(QR_Vertex* pVertex)
-{
-    // no vertex descriptor?
-    if (!pVertex)
-        return;
-
-    // is vertex buffer empty?
-    if (pVertex->m_Buffer.size())
-        return;
-
-    // is stride defined and valid?
-    if (pVertex->m_Stride < 2)
-        return;
-
-    // get vertices count
-    const QR_SizeT count = pVertex->m_Buffer.size() / pVertex->m_Stride;
-
-    // initialize memory for indexes
-    m_Indexes.resize(count);
-
-    // iterate through vertices to index
-    for (QR_SizeT i = 0; i < count; ++i)
-        // calculate and set vertex index
-        m_Indexes[i] = i * pVertex->m_Stride;
-}
-//------------------------------------------------------------------------------
-// Class QR_TexCoord - c++ cross-platform
-//------------------------------------------------------------------------------
-QR_TexCoord::QR_TexCoord() :
-    m_U(0.0f),
-    m_V(0.0f)
-{}
-//------------------------------------------------------------------------------
-QR_TexCoord::QR_TexCoord(M_Precision u, M_Precision v) :
-    m_U(u),
-    m_V(v)
-{}
-//------------------------------------------------------------------------------
-QR_TexCoord::~QR_TexCoord()
-{}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------

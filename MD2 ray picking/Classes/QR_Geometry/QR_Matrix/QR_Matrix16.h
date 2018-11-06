@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_Matrix16 -----------------------------------------------------------*
- ******************************************************************************
- * Description : 4x4 matrix                                                   *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_Matrix16 ---------------------------------------------------------*
+ ****************************************************************************
+ * Description : 4x4 matrix                                                 *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_Matrix16H
 #define QR_Matrix16H
@@ -11,25 +32,15 @@
 // std
 #include <memory>
 #include <cmath>
-
-#ifdef _WIN32
+#if defined (OS_WIN)
     // needed for some std::memset implementation, e.g. in CodeBlocks where
     // compiler will not found it otherwise
     #include <cstring>
 #endif
 
 // qr engine
+#include "QR_Types.h"
 #include "QR_Vector3D.h"
-
-// do use without others QR Engine classes?
-#ifndef USE_QR_GEOMETRY_OLNY
-    #include "QR_Types.h"
-#else
-    // std
-    #include <stdint.h>
-
-    #define QR_UInt8 unsigned char
-#endif
 
 /**
 * 4x4 matrix
@@ -66,10 +77,10 @@ class QR_Matrix16
         *@param _43 - matrix value
         *@param _44 - matrix value
         */
-        inline QR_Matrix16(const T& _11, const T& _12, const T& _13, const T& _14,
-                           const T& _21, const T& _22, const T& _23, const T& _24,
-                           const T& _31, const T& _32, const T& _33, const T& _34,
-                           const T& _41, const T& _42, const T& _43, const T& _44);
+        inline QR_Matrix16(T _11, T _12, T _13, T _14,
+                           T _21, T _22, T _23, T _24,
+                           T _31, T _32, T _33, T _34,
+                           T _41, T _42, T _43, T _44);
 
         /**
         * Copy constructor
@@ -128,6 +139,12 @@ class QR_Matrix16
         static inline QR_Matrix16 Identity();
 
         /**
+        * Inverses a matrix
+        *@param[out] determinant - matrix determinant
+        */
+        virtual inline QR_Matrix16 Inverse(float& determinant);
+
+        /**
         * Multiplies matrix by another matrix
         *@param other - other matrix to multiply with
         *@return multiplied resulting matrix
@@ -149,7 +166,7 @@ class QR_Matrix16
         *@note rotation direction vector should be normalized before calling
         *      this function
         */
-        virtual inline QR_Matrix16 Rotate(const T&              angle,
+        virtual inline QR_Matrix16 Rotate(T              angle,
                                           const QR_Vector3D<T>& r);
 
         /**
@@ -168,10 +185,16 @@ class QR_Matrix16
         /**
         * Applies a transformation matrix to a vector
         *@param vector - vector to transform
-        *@param matrix - transformation matrix
         *@return transformed vector
         */
         virtual inline QR_Vector3D<T> Transform(const QR_Vector3D<T>& vector) const;
+
+        /**
+        * Applies a transformation matrix to a normal
+        *@param normal - normal to transform
+        *@return transformed normal
+        */
+        virtual inline QR_Vector3D<T> TransformNormal(const QR_Vector3D<T>& normal) const;
 
         /**
         * Gets table pointer
@@ -180,73 +203,71 @@ class QR_Matrix16
         virtual inline const T* GetPtr() const;
 };
 
-#ifdef USE_QR_GEOMETRY_OLNY
-    // formatted 4x4 matrix using float or double
-    typedef QR_Matrix16<QR_Float>  QR_Matrix16F;
-    typedef QR_Matrix16<QR_Double> QR_Matrix16D;
-#else
-    // formatted 4x4 matrix using global precision
-    typedef QR_Matrix16<M_Precision> QR_Matrix16P;
-#endif
+typedef QR_Matrix16<QR_Float>    QR_Matrix16F;
+typedef QR_Matrix16<QR_Double>   QR_Matrix16D;
+typedef QR_Matrix16<M_Precision> QR_Matrix16P;
 
-//------------------------------------------------------------------------------
-// QR_Matrix16 implementation - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_Matrix16
+//---------------------------------------------------------------------------
 template <class T>
 QR_Matrix16<T>::QR_Matrix16()
 {
     // initialize matrix table
-    std::memset(&m_Table, 0, sizeof(T) * 16);
+    m_Table[0][0] = 1.0f; m_Table[1][0] = 0.0f; m_Table[2][0] = 0.0f; m_Table[3][0] = 0.0f;
+    m_Table[0][1] = 0.0f; m_Table[1][1] = 1.0f; m_Table[2][1] = 0.0f; m_Table[3][1] = 0.0f;
+    m_Table[0][2] = 0.0f; m_Table[1][2] = 0.0f; m_Table[2][2] = 1.0f; m_Table[3][2] = 0.0f;
+    m_Table[0][3] = 0.0f; m_Table[1][3] = 0.0f; m_Table[2][3] = 0.0f; m_Table[3][3] = 1.0f;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
-QR_Matrix16<T>::QR_Matrix16(const T& _11, const T& _12, const T& _13, const T& _14,
-                            const T& _21, const T& _22, const T& _23, const T& _24,
-                            const T& _31, const T& _32, const T& _33, const T& _34,
-                            const T& _41, const T& _42, const T& _43, const T& _44)
+QR_Matrix16<T>::QR_Matrix16(T _11, T _12, T _13, T _14,
+                            T _21, T _22, T _23, T _24,
+                            T _31, T _32, T _33, T _34,
+                            T _41, T _42, T _43, T _44)
 {
     m_Table[0][0] = _11; m_Table[1][0] = _12; m_Table[2][0] = _13; m_Table[3][0] = _14;
     m_Table[0][1] = _21; m_Table[1][1] = _22; m_Table[2][1] = _23; m_Table[3][1] = _24;
     m_Table[0][2] = _31; m_Table[1][2] = _32; m_Table[2][2] = _33; m_Table[3][2] = _34;
     m_Table[0][3] = _41; m_Table[1][3] = _42; m_Table[2][3] = _43; m_Table[3][3] = _44;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Matrix16<T>::QR_Matrix16(const QR_Matrix16& other)
 {
     Copy(other);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Matrix16<T>::~QR_Matrix16()
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Matrix16<T>& QR_Matrix16<T>::operator =(const QR_Matrix16& other)
 {
     Copy(other);
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Matrix16<T>::operator ==(const QR_Matrix16& other)
 {
     return IsEqual(other);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Matrix16<T>::operator !=(const QR_Matrix16& other)
 {
     return !IsEqual(other);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 void QR_Matrix16<T>::Copy(const QR_Matrix16& other)
 {
     // copy matrix table from other
     std::memcpy(m_Table, other.m_Table, sizeof(m_Table));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Matrix16<T>::IsEqual(const QR_Matrix16& other) const
 {
@@ -261,22 +282,104 @@ bool QR_Matrix16<T>::IsEqual(const QR_Matrix16& other) const
 
     return true;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Matrix16<T>::IsIdentity() const
 {
     return IsEqual(Identity());
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Matrix16<T> QR_Matrix16<T>::Identity()
 {
-    return QR_Matrix16<T>(1.0f, 0.0f, 0.0f, 0.0f,
-                          0.0f, 1.0f, 0.0f, 0.0f,
-                          0.0f, 0.0f, 1.0f, 0.0f,
-                          0.0f, 0.0f, 0.0f, 1.0f);
+    return QR_Matrix16<T>(T(1.0), T(0.0), T(0.0), T(0.0),
+                          T(0.0), T(1.0), T(0.0), T(0.0),
+                          T(0.0), T(0.0), T(1.0), T(0.0),
+                          T(0.0), T(0.0), T(0.0), T(1.0));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+template <class T>
+QR_Matrix16<T> QR_Matrix16<T>::Inverse(float& determinant)
+{
+    float t[3];
+    float v[16];
+
+    t[0] = m_Table[2][2] * m_Table[3][3] - m_Table[2][3] * m_Table[3][2];
+    t[1] = m_Table[1][2] * m_Table[3][3] - m_Table[1][3] * m_Table[3][2];
+    t[2] = m_Table[1][2] * m_Table[2][3] - m_Table[1][3] * m_Table[2][2];
+
+    v[0] =  m_Table[1][1] * t[0] - m_Table[2][1] * t[1] + m_Table[3][1] * t[2];
+    v[4] = -m_Table[1][0] * t[0] + m_Table[2][0] * t[1] - m_Table[3][0] * t[2];
+
+    t[0] =  m_Table[1][0] * m_Table[2][1] - m_Table[2][0] * m_Table[1][1];
+    t[1] =  m_Table[1][0] * m_Table[3][1] - m_Table[3][0] * m_Table[1][1];
+    t[2] =  m_Table[2][0] * m_Table[3][1] - m_Table[3][0] * m_Table[2][1];
+
+    v[8]  =  m_Table[3][3] * t[0] - m_Table[2][3] * t[1] + m_Table[1][3] * t[2];
+    v[12] = -m_Table[3][2] * t[0] + m_Table[2][2] * t[1] - m_Table[1][2] * t[2];
+
+    determinant = m_Table[0][0] * v[0] +
+                  m_Table[0][1] * v[4] +
+                  m_Table[0][2] * v[8] +
+                  m_Table[0][3] * v[12];
+
+    if (determinant == 0.0)
+        return QR_Matrix16<T>();
+
+    t[0] = m_Table[2][2] * m_Table[3][3] - m_Table[2][3] * m_Table[3][2];
+    t[1] = m_Table[0][2] * m_Table[3][3] - m_Table[0][3] * m_Table[3][2];
+    t[2] = m_Table[0][2] * m_Table[2][3] - m_Table[0][3] * m_Table[2][2];
+
+    v[1] = -m_Table[0][1] * t[0] + m_Table[2][1] * t[1] - m_Table[3][1] * t[2];
+    v[5] =  m_Table[0][0] * t[0] - m_Table[2][0] * t[1] + m_Table[3][0] * t[2];
+
+    t[0] = m_Table[0][0] * m_Table[2][1] - m_Table[2][0] * m_Table[0][1];
+    t[1] = m_Table[3][0] * m_Table[0][1] - m_Table[0][0] * m_Table[3][1];
+    t[2] = m_Table[2][0] * m_Table[3][1] - m_Table[3][0] * m_Table[2][1];
+
+    v[9]  = -m_Table[3][3] * t[0] - m_Table[2][3] * t[1] - m_Table[0][3] * t[2];
+    v[13] =  m_Table[3][2] * t[0] + m_Table[2][2] * t[1] + m_Table[0][2] * t[2];
+
+    t[0] = m_Table[1][2] * m_Table[3][3] - m_Table[1][3] * m_Table[3][2];
+    t[1] = m_Table[0][2] * m_Table[3][3] - m_Table[0][3] * m_Table[3][2];
+    t[2] = m_Table[0][2] * m_Table[1][3] - m_Table[0][3] * m_Table[1][2];
+
+    v[2] =  m_Table[0][1] * t[0] - m_Table[1][1] * t[1] + m_Table[3][1] * t[2];
+    v[6] = -m_Table[0][0] * t[0] + m_Table[1][0] * t[1] - m_Table[3][0] * t[2];
+
+    t[0] = m_Table[0][0] * m_Table[1][1] - m_Table[1][0] * m_Table[0][1];
+    t[1] = m_Table[3][0] * m_Table[0][1] - m_Table[0][0] * m_Table[3][1];
+    t[2] = m_Table[1][0] * m_Table[3][1] - m_Table[3][0] * m_Table[1][1];
+
+    v[10] =  m_Table[3][3] * t[0] + m_Table[1][3] * t[1] + m_Table[0][3] * t[2];
+    v[14] = -m_Table[3][2] * t[0] - m_Table[1][2] * t[1] - m_Table[0][2] * t[2];
+
+    t[0] = m_Table[1][2] * m_Table[2][3] - m_Table[1][3] * m_Table[2][2];
+    t[1] = m_Table[0][2] * m_Table[2][3] - m_Table[0][3] * m_Table[2][2];
+    t[2] = m_Table[0][2] * m_Table[1][3] - m_Table[0][3] * m_Table[1][2];
+
+    v[3] = -m_Table[0][1] * t[0] + m_Table[1][1] * t[1] - m_Table[2][1] * t[2];
+    v[7] =  m_Table[0][0] * t[0] - m_Table[1][0] * t[1] + m_Table[2][0] * t[2];
+
+    v[11] = -m_Table[0][0] * (m_Table[1][1] * m_Table[2][3] - m_Table[1][3] * m_Table[2][1]) +
+             m_Table[1][0] * (m_Table[0][1] * m_Table[2][3] - m_Table[0][3] * m_Table[2][1]) -
+             m_Table[2][0] * (m_Table[0][1] * m_Table[1][3] - m_Table[0][3] * m_Table[1][1]);
+
+    v[15] = m_Table[0][0] * (m_Table[1][1] * m_Table[2][2] - m_Table[1][2] * m_Table[2][1]) -
+            m_Table[1][0] * (m_Table[0][1] * m_Table[2][2] - m_Table[0][2] * m_Table[2][1]) +
+            m_Table[2][0] * (m_Table[0][1] * m_Table[1][2] - m_Table[0][2] * m_Table[1][1]);
+
+    const T invDet = 1.0 / determinant;
+
+    QR_Matrix16<T> result;
+
+    for (QR_UInt8 i = 0; i < 4; ++i)
+        for (QR_UInt8 j = 0; j < 4; ++j)
+            result. m_Table[i][j] = v[4 * i + j] * invDet;
+
+    return result;
+}
+//---------------------------------------------------------------------------
 template <class T>
 QR_Matrix16<T> QR_Matrix16<T>::Multiply(const QR_Matrix16<T>& other) const
 {
@@ -291,7 +394,7 @@ QR_Matrix16<T> QR_Matrix16<T>::Multiply(const QR_Matrix16<T>& other) const
 
     return matrix;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Matrix16<T> QR_Matrix16<T>::Translate(const QR_Vector3D<T>& t)
 {
@@ -302,15 +405,15 @@ QR_Matrix16<T> QR_Matrix16<T>::Translate(const QR_Vector3D<T>& t)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
-QR_Matrix16<T> QR_Matrix16<T>::Rotate(const T&              angle,
+QR_Matrix16<T> QR_Matrix16<T>::Rotate(T              angle,
                                       const QR_Vector3D<T>& r)
 {
     // calculate sinus, cosinus and inverted cosinus values
     const T c  = std::cos(angle);
     const T s  = std::sin(angle);
-    const T ic = (1.0f - c);
+    const T ic = (T(1.0) - c);
 
     // create rotation matrix
     QR_Matrix16<T> matrix = Identity();
@@ -329,7 +432,7 @@ QR_Matrix16<T> QR_Matrix16<T>::Rotate(const T&              angle,
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Matrix16<T> QR_Matrix16<T>::Scale(const QR_Vector3D<T>& s)
 {
@@ -340,7 +443,7 @@ QR_Matrix16<T> QR_Matrix16<T>::Scale(const QR_Vector3D<T>& s)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 inline QR_Matrix16<T> QR_Matrix16<T>::Swap() const
 {
@@ -349,40 +452,41 @@ inline QR_Matrix16<T> QR_Matrix16<T>::Swap() const
                           m_Table[0][2], m_Table[1][2], m_Table[2][2], m_Table[3][2],
                           m_Table[0][3], m_Table[1][3], m_Table[2][3], m_Table[3][3]);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Matrix16<T>::Transform(const QR_Vector3D<T>& vector) const
 {
-    // calculates x, y and z coordinates (don't use w component), and returns
-    // transformed vector
-    return QR_Vector3D<T>((vector.m_X * m_Table[0][0] +
-                           vector.m_Y * m_Table[1][0] +
-                           vector.m_Z * m_Table[2][0] +
-                           m_Table[3][0]),
-                          (vector.m_X * m_Table[0][1] +
-                           vector.m_Y * m_Table[1][1] +
-                           vector.m_Z * m_Table[2][1] +
-                           m_Table[3][1]),
-                          (vector.m_X * m_Table[0][2] +
-                           vector.m_Y * m_Table[1][2] +
-                           vector.m_Z * m_Table[2][2] +
-                           m_Table[3][2]));
+    // calculates x, y and z coordinates (don't use w component), and returns transformed vector
+    return QR_Vector3D<T>
+            ((vector.m_X * m_Table[0][0] + vector.m_Y * m_Table[1][0] + vector.m_Z * m_Table[2][0] + m_Table[3][0]),
+             (vector.m_X * m_Table[0][1] + vector.m_Y * m_Table[1][1] + vector.m_Z * m_Table[2][1] + m_Table[3][1]),
+             (vector.m_X * m_Table[0][2] + vector.m_Y * m_Table[1][2] + vector.m_Z * m_Table[2][2] + m_Table[3][2]));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+template <class T>
+QR_Vector3D<T> QR_Matrix16<T>::TransformNormal(const QR_Vector3D<T>& normal) const
+{
+    return QR_Vector3D<T>
+            ((normal.m_X * m_Table[0][0]) + normal.m_Y * m_Table[1][0] + (normal.m_Z * m_Table[2][0]),
+             (normal.m_X * m_Table[0][1]) + normal.m_Y * m_Table[1][1] + (normal.m_Z * m_Table[2][1]),
+             (normal.m_X * m_Table[0][2]) + normal.m_Y * m_Table[1][2] + (normal.m_Z * m_Table[2][2]));
+}
+//---------------------------------------------------------------------------
 template <class T>
 const T* QR_Matrix16<T>::GetPtr() const
 {
     return &m_Table[0][0];
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // RAD studio
-//------------------------------------------------------------------------------
-#ifdef __CODEGEARC__
-    // needed to avoid the W8058 error "Cannot create pre-compiled header: header incomplete" warning in BCC compilers
+//---------------------------------------------------------------------------
+#if defined(CP_EMBARCADERO)
+    // needed to avoid the W8058 error "Cannot create pre-compiled header: header incomplete"
+    // warning in BCC compilers
     ;
 #endif
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-#endif // QR_Matrix16H
+#endif

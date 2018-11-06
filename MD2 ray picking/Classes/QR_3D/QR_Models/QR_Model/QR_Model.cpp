@@ -1,173 +1,137 @@
-/******************************************************************************
- * ==> QR_Model --------------------------------------------------------------*
- ******************************************************************************
- * Description : Basic 3D model, can be a sprite, a MD2, ...                  *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_Model ------------------------------------------------------------*
+ ****************************************************************************
+ * Description : Provides a generic class to manage a 3D model              *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #include "QR_Model.h"
 
-//------------------------------------------------------------------------------
-// QR_Model::IRotation - c++ cross-platform
-//------------------------------------------------------------------------------
-QR_Model::IRotation::IRotation() : m_Angle(0.0f)
-{}
-//------------------------------------------------------------------------------
-QR_Model::IRotation::IRotation(const M_Precision& angle, const QR_Vector3DP& axis) :
-    m_Angle(angle),
-    m_Axis(axis)
-{}
-//------------------------------------------------------------------------------
-QR_Model::IRotation::~IRotation()
-{}
-//------------------------------------------------------------------------------
-// QR_Model - c++ cross-platform
-//------------------------------------------------------------------------------
+// qr engine
+#include "QR_STDTools.h"
+#include "QR_CollisionHelper.h"
+
+//---------------------------------------------------------------------------
+// QR_Model
+//---------------------------------------------------------------------------
 QR_Model::QR_Model() :
+    m_Color(QR_Color(255, 255, 255, 255)),
     m_VertexFormat(QR_Vertex::IE_VF_None),
-    m_Scaling(QR_Vector3DP(1.0f, 1.0f, 1.0f)),
-    m_Translation(QR_Vector3DP(1.0f, 1.0f, 1.0f)),
-    m_RotationX(IRotation(0.0f, QR_Vector3DP(1.0f, 0.0f, 0.0f))),
-    m_RotationY(IRotation(0.0f, QR_Vector3DP(0.0f, 1.0f, 0.0f))),
-    m_RotationZ(IRotation(0.0f, QR_Vector3DP(0.0f, 0.0f, 1.0f)))
+    m_DoConvertRHLH(false)
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Model::~QR_Model()
 {}
-//------------------------------------------------------------------------------
-QR_Vector3DP QR_Model::GetTranslation() const
+//---------------------------------------------------------------------------
+void QR_Model::Clear()
 {
-    return m_Translation;
-}
-//------------------------------------------------------------------------------
-void QR_Model::SetTranslation(const QR_Vector3DP& translation)
-{
-    m_Translation = translation;
-}
-//------------------------------------------------------------------------------
-M_Precision QR_Model::GetRotationX() const
-{
-    return m_RotationX.m_Angle;
-}
-//------------------------------------------------------------------------------
-void QR_Model::SetRotationX(const M_Precision& angle)
-{
-    m_RotationX.m_Angle = angle;
-}
-//------------------------------------------------------------------------------
-M_Precision QR_Model::GetRotationY() const
-{
-    return m_RotationY.m_Angle;
-}
-//------------------------------------------------------------------------------
-void QR_Model::SetRotationY(const M_Precision& angle)
-{
-    m_RotationY.m_Angle = angle;
-}
-//------------------------------------------------------------------------------
-M_Precision QR_Model::GetRotationZ() const
-{
-    return m_RotationZ.m_Angle;
-}
-//------------------------------------------------------------------------------
-void QR_Model::SetRotationZ(const M_Precision& angle)
-{
-    m_RotationZ.m_Angle = angle;
-}
-//------------------------------------------------------------------------------
-QR_Vector3DP QR_Model::GetScaling() const
-{
-    return m_Scaling;
-}
-//------------------------------------------------------------------------------
-void QR_Model::SetScaling(const QR_Vector3DP& scaling)
-{
-    m_Scaling = scaling;
-}
-//------------------------------------------------------------------------------
-QR_Matrix16P QR_Model::GetMatrix(IECombinationType   type,
-                                 const QR_Matrix16P* pInitialMatrix) const
-{
-    // initialize matrix
-    QR_Matrix16P scaleMatrix     = QR_Matrix16P::Identity();
-    QR_Matrix16P rotateXMatrix   = QR_Matrix16P::Identity();
-    QR_Matrix16P rotateYMatrix   = QR_Matrix16P::Identity();
-    QR_Matrix16P rotateZMatrix   = QR_Matrix16P::Identity();
-    QR_Matrix16P translateMatrix = QR_Matrix16P::Identity();
-    QR_Matrix16P modelMatrix     = pInitialMatrix ? *pInitialMatrix : QR_Matrix16P::Identity();
+    m_Color         = QR_Color(255, 255, 255, 255);
+    m_VertexFormat  = QR_Vertex::IE_VF_None;
+    m_DoConvertRHLH = false;
 
-    // build scaling, rotation and translation matrix
-    scaleMatrix.Scale(m_Scaling);
-    rotateXMatrix.Rotate(m_RotationX.m_Angle, m_RotationX.m_Axis);
-    rotateYMatrix.Rotate(m_RotationY.m_Angle, m_RotationY.m_Axis);
-    rotateZMatrix.Rotate(m_RotationZ.m_Angle, m_RotationZ.m_Axis);
-    translateMatrix.Translate(m_Translation);
+    m_Light.Clear();
+}
+//---------------------------------------------------------------------------
+void QR_Model::Copy(const QR_Model& other)
+{
+    m_Color         = other.m_Color;
+    m_Light         = other.m_Light;
+    m_VertexFormat  = other.m_VertexFormat;
+    m_DoConvertRHLH = other.m_DoConvertRHLH;
+}
+//---------------------------------------------------------------------------
+QR_Color QR_Model::CalculateLight(const QR_Vector3DP&        normal,
+                                  const QR_DirectionalLight* pLight) const
+{
+    // calculate light angle
+    M_Precision lightAngle = normal.Dot(pLight->m_Direction);
 
-    // build model matrix
-    switch (type)
+    // is light angle out of bounds?
+    if (lightAngle < 0.0f)
+        lightAngle = 0.0f;
+
+    // calculate light color
+    QR_UInt32 r = (QR_UInt32)(pLight->m_Color.GetRed()   * lightAngle) + pLight->m_Ambient.GetRed();
+    QR_UInt32 g = (QR_UInt32)(pLight->m_Color.GetGreen() * lightAngle) + pLight->m_Ambient.GetGreen();
+    QR_UInt32 b = (QR_UInt32)(pLight->m_Color.GetBlue()  * lightAngle) + pLight->m_Ambient.GetBlue();
+    QR_UInt32 a = (QR_UInt32)(pLight->m_Color.GetAlpha() * lightAngle) + pLight->m_Ambient.GetAlpha();
+
+    // is color red component out of bounds?
+    if (r > 255)
+        r = 255;
+
+    // is color green component out of bounds?
+    if (g > 255)
+        g = 255;
+
+    // is color blue component out of bounds?
+    if (b > 255)
+        b = 255;
+
+    // is color alpha component out of bounds?
+    if (a > 255)
+        a = 255;
+
+    return QR_Color(r, g, b, a);
+}
+//---------------------------------------------------------------------------
+bool QR_Model::PopulateAABBTree(const QR_Mesh& mesh, QR_AABBTree* pAABBTree) const
+{
+    // no destination tree?
+    if (!pAABBTree)
+        // it's not an error so return true
+        return true;
+
+    // get mesh count
+    const QR_SizeT meshCount = mesh.size();
+
+    // no source mesh?
+    if (!meshCount)
+        // it's not an error so return true
+        return true;
+
+    QR_PolygonsP polygons;
+    bool         success = false;
+
+    try
     {
-        case IE_CT_Scale_Rotate_Translate:
-            modelMatrix = modelMatrix.Multiply(scaleMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateXMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateYMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateZMatrix);
-            modelMatrix = modelMatrix.Multiply(translateMatrix);
-            break;
+        // iterate through meshes
+        for (QR_SizeT i = 0; i < meshCount; ++i)
+            // get collide polygons
+            if (!QR_CollisionHelper::GetPolygons(mesh[i], polygons))
+                return false;
 
-        case IE_CT_Scale_Translate_Rotate:
-            modelMatrix = modelMatrix.Multiply(scaleMatrix);
-            modelMatrix = modelMatrix.Multiply(translateMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateXMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateYMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateZMatrix);
-            break;
-
-        case IE_CT_Rotate_Translate_Scale:
-            modelMatrix = modelMatrix.Multiply(rotateXMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateYMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateZMatrix);
-            modelMatrix = modelMatrix.Multiply(translateMatrix);
-            modelMatrix = modelMatrix.Multiply(scaleMatrix);
-            break;
-
-        case IE_CT_Rotate_Scale_Translate:
-            modelMatrix = modelMatrix.Multiply(rotateXMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateYMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateZMatrix);
-            modelMatrix = modelMatrix.Multiply(scaleMatrix);
-            modelMatrix = modelMatrix.Multiply(translateMatrix);
-            break;
-
-        case IE_CT_Translate_Rotate_Scale:
-            modelMatrix = modelMatrix.Multiply(translateMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateXMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateYMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateZMatrix);
-            modelMatrix = modelMatrix.Multiply(scaleMatrix);
-            break;
-
-        case IE_CT_Translate_Scale_Rotate:
-            modelMatrix = modelMatrix.Multiply(translateMatrix);
-            modelMatrix = modelMatrix.Multiply(scaleMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateXMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateYMatrix);
-            modelMatrix = modelMatrix.Multiply(rotateZMatrix);
-            break;
-
-        default:
-            M_THROW_EXCEPTION("Unknown model matrix combination type");
+        // populate aligned-axis bounding box tree
+        success = pAABBTree->Populate(polygons);
+    }
+    catch (...)
+    {
+        QR_STDTools::DelAndClear(polygons);
+        throw;
     }
 
-    return modelMatrix;
+    QR_STDTools::DelAndClear(polygons);
+    return success;
 }
-//------------------------------------------------------------------------------
-QR_Vertex::IEFormat QR_Model::GetVertexFormat() const
-{
-    return m_VertexFormat;
-}
-//------------------------------------------------------------------------------
-void QR_Model::SetVertexFormat(QR_Vertex::IEFormat format)
-{
-    m_VertexFormat = format;
-}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------

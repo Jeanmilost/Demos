@@ -3,5 +3,6 @@
 // MD2 model
 ID_MD2_MODEL            DATA    "Resources\Models\marvin.md2"
 ID_MD2_TEXTURE          DATA    "Resources\Models\marvin.bmp"
+ID_MD2_CONFIGURATION    DATA    "Resources\Models\marvin.cfg"
 ID_MD2_NORMALS_TABLE    DATA    "Resources\Models\Normals.bin"
 

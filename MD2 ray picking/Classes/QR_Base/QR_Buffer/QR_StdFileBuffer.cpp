@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_StdFileBuffer ------------------------------------------------------*
- ******************************************************************************
- * Description : File buffer based on std library                             *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_StdFileBuffer ----------------------------------------------------*
+ ****************************************************************************
+ * Description : File buffer based on std library                           *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #include "QR_StdFileBuffer.h"
 
@@ -13,24 +34,24 @@
 // qr engine
 #include "QR_StringTools.h"
 
-//------------------------------------------------------------------------------
-// QR_StdFileBuffer - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_StdFileBuffer
+//---------------------------------------------------------------------------
 QR_StdFileBuffer::QR_StdFileBuffer() :
     QR_FileBuffer(),
     m_FileBuffer(NULL)
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_StdFileBuffer::~QR_StdFileBuffer()
 {
     Close();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StdFileBuffer::Open(const std::wstring& fileName, IEMode mode)
 {
     return (Open(QR_StringTools::UTF16ToUTF8(fileName), mode));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StdFileBuffer::Open(const std::string& fileName, IEMode mode)
 {
     // call base function to execute common stuffs
@@ -59,17 +80,17 @@ bool QR_StdFileBuffer::Open(const std::string& fileName, IEMode mode)
 
     return m_FileBuffer;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 void QR_StdFileBuffer::Clear()
 {
     Close();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StdFileBuffer::Empty()
 {
     return (!m_FileBuffer || !GetSize());
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Buffer::ISizeType QR_StdFileBuffer::GetOffset() const
 {
     // is file opened?
@@ -79,7 +100,7 @@ QR_Buffer::ISizeType QR_StdFileBuffer::GetOffset() const
     // get current offset
     return std::ftell(m_FileBuffer);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Buffer::ISizeType QR_StdFileBuffer::GetSize() const
 {
     // is file opened?
@@ -87,7 +108,7 @@ QR_Buffer::ISizeType QR_StdFileBuffer::GetSize() const
         return 0L;
 
     // keep current position
-    ISizeType curPos = std::ftell(m_FileBuffer);;
+    ISizeType curPos = std::ftell(m_FileBuffer);
 
     // get file size
     std::fseek(m_FileBuffer, 0, SEEK_END);
@@ -96,7 +117,7 @@ QR_Buffer::ISizeType QR_StdFileBuffer::GetSize() const
 
     return fileSize;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Buffer::ISizeType QR_StdFileBuffer::Seek(const ISizeType& start, const ISizeType& delta)
 {
     // no opened file buffer
@@ -140,7 +161,7 @@ QR_Buffer::ISizeType QR_StdFileBuffer::Seek(const ISizeType& start, const ISizeT
 
     return offset + startDelta + delta;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Buffer::ISizeType QR_StdFileBuffer::Read(void* pBuffer, const ISizeType& length)
 {
     // no opened file buffer
@@ -202,7 +223,7 @@ QR_Buffer::ISizeType QR_StdFileBuffer::Read(void* pBuffer, const ISizeType& leng
 
     return length;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 QR_Buffer::ISizeType QR_StdFileBuffer::Write(void* pBuffer, const ISizeType& length)
 {
     // no opened file buffer
@@ -216,7 +237,7 @@ QR_Buffer::ISizeType QR_StdFileBuffer::Write(void* pBuffer, const ISizeType& len
     // write buffer and return successfully written bytes
     return std::fwrite(pBuffer, length, 1, m_FileBuffer);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_StdFileBuffer::ToStr()
 {
     // is file open?
@@ -225,7 +246,7 @@ std::string QR_StdFileBuffer::ToStr()
 
     // buffer is opened in an incompatible mode?
     if (m_Mode != IE_M_Read && m_Mode != IE_M_RW)
-        return 0L;
+        return "";
 
     // get buffer size
     ISizeType size = GetSize();
@@ -240,7 +261,7 @@ std::string QR_StdFileBuffer::ToStr()
 
     return str;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 void QR_StdFileBuffer::Close()
 {
     // is file open?
@@ -250,5 +271,4 @@ void QR_StdFileBuffer::Close()
     // close file
     std::fclose(m_FileBuffer);
 }
-//------------------------------------------------------------------------------
-
+//---------------------------------------------------------------------------

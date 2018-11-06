@@ -1,18 +1,40 @@
-/******************************************************************************
- * ==> QR_Model --------------------------------------------------------------*
- ******************************************************************************
- * Description : Basic 3D model, can be a sprite, a MD2, ...                  *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_Model ------------------------------------------------------------*
+ ****************************************************************************
+ * Description : Provides a generic class to manage a 3D model              *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_ModelH
 #define QR_ModelH
 
 // qr engine
 #include "QR_Types.h"
-#include "QR_Vector3D.h"
-#include "QR_Matrix16.h"
+#include "QR_Color.h"
+#include "QR_Light.h"
 #include "QR_Vertex.h"
+#include "QR_AABBTree.h"
 
 /**
 * Basic 3D model
@@ -23,137 +45,151 @@ class QR_Model
 {
     public:
         /**
-        * Matrix combination type enumeration
+        * Constructor
         */
-        enum IECombinationType
-        {
-            IE_CT_Scale_Rotate_Translate,
-            IE_CT_Scale_Translate_Rotate,
-            IE_CT_Rotate_Translate_Scale,
-            IE_CT_Rotate_Scale_Translate,
-            IE_CT_Translate_Rotate_Scale,
-            IE_CT_Translate_Scale_Rotate,
-        };
+        QR_Model();
 
         /**
-        * Rotation data
+        * Destructor
         */
-        struct IRotation
-        {
-            M_Precision  m_Angle;
-            QR_Vector3DP m_Axis;
-
-            /**
-            * Constructor
-            */
-            IRotation();
-
-            /**
-            * Constructor
-            *@param angle - angle
-            *@param axis - rotation axis
-            */
-            IRotation(const M_Precision& angle, const QR_Vector3DP& axis);
-
-            /**
-            * Destructor
-            */
-            virtual ~IRotation();
-        };
-
-        QR_Model();
         virtual ~QR_Model();
 
         /**
-        * Gets translation
-        *@return Translation
+        * Clears model
         */
-        virtual QR_Vector3DP GetTranslation() const;
+        virtual void Clear();
 
         /**
-        * Sets translation
-        *@param Translation - Translation
+        * Copies content from another model
+        *@param other - other model to copy from
         */
-        virtual void SetTranslation(const QR_Vector3DP& translation);
+        virtual void Copy(const QR_Model& other);
 
         /**
-        * Gets rotation on X axis
-        *@return rotation angle on X axis in radians
+        * Gets color
+        *@return color
         */
-        virtual M_Precision GetRotationX() const;
+        virtual inline QR_Color GetColor() const;
 
         /**
-        * Sets rotation on X axis
-        *@param angle - rotation angle in radians
+        * Sets color
+        *@param color - color
         */
-        virtual void SetRotationX(const M_Precision& angle);
+        virtual inline void SetColor(const QR_Color& color);
 
         /**
-        * Gets rotation on Y axis
-        *@return rotation angle on Y axis in radians
+        * Gets pre-calculated light
+        *@return pre-calculated light to apply
         */
-        virtual M_Precision GetRotationY() const;
+        virtual inline QR_DirectionalLight GetLight() const;
 
         /**
-        * Sets rotation on Y axis
-        *@param angle - rotation angle in radians
+        * Sets pre-calculated light
+        *@param pLight - pre-calculated light to apply to this model
         */
-        virtual void SetRotationY(const M_Precision& angle);
+        virtual inline void SetLight(const QR_DirectionalLight& light);
 
         /**
-        * Gets rotation on Z axis
-        *@return rotation angle on Z axis in radians
+        * Enables or disables the pre-calculated light
+        *@param value - if true, pre-calculated light is enabled, otherwise disabled
         */
-        virtual M_Precision GetRotationZ() const;
+        virtual inline void EnableLight(bool value);
 
         /**
-        * Sets rotation on Z axis
-        *@param angle - rotation angle in radians
+        * Checks if left hand to right hand conversion mode is enabled
+        *@return true if left hand to right hand conversion is enabled, otherwise false
         */
-        virtual void SetRotationZ(const M_Precision& angle);
+        virtual inline bool DoConvertRHLH() const;
 
         /**
-        * Gets scaling
-        *@return scaling
+        * Enables or disables left hand to right hand conversion mode
+        *@param value - if true, conversion mode is enabled, disabled otherwise
         */
-        virtual QR_Vector3DP GetScaling() const;
-
-        /**
-        * Sets scaling
-        *@param scaling - scaling
-        */
-        virtual void SetScaling(const QR_Vector3DP& scaling);
-
-        /**
-        * Gets model matrix
-        *@param type - combination type
-        *@param pInitialMatrix - initial model matrix to start from, can be NULL
-        *@return matrix
-        */
-        virtual QR_Matrix16P GetMatrix(      IECombinationType type           = IE_CT_Scale_Rotate_Translate,
-                                       const QR_Matrix16P*     pInitialMatrix = NULL) const;
+        virtual inline void SetConvertRHLH(bool value);
 
         /**
         * Gets vertex format
         *@return vertex format
         */
-        virtual QR_Vertex::IEFormat GetVertexFormat() const;
+        virtual inline QR_Vertex::IEFormat GetVertexFormat() const;
 
         /**
         * Sets vertex format
         *@param format - vertex format
         */
-        virtual void SetVertexFormat(QR_Vertex::IEFormat format);
+        virtual inline void SetVertexFormat(QR_Vertex::IEFormat format);
 
     protected:
+        QR_Color            m_Color;
+        QR_DirectionalLight m_Light;
         QR_Vertex::IEFormat m_VertexFormat;
+        bool                m_DoConvertRHLH;
 
-    private:
-        QR_Vector3DP m_Scaling;
-        QR_Vector3DP m_Translation;
-        IRotation    m_RotationX;
-        IRotation    m_RotationY;
-        IRotation    m_RotationZ;
+        /**
+        * Calculates vertex color based on pre-calculated light
+        *@param normal - vertex normal
+        *@param light - pre-calculated light
+        *@return vertex color
+        */
+        virtual QR_Color CalculateLight(const QR_Vector3DP&        normal,
+                                        const QR_DirectionalLight* pLight) const;
+
+        /**
+        * Populates aligned-axis bounding box tree from a mesh
+        *@param mesh - source mesh from which aligned-axis bounding box tree should be populated
+        *@param pAABBTree - aligned-axis bounding box tree to populate
+        *@return true on success, otherwise false
+        */
+        virtual bool PopulateAABBTree(const QR_Mesh& mesh, QR_AABBTree* pAABBTree) const;
 };
 
-#endif // QR_ModelH
+//---------------------------------------------------------------------------
+// QR_Model
+//---------------------------------------------------------------------------
+QR_Color QR_Model::GetColor() const
+{
+    return m_Color;
+}
+//---------------------------------------------------------------------------
+void QR_Model::SetColor(const QR_Color& color)
+{
+    m_Color = color;
+}
+//---------------------------------------------------------------------------
+QR_DirectionalLight QR_Model::GetLight() const
+{
+    return m_Light;
+}
+//---------------------------------------------------------------------------
+void QR_Model::SetLight(const QR_DirectionalLight& light)
+{
+    m_Light = light;
+}
+//---------------------------------------------------------------------------
+void QR_Model::EnableLight(bool value)
+{
+    m_Light.m_Enabled = value;
+}
+//---------------------------------------------------------------------------
+bool QR_Model::DoConvertRHLH() const
+{
+    return m_DoConvertRHLH;
+}
+//---------------------------------------------------------------------------
+void QR_Model::SetConvertRHLH(bool value)
+{
+    m_DoConvertRHLH = value;
+}
+//---------------------------------------------------------------------------
+QR_Vertex::IEFormat QR_Model::GetVertexFormat() const
+{
+    return m_VertexFormat;
+}
+//---------------------------------------------------------------------------
+void QR_Model::SetVertexFormat(QR_Vertex::IEFormat format)
+{
+    m_VertexFormat = format;
+}
+//---------------------------------------------------------------------------
+
+#endif

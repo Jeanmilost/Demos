@@ -8,12 +8,13 @@
 
 #include <vcl.h>
 #pragma hdrstop
+#pragma package(smart_init)
 
 #include <tchar.h>
 
 //------------------------------------------------------------------------------
 USEFORM("Main.cpp", MainForm);
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 {
     try

@@ -1,20 +1,37 @@
-/******************************************************************************
- * ==> QR_Plane --------------------------------------------------------------*
- ******************************************************************************
- * Description : Euclidean plane                                              *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_Plane ------------------------------------------------------------*
+ ****************************************************************************
+ * Description : Plane                                                      *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_PlaneH
 #define QR_PlaneH
 
 // qr engine
+#include "QR_Types.h"
 #include "QR_Vector3D.h"
-
-// do use without others QR Engine classes?
-#ifndef USE_QR_GEOMETRY_OLNY
-    #include "QR_Types.h"
-#endif
 
 /**
 * Plane
@@ -42,7 +59,7 @@ class QR_Plane
         *@param c - c coordinate
         *@param d - d coordinate
         */
-        inline QR_Plane(const T& a, const T& b, const T& c, const T& d);
+        inline QR_Plane(T a, T b, T c, T d);
 
         /**
         * Copy constructor
@@ -144,21 +161,16 @@ class QR_Plane
         *         otherwise false
         */
         inline bool Compare(const QR_Plane& other,
-                            const T&        tolerance) const;
+                                  T         tolerance) const;
 };
 
-#ifdef USE_QR_GEOMETRY_OLNY
-    // formatted plane using float or double
-    typedef QR_Plane<QR_Float>  QR_PlaneF;
-    typedef QR_Plane<QR_Double> QR_PlaneD;
-#else
-    // formatted plane using global precision
-    typedef QR_Plane<M_Precision> QR_PlaneP;
-#endif
+typedef QR_Plane<QR_Float>    QR_PlaneF;
+typedef QR_Plane<QR_Double>   QR_PlaneD;
+typedef QR_Plane<M_Precision> QR_PlaneP;
 
-//------------------------------------------------------------------------------
-// QR_Plane implementation - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_Plane
+//---------------------------------------------------------------------------
 template <class T>
 QR_Plane<T>::QR_Plane() :
     m_A(0),
@@ -166,56 +178,50 @@ QR_Plane<T>::QR_Plane() :
     m_C(0),
     m_D(0)
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
-QR_Plane<T>::QR_Plane(const T& a, const T& b, const T& c, const T& d) :
+QR_Plane<T>::QR_Plane(T a, T b, T c, T d) :
     m_A(a),
     m_B(b),
     m_C(c),
     m_D(d)
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Plane<T>::QR_Plane(const QR_Plane& other)
 {
     Copy(other);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Plane<T>::~QR_Plane()
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Plane<T>& QR_Plane<T>::operator =(const QR_Plane& other)
 {
     Copy(other);
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Plane<T> QR_Plane<T>::operator - () const
 {
     return QR_Plane<T>(-m_A, -m_B, -m_C, -m_D);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Plane<T>::operator == (const QR_Plane<T>& other) const
 {
-    return ((m_A == other.m_A) &&
-            (m_B == other.m_B) &&
-            (m_C == other.m_C) &&
-            (m_D == other.m_D));
+    return ((m_A == other.m_A) && (m_B == other.m_B) && (m_C == other.m_C) && (m_D == other.m_D));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Plane<T>::operator != (const QR_Plane<T>& other) const
 {
-    return ((m_A != other.m_A) ||
-            (m_B != other.m_B) ||
-            (m_C != other.m_C) ||
-            (m_D != other.m_D));
+    return ((m_A != other.m_A) || (m_B != other.m_B) || (m_C != other.m_C) || (m_D != other.m_D));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 void QR_Plane<T>::Copy(const QR_Plane& other)
 {
@@ -224,23 +230,23 @@ void QR_Plane<T>::Copy(const QR_Plane& other)
     m_C = other.m_C;
     m_D = other.m_D;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Plane<T> QR_Plane<T>::FromPoints(const QR_Vector3D<T>& v1,
                                     const QR_Vector3D<T>& v2,
                                     const QR_Vector3D<T>& v3)
 {
     // calculate edge vectors
-    QR_Vector3D<T> e1 = v2 - v1;
-    QR_Vector3D<T> e2 = v3 - v1;
+    const QR_Vector3D<T> e1 = v2 - v1;
+    const QR_Vector3D<T> e2 = v3 - v1;
 
     // calculate the normal of the plane
-    QR_Vector3D<T> normal = e1.Cross(e2).Normalize();
+    const QR_Vector3D<T> normal = e1.Cross(e2).Normalize();
 
     // calculate and return the plane
     return FromPointNormal(v1, normal);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Plane<T> QR_Plane<T>::FromPointNormal(const QR_Vector3D<T>& point,
                                          const QR_Vector3D<T>& normal)
@@ -252,17 +258,17 @@ QR_Plane<T> QR_Plane<T>::FromPointNormal(const QR_Vector3D<T>& point,
                        normal.m_Z,
                      -(normal.Dot(point)));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 T QR_Plane<T>::DistanceTo(const QR_Vector3D<T>& point) const
 {
     // get the normal of the plane
-    QR_Vector3D<T> n(m_A, m_B, m_C);
+    const QR_Vector3D<T> n(m_A, m_B, m_C);
 
     // calculate the distance between the plane and the point
     return n.Dot(point) + m_D;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Plane<T>::IntersectLine(const QR_Vector3D<T>& v1,
                                 const QR_Vector3D<T>& v2,
@@ -273,7 +279,7 @@ bool QR_Plane<T>::IntersectLine(const QR_Vector3D<T>& v1,
 
     return IntersectRay(v1, direction.Normalize(), p);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Plane<T>::IntersectRay(const QR_Vector3D<T>& rp,
                                const QR_Vector3D<T>& rd,
@@ -300,10 +306,10 @@ bool QR_Plane<T>::IntersectRay(const QR_Vector3D<T>& rp,
 
     return true;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Plane<T>::Compare(const QR_Plane<T>& other,
-                          const T&           tolerance) const
+                                T            tolerance) const
 {
     return (((m_A >= (other.m_A - tolerance))  &&
              (m_A <= (other.m_A + tolerance))) &&
@@ -314,15 +320,16 @@ bool QR_Plane<T>::Compare(const QR_Plane<T>& other,
             ((m_D >= (other.m_D - tolerance))  &&
              (m_D <= (other.m_D + tolerance))));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // RAD studio
-//------------------------------------------------------------------------------
-#ifdef __CODEGEARC__
-    // needed to avoid the W8058 error "Cannot create pre-compiled header: header incomplete" warning in BCC compilers
+//---------------------------------------------------------------------------
+#if defined(CP_EMBARCADERO)
+    // needed to avoid the W8058 error "Cannot create pre-compiled header: header incomplete"
+    // warning in BCC compilers
     ;
 #endif
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-#endif // QR_PlaneH
+#endif

@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_StringTools --------------------------------------------------------*
- ******************************************************************************
- * Description : Tools for string manipulation                                *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_StringTools ------------------------------------------------------*
+ ****************************************************************************
+ * Description : Tools to work with strings                                 *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #include "QR_StringTools.h"
 
@@ -13,23 +34,23 @@
 // libraries
 #include "ConvertUTF.h"
 
-//------------------------------------------------------------------------------
-// QR_StringTools - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_StringTools
+//---------------------------------------------------------------------------
 std::wstring QR_StringTools::StrToWStr(const std::string& str)
 {
     std::wstring wstr(str.length(), L' ');
     std::copy(str.begin(), str.end(), wstr.begin());
     return wstr;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_StringTools::WStrToStr(const std::wstring& wstr)
 {
     std::string str(wstr.length(), ' ');
     std::copy(wstr.begin(), wstr.end(), str.begin());
     return str;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::wstring QR_StringTools::UTF8ToUTF16(const std::string& str)
 {
     // source code from:
@@ -37,7 +58,7 @@ std::wstring QR_StringTools::UTF8ToUTF16(const std::string& str)
 
     size_t wideSize = str.length();
 
-    #if defined(__BORLANDC__) || defined(__CODEGEARC__)
+    #if defined(CP_EMBARCADERO)
         #pragma warn -8008
         #pragma warn -8066
     #endif
@@ -105,12 +126,12 @@ std::wstring QR_StringTools::UTF8ToUTF16(const std::string& str)
     else
         M_THROW_EXCEPTION("Conversion failed - unknown wchar_t length");
 
-    #if defined(__BORLANDC__) || defined(__CODEGEARC__)
+    #if defined(CP_EMBARCADERO)
         #pragma warn .8066
         #pragma warn .8008
     #endif
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_StringTools::UTF16ToUTF8(const std::wstring& wstr)
 {
     // source code from:
@@ -118,7 +139,7 @@ std::string QR_StringTools::UTF16ToUTF8(const std::wstring& wstr)
 
     size_t wideSize = wstr.length();
 
-    #if defined(__BORLANDC__) || defined(__CODEGEARC__)
+    #if defined(CP_EMBARCADERO)
         #pragma warn -8008
         #pragma warn -8066
     #endif
@@ -188,12 +209,12 @@ std::string QR_StringTools::UTF16ToUTF8(const std::wstring& wstr)
     else
         M_THROW_EXCEPTION("Conversion failed - unknown wchar_t length");
 
-    #if defined(__BORLANDC__) || defined(__CODEGEARC__)
+    #if defined(CP_EMBARCADERO)
         #pragma warn .8066
         #pragma warn .8008
     #endif
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::string QR_StringTools::BoolToStr(bool value, bool numeric)
 {
     if (numeric)
@@ -201,7 +222,7 @@ std::string QR_StringTools::BoolToStr(bool value, bool numeric)
 
     return value ? "true" : "false";
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 std::wstring QR_StringTools::BoolToWStr(bool value, bool numeric)
 {
     if (numeric)
@@ -209,14 +230,14 @@ std::wstring QR_StringTools::BoolToWStr(bool value, bool numeric)
 
     return value ? L"true" : L"false";
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StringTools::StrToBool(const std::string& str)
 {
     return (str == "1" || ToLowerCase(str) == "true");
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StringTools::StrToBool(const std::wstring& str)
 {
     return (str == L"1" || ToLowerCase(str) == L"true");
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------

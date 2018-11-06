@@ -52,17 +52,18 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <BCC_PCHInject>Classes\QR_OS\QR_GlobalDefines\QR_GlobalDefines.h</BCC_PCHInject>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Locale>4108</VerInfo_Locale>
         <AllPackageLibs>rtl.lib;vcl.lib</AllPackageLibs>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>MD2RayPicking</SanitizedProjectName>
-        <IncludePath>Classes\QR_Geometry\QR_Line\;Classes\QR_Geometry\QR_Ray\;Classes\QR_Geometry\QR_Plane\;Classes\QR_Collisions\QR_Sphere\;Classes\QR_Collisions\QR_Polygon\;Classes\QR_Collisions\QR_CollisionHelper\;Classes\QR_Collisions\QR_CollideShape\;Classes\QR_Collisions\QR_Box\;Classes\QR_Collisions\QR_AABBTree\;Classes\QR_Maths\QR_Shapes\QR_Rect\;Classes\QR_OS\QR_Windows\QR_OpenGL\QR_WinOpenGLHelper\;Classes\QR_Base\QR_StringTools\convertUTF\;Classes\QR_Base\QR_StringTools\;Classes\QR_Base\QR_STDTools\;Classes\QR_Geometry\QR_Matrix\;Classes\QR_Base\QR_Buffer\;Classes\QR_Base\QR_Sealed\;Classes\QR_Base\QR_Exception\;Classes\QR_3D\QR_Vertex\;Classes\QR_Geometry\QR_Vector\;Classes\QR_Graphics\QR_Color\;Classes\QR_Base\QR_Types\;Classes\QR_3D\QR_Models\QR_Model\;Classes\QR_3D\QR_Models\QR_MD2\;E:\Jeanmilost\QREngine\Projects\Prototypes\Renderer\;$(IncludePath)</IncludePath>
+        <IncludePath>Classes\QR_Base\QR_MemoryTools\;Classes\QR_Base\QR_Version\;Classes\QR_Base\QR_FileTools\;Classes\QR_Maths\QR_MathTools\;Classes\QR_Geometry\QR_GeometryHelper\;Classes\QR_Geometry\QR_Sphere\;Classes\QR_OS\QR_GlobalDefines\;Classes\QR_3D\QR_Resources\;Classes\QR_Base\QR_Script\;Classes\QR_Base\QR_MemoryDir\;Classes\QR_3D\QR_Effects\;Classes\QR_Geometry\QR_Size\;Classes\QR_Geometry\QR_Rect\;Classes\QR_Geometry\QR_Point\;Classes\QR_3D\QR_Renderer\;Classes\QR_3D\QR_Shader\;Classes\QR_3D\QR_Texture\;Classes\QR_Base\QR_Hash\;Classes\QR_Geometry\QR_Box\;Classes\QR_Geometry\QR_Polygon\;Classes\QR_3D\QR_Light\;Classes\QR_Geometry\QR_Line\;Classes\QR_Geometry\QR_Ray\;Classes\QR_Geometry\QR_Plane\;Classes\QR_Collisions\QR_CollisionHelper\;Classes\QR_Collisions\QR_AABBTree\;Classes\QR_Base\QR_StringTools\convertUTF\;Classes\QR_Base\QR_StringTools\;Classes\QR_Base\QR_STDTools\;Classes\QR_Geometry\QR_Matrix\;Classes\QR_Base\QR_Buffer\;Classes\QR_Base\QR_Exception\;Classes\QR_3D\QR_Vertex\;Classes\QR_Geometry\QR_Vector\;Classes\QR_Graphics\QR_Color\;Classes\QR_Base\QR_Types\;Classes\QR_3D\QR_Models\QR_Model\;Classes\QR_3D\QR_Models\QR_MD2\;glew\;$(IncludePath)</IncludePath>
         <Multithreaded>true</Multithreaded>
         <ProjectType>CppVCLApplication</ProjectType>
         <_TCHARMapping>wchar_t</_TCHARMapping>
-        <ILINK_LibraryPath>Classes\QR_Geometry\QR_Line\;Classes\QR_Geometry\QR_Ray\;Classes\QR_Geometry\QR_Plane\;Classes\QR_Collisions\QR_Sphere\;Classes\QR_Collisions\QR_Polygon\;Classes\QR_Collisions\QR_CollisionHelper\;Classes\QR_Collisions\QR_CollideShape\;Classes\QR_Collisions\QR_Box\;Classes\QR_Collisions\QR_AABBTree\;Classes\QR_Maths\QR_Shapes\QR_Rect\;Classes\QR_OS\QR_Windows\QR_OpenGL\QR_WinOpenGLHelper\;Classes\QR_Base\QR_StringTools\convertUTF\;Classes\QR_Base\QR_StringTools\;Classes\QR_Base\QR_STDTools\;Classes\QR_Geometry\QR_Matrix\;Classes\QR_Base\QR_Buffer\;Classes\QR_Base\QR_Sealed\;Classes\QR_Base\QR_Exception\;Classes\QR_3D\QR_Vertex\;Classes\QR_Geometry\QR_Vector\;Classes\QR_Graphics\QR_Color\;Classes\QR_Base\QR_Types\;Classes\QR_3D\QR_Models\QR_Model\;Classes\QR_3D\QR_Models\QR_MD2\;E:\Jeanmilost\QREngine\Projects\Prototypes\Renderer\;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <ILINK_LibraryPath>Classes\QR_Base\QR_MemoryTools\;Classes\QR_Base\QR_Version\;Classes\QR_Base\QR_FileTools\;Classes\QR_Maths\QR_MathTools\;Classes\QR_Geometry\QR_GeometryHelper\;Classes\QR_Geometry\QR_Sphere\;Classes\QR_OS\QR_GlobalDefines\;Classes\QR_3D\QR_Resources\;Classes\QR_Base\QR_Script\;Classes\QR_Base\QR_MemoryDir\;Classes\QR_3D\QR_Effects\;Classes\QR_Geometry\QR_Size\;Classes\QR_Geometry\QR_Rect\;Classes\QR_Geometry\QR_Point\;Classes\QR_3D\QR_Renderer\;Classes\QR_3D\QR_Shader\;Classes\QR_3D\QR_Texture\;Classes\QR_Base\QR_Hash\;Classes\QR_Geometry\QR_Box\;Classes\QR_Geometry\QR_Polygon\;Classes\QR_3D\QR_Light\;Classes\QR_Geometry\QR_Line\;Classes\QR_Geometry\QR_Ray\;Classes\QR_Geometry\QR_Plane\;Classes\QR_Collisions\QR_CollisionHelper\;Classes\QR_Collisions\QR_AABBTree\;Classes\QR_Base\QR_StringTools\convertUTF\;Classes\QR_Base\QR_StringTools\;Classes\QR_Base\QR_STDTools\;Classes\QR_Geometry\QR_Matrix\;Classes\QR_Base\QR_Buffer\;Classes\QR_Base\QR_Exception\;Classes\QR_3D\QR_Vertex\;Classes\QR_Geometry\QR_Vector\;Classes\QR_Graphics\QR_Color\;Classes\QR_Base\QR_Types\;Classes\QR_3D\QR_Models\QR_Model\;Classes\QR_3D\QR_Models\QR_MD2\;glew\;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <Icon_MainIcon>MD2RayPicking_Icon.ico</Icon_MainIcon>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
         <DynamicRTL>true</DynamicRTL>
@@ -126,21 +127,32 @@
         <BCC_PCHName_Clang>MD2RayPicking_PCH.h</BCC_PCHName_Clang>
     </PropertyGroup>
     <ItemGroup>
+        <CppCompile Include="Classes\QR_3D\QR_Effects\QR_Effect.cpp">
+            <DependentOn>Classes\QR_3D\QR_Effects\QR_Effect.h</DependentOn>
+            <BuildOrder>56</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Effects\QR_MSAA_OpenGL_Effect.cpp">
+            <DependentOn>Classes\QR_3D\QR_Effects\QR_MSAA_OpenGL_Effect.h</DependentOn>
+            <BuildOrder>57</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Effects\QR_PostProcessingEffect.cpp">
+            <DependentOn>Classes\QR_3D\QR_Effects\QR_PostProcessingEffect.h</DependentOn>
+            <BuildOrder>58</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Light\QR_Light.cpp">
+            <DependentOn>Classes\QR_3D\QR_Light\QR_Light.h</DependentOn>
+            <BuildOrder>43</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Classes\QR_3D\QR_Models\QR_MD2\QR_MD2.cpp">
             <DependentOn>Classes\QR_3D\QR_Models\QR_MD2\QR_MD2.h</DependentOn>
             <BuildOrder>3</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Animation.cpp">
-            <DependentOn>Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Animation.h</DependentOn>
-            <BuildOrder>6</BuildOrder>
+        <CppCompile Include="Classes\QR_3D\QR_Models\QR_MD2\QR_MD2CfgFile.cpp">
+            <DependentOn>Classes\QR_3D\QR_Models\QR_MD2\QR_MD2CfgFile.h</DependentOn>
+            <BuildOrder>60</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Collision.cpp">
-            <DependentOn>Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Collision.h</DependentOn>
-            <BuildOrder>41</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Common.cpp">
-            <DependentOn>Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Common.h</DependentOn>
-            <BuildOrder>4</BuildOrder>
+        <CppCompile Include="Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Group.cpp">
+            <BuildOrder>61</BuildOrder>
         </CppCompile>
         <CppCompile Include="Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Parser.cpp">
             <DependentOn>Classes\QR_3D\QR_Models\QR_MD2\QR_MD2Parser.h</DependentOn>
@@ -150,17 +162,48 @@
             <DependentOn>Classes\QR_3D\QR_Models\QR_Model\QR_FramedModel.h</DependentOn>
             <BuildOrder>42</BuildOrder>
         </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Models\QR_Model\QR_FramedModelGroup.cpp">
+            <DependentOn>Classes\QR_3D\QR_Models\QR_Model\QR_FramedModelGroup.h</DependentOn>
+            <BuildOrder>49</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Classes\QR_3D\QR_Models\QR_Model\QR_Model.cpp">
             <DependentOn>Classes\QR_3D\QR_Models\QR_Model\QR_Model.h</DependentOn>
             <BuildOrder>7</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_3D\QR_Models\QR_Model\QR_ModelCollision.cpp">
-            <DependentOn>Classes\QR_3D\QR_Models\QR_Model\QR_ModelCollision.h</DependentOn>
-            <BuildOrder>40</BuildOrder>
+        <CppCompile Include="Classes\QR_3D\QR_Models\QR_Model\QR_ModelGroup.cpp">
+            <DependentOn>Classes\QR_3D\QR_Models\QR_Model\QR_ModelGroup.h</DependentOn>
+            <BuildOrder>50</BuildOrder>
         </CppCompile>
         <CppCompile Include="Classes\QR_3D\QR_Models\QR_Model\QR_ModelParser.cpp">
             <DependentOn>Classes\QR_3D\QR_Models\QR_Model\QR_ModelParser.h</DependentOn>
             <BuildOrder>8</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Renderer\QR_Renderer.cpp">
+            <DependentOn>Classes\QR_3D\QR_Renderer\QR_Renderer.h</DependentOn>
+            <BuildOrder>51</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Renderer\QR_Renderer_OpenGL.cpp">
+            <DependentOn>Classes\QR_3D\QR_Renderer\QR_Renderer_OpenGL.h</DependentOn>
+            <BuildOrder>52</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Resources\QR_Resources.cpp">
+            <BuildOrder>61</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Shader\QR_Shader.cpp">
+            <DependentOn>Classes\QR_3D\QR_Shader\QR_Shader.h</DependentOn>
+            <BuildOrder>49</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Shader\QR_Shader_OpenGL.cpp">
+            <DependentOn>Classes\QR_3D\QR_Shader\QR_Shader_OpenGL.h</DependentOn>
+            <BuildOrder>50</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Texture\QR_Texture.cpp">
+            <DependentOn>Classes\QR_3D\QR_Texture\QR_Texture.h</DependentOn>
+            <BuildOrder>47</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_3D\QR_Texture\QR_Texture_OpenGL.cpp">
+            <DependentOn>Classes\QR_3D\QR_Texture\QR_Texture_OpenGL.h</DependentOn>
+            <BuildOrder>48</BuildOrder>
         </CppCompile>
         <CppCompile Include="Classes\QR_3D\QR_Vertex\QR_Vertex.cpp">
             <DependentOn>Classes\QR_3D\QR_Vertex\QR_Vertex.h</DependentOn>
@@ -186,13 +229,29 @@
             <DependentOn>Classes\QR_Base\QR_Exception\QR_Exception.h</DependentOn>
             <BuildOrder>13</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_Base\QR_Sealed\QR_Sealed.cpp">
-            <DependentOn>Classes\QR_Base\QR_Sealed\QR_Sealed.h</DependentOn>
-            <BuildOrder>14</BuildOrder>
+        <CppCompile Include="Classes\QR_Base\QR_FileTools\QR_FileTools.cpp">
+            <DependentOn>Classes\QR_Base\QR_FileTools\QR_FileTools.h</DependentOn>
+            <BuildOrder>54</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_Base\QR_Hash\QR_Hash.cpp">
+            <DependentOn>Classes\QR_Base\QR_Hash\QR_Hash.h</DependentOn>
+            <BuildOrder>46</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_Base\QR_MemoryDir\QR_MemoryDir.cpp">
+            <DependentOn>Classes\QR_Base\QR_MemoryDir\QR_MemoryDir.h</DependentOn>
+            <BuildOrder>59</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_Base\QR_MemoryTools\QR_MemoryTools.cpp">
+            <DependentOn>Classes\QR_Base\QR_MemoryTools\QR_MemoryTools.h</DependentOn>
+            <BuildOrder>56</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_Base\QR_Script\QR_Script.cpp">
+            <DependentOn>Classes\QR_Base\QR_Script\QR_Script.h</DependentOn>
+            <BuildOrder>60</BuildOrder>
         </CppCompile>
         <CppCompile Include="Classes\QR_Base\QR_STDTools\QR_STDTools.cpp">
             <DependentOn>Classes\QR_Base\QR_STDTools\QR_STDTools.h</DependentOn>
-            <BuildOrder>20</BuildOrder>
+            <BuildOrder>57</BuildOrder>
         </CppCompile>
         <CppCompile Include="Classes\QR_Base\QR_StringTools\convertUTF\convertUTF.c">
             <BuildOrder>22</BuildOrder>
@@ -205,45 +264,25 @@
             <DependentOn>Classes\QR_Base\QR_Types\QR_Types.h</DependentOn>
             <BuildOrder>9</BuildOrder>
         </CppCompile>
+        <CppCompile Include="Classes\QR_Base\QR_Version\QR_Version.cpp">
+            <DependentOn>Classes\QR_Base\QR_Version\QR_Version.h</DependentOn>
+            <BuildOrder>55</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Classes\QR_Collisions\QR_AABBTree\QR_AABBTree.cpp">
             <DependentOn>Classes\QR_Collisions\QR_AABBTree\QR_AABBTree.h</DependentOn>
             <BuildOrder>27</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_Box\QR_Box.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_Box\QR_Box.h</DependentOn>
-            <BuildOrder>28</BuildOrder>
+        <CppCompile Include="Classes\QR_Collisions\QR_CollisionHelper\QR_CollisionHelper.cpp">
+            <DependentOn>Classes\QR_Collisions\QR_CollisionHelper\QR_CollisionHelper.h</DependentOn>
+            <BuildOrder>57</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_CollideShape\QR_CollideShape3D.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_CollideShape\QR_CollideShape3D.h</DependentOn>
-            <BuildOrder>29</BuildOrder>
+        <CppCompile Include="Classes\QR_Geometry\QR_Box\QR_Box.cpp">
+            <DependentOn>Classes\QR_Geometry\QR_Box\QR_Box.h</DependentOn>
+            <BuildOrder>45</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_CollisionHelper\QR_3DCollisionHelper.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_CollisionHelper\QR_3DCollisionHelper.h</DependentOn>
-            <BuildOrder>30</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_Polygon\QR_DrawablePolygon.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_Polygon\QR_DrawablePolygon.h</DependentOn>
-            <BuildOrder>32</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_Polygon\QR_DrawablePolygon_OpenGL.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_Polygon\QR_DrawablePolygon_OpenGL.h</DependentOn>
-            <BuildOrder>33</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_Polygon\QR_IndexedPolygon.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_Polygon\QR_IndexedPolygon.h</DependentOn>
-            <BuildOrder>40</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_Polygon\QR_Polygon.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_Polygon\QR_Polygon.h</DependentOn>
-            <BuildOrder>34</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_Polygon\QR_SimplePolygon.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_Polygon\QR_SimplePolygon.h</DependentOn>
-            <BuildOrder>40</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Classes\QR_Collisions\QR_Sphere\QR_Sphere.cpp">
-            <DependentOn>Classes\QR_Collisions\QR_Sphere\QR_Sphere.h</DependentOn>
-            <BuildOrder>36</BuildOrder>
+        <CppCompile Include="Classes\QR_Geometry\QR_GeometryHelper\QR_GeometryHelper.cpp">
+            <DependentOn>Classes\QR_Geometry\QR_GeometryHelper\QR_GeometryHelper.h</DependentOn>
+            <BuildOrder>57</BuildOrder>
         </CppCompile>
         <CppCompile Include="Classes\QR_Geometry\QR_Line\QR_Line.cpp">
             <DependentOn>Classes\QR_Geometry\QR_Line\QR_Line.h</DependentOn>
@@ -257,9 +296,29 @@
             <DependentOn>Classes\QR_Geometry\QR_Plane\QR_Plane.h</DependentOn>
             <BuildOrder>37</BuildOrder>
         </CppCompile>
+        <CppCompile Include="Classes\QR_Geometry\QR_Point\QR_Point.cpp">
+            <DependentOn>Classes\QR_Geometry\QR_Point\QR_Point.h</DependentOn>
+            <BuildOrder>53</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_Geometry\QR_Polygon\QR_Polygon.cpp">
+            <DependentOn>Classes\QR_Geometry\QR_Polygon\QR_Polygon.h</DependentOn>
+            <BuildOrder>44</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Classes\QR_Geometry\QR_Ray\QR_Ray.cpp">
             <DependentOn>Classes\QR_Geometry\QR_Ray\QR_Ray.h</DependentOn>
             <BuildOrder>38</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_Geometry\QR_Rect\QR_Rect.cpp">
+            <DependentOn>Classes\QR_Geometry\QR_Rect\QR_Rect.h</DependentOn>
+            <BuildOrder>54</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_Geometry\QR_Size\QR_Size.cpp">
+            <DependentOn>Classes\QR_Geometry\QR_Size\QR_Size.h</DependentOn>
+            <BuildOrder>55</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Classes\QR_Geometry\QR_Sphere\QR_Sphere.cpp">
+            <DependentOn>Classes\QR_Geometry\QR_Sphere\QR_Sphere.h</DependentOn>
+            <BuildOrder>51</BuildOrder>
         </CppCompile>
         <CppCompile Include="Classes\QR_Geometry\QR_Vector\QR_Vector3D.cpp">
             <DependentOn>Classes\QR_Geometry\QR_Vector\QR_Vector3D.h</DependentOn>
@@ -269,13 +328,13 @@
             <DependentOn>Classes\QR_Graphics\QR_Color\QR_Color.h</DependentOn>
             <BuildOrder>10</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_Maths\QR_Shapes\QR_Rect\QR_Rect.cpp">
-            <DependentOn>Classes\QR_Maths\QR_Shapes\QR_Rect\QR_Rect.h</DependentOn>
-            <BuildOrder>26</BuildOrder>
+        <CppCompile Include="Classes\QR_Maths\QR_MathTools\QR_MathTools.cpp">
+            <DependentOn>Classes\QR_Maths\QR_MathTools\QR_MathTools.h</DependentOn>
+            <BuildOrder>53</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Classes\QR_OS\QR_Windows\QR_OpenGL\QR_WinOpenGLHelper\QR_WinOpenGLHelper.cpp">
-            <DependentOn>Classes\QR_OS\QR_Windows\QR_OpenGL\QR_WinOpenGLHelper\QR_WinOpenGLHelper.h</DependentOn>
-            <BuildOrder>25</BuildOrder>
+        <CppCompile Include="Classes\QR_OS\QR_GlobalDefines\QR_GlobalDefines.cpp">
+            <DependentOn>Classes\QR_OS\QR_GlobalDefines\QR_GlobalDefines.h</DependentOn>
+            <BuildOrder>62</BuildOrder>
         </CppCompile>
         <CppCompile Include="Main.cpp">
             <Form>MainForm</Form>
@@ -322,79 +381,100 @@
                     <Source Name="MainSource">MD2RayPicking.cpp</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k210.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp210.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k210.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp210.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k180.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp180.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k180.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp180.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
+                <VersionInfo>
+                    <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+                    <VersionInfo Name="AutoIncBuild">False</VersionInfo>
+                    <VersionInfo Name="MajorVer">1</VersionInfo>
+                    <VersionInfo Name="MinorVer">0</VersionInfo>
+                    <VersionInfo Name="Release">0</VersionInfo>
+                    <VersionInfo Name="Build">0</VersionInfo>
+                    <VersionInfo Name="Debug">False</VersionInfo>
+                    <VersionInfo Name="PreRelease">False</VersionInfo>
+                    <VersionInfo Name="Special">False</VersionInfo>
+                    <VersionInfo Name="Private">False</VersionInfo>
+                    <VersionInfo Name="DLL">False</VersionInfo>
+                    <VersionInfo Name="Locale">4108</VersionInfo>
+                    <VersionInfo Name="CodePage">1252</VersionInfo>
+                </VersionInfo>
+                <VersionInfoKeys>
+                    <VersionInfoKeys Name="CompanyName"/>
+                    <VersionInfoKeys Name="FileDescription"/>
+                    <VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="InternalName"/>
+                    <VersionInfoKeys Name="LegalCopyright"/>
+                    <VersionInfoKeys Name="LegalTrademarks"/>
+                    <VersionInfoKeys Name="OriginalFilename"/>
+                    <VersionInfoKeys Name="ProductName"/>
+                    <VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="Comments"/>
+                    <VersionInfoKeys Name="CFBundleName"/>
+                    <VersionInfoKeys Name="CFBundleDisplayName"/>
+                    <VersionInfoKeys Name="UIDeviceFamily"/>
+                    <VersionInfoKeys Name="CFBundleIdentifier"/>
+                    <VersionInfoKeys Name="CFBundleVersion"/>
+                    <VersionInfoKeys Name="CFBundlePackageType"/>
+                    <VersionInfoKeys Name="CFBundleSignature"/>
+                    <VersionInfoKeys Name="CFBundleAllowMixedLocalizations"/>
+                    <VersionInfoKeys Name="UISupportedInterfaceOrientations"/>
+                    <VersionInfoKeys Name="CFBundleExecutable"/>
+                    <VersionInfoKeys Name="CFBundleResourceSpecification"/>
+                    <VersionInfoKeys Name="LSRequiresIPhoneOS"/>
+                    <VersionInfoKeys Name="CFBundleInfoDictionaryVersion"/>
+                    <VersionInfoKeys Name="CFBundleDevelopmentRegion"/>
+                </VersionInfoKeys>
             </CPlusPlusBuilder.Personality>
             <Deployment>
+                <DeployFile LocalName=".\Win32\Debug\MD2 reader.tds" Configuration="Debug" Class="DebugSymbols"/>
                 <DeployFile Condition="'$(UsingDelphiRTL)'=='true'" LocalName="$(BDS)\bin64\borlndmm.dll" Class="DependencyModule">
-                    <Platform Name="Win64">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
+                    <Platform Name="Win64"/>
+                </DeployFile>
+                <DeployFile LocalName=".\Win32\Debug\Renderer.tds" Configuration="Debug" Class="DebugSymbols"/>
+                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin64\cc64160.dll" Class="DependencyModule">
+                    <Platform Name="Win64"/>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32160mt.dll" Class="DependencyModule">
+                    <Platform Name="Win32"/>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx32\libcgcrtl.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32"/>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin64\cc64160mt.dll" Class="DependencyModule">
+                    <Platform Name="Win64"/>
+                </DeployFile>
+                <DeployFile LocalName=".\Win32\Debug\MD2Reader.tds" Configuration="Debug" Class="DebugSymbols"/>
+                <DeployFile LocalName=".\Win32\Debug\Project1.tds" Configuration="Debug" Class="DebugSymbols"/>
+                <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx32\libcgstl.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32"/>
+                </DeployFile>
+                <DeployFile Condition="'$(UsingDelphiRTL)'=='true'" LocalName="$(BDS)\bin\borlndmm.dll" Class="DependencyModule">
+                    <Platform Name="Win32"/>
                 </DeployFile>
                 <DeployFile LocalName="Classes\QR_Base\QR_StringTools\convertUTF\convertUTF.c" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win32">
                         <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32160mt.dll" Class="DependencyModule">
-                    <Platform Name="Win32">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx32\libcgcrtl.dylib" Class="DependencyModule">
-                    <Platform Name="OSX32">
-                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName=".\Win32\Debug\MD2RayPicking.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>MD2RayPicking.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName=".\Win32\Debug\MD2 reader.tds" Configuration="Debug" Class="DebugSymbols"/>
                 <DeployFile LocalName=".\Win32\Debug\MD2RayPicking.tds" Configuration="Debug" Class="DebugSymbols">
                     <Platform Name="Win32">
                         <RemoteName>MD2RayPicking.tds</RemoteName>
-                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin64\cc64160mt.dll" Class="DependencyModule">
-                    <Platform Name="Win64">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
+                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32160.dll" Class="DependencyModule">
+                    <Platform Name="Win32"/>
                 </DeployFile>
                 <DeployFile LocalName="Resources.rh" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win32">
                         <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName=".\Win32\Debug\MD2Reader.tds" Configuration="Debug" Class="DebugSymbols"/>
-                <DeployFile LocalName=".\Win32\Debug\Renderer.tds" Configuration="Debug" Class="DebugSymbols"/>
-                <DeployFile LocalName=".\Win32\Debug\Project1.tds" Configuration="Debug" Class="DebugSymbols"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx32\libcgstl.dylib" Class="DependencyModule">
-                    <Platform Name="OSX32">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile Condition="'$(UsingDelphiRTL)'=='true'" LocalName="$(BDS)\bin\borlndmm.dll" Class="DependencyModule">
-                    <Platform Name="Win32">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32160.dll" Class="DependencyModule">
-                    <Platform Name="Win32">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin64\cc64160.dll" Class="DependencyModule">
-                    <Platform Name="Win64">
-                        <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployClass Required="true" Name="DependencyPackage">

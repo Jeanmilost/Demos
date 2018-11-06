@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_MD2Parser ----------------------------------------------------------*
- ******************************************************************************
- * Description : Reads and exposes MD2 file content                           *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_MD2Parser --------------------------------------------------------*
+ ****************************************************************************
+ * Description : Provides a parser for the MD2 models                       *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_MD2ParserH
 #define QR_MD2ParserH
@@ -14,7 +35,6 @@
 
 // qr engine
 #include "QR_Types.h"
-#include "QR_Sealed.h"
 #include "QR_ModelParser.h"
 #include "QR_Buffer.h"
 
@@ -28,9 +48,8 @@ class QR_MD2Parser : public QR_ModelParser
     public:
         /**
         * MD2 header
-        *@note This class cannot be inherited
         */
-        struct IHeader : QR_Sealed(IHeader)
+        struct IHeader
         {
             QR_UInt32 m_ID;
             QR_UInt32 m_Version;
@@ -52,7 +71,19 @@ class QR_MD2Parser : public QR_ModelParser
 
             IHeader();
             ~IHeader();
-            /**
+
+            /**
+            * Clears the header content
+            */
+            void Clear();
+
+            /**
+            * Copies content from another header
+            *@param other - other header to copy from
+            */
+            void Copy(const IHeader& other);
+
+            /**
             * Reads data from file
             *@param buffer - buffer to read from
             */
@@ -61,14 +92,24 @@ class QR_MD2Parser : public QR_ModelParser
 
         /**
         * MD2 skin
-        *@note This class cannot be inherited
         */
-        struct ISkin : QR_Sealed(ISkin)
+        struct ISkin
         {
             std::string m_Name;
 
             ISkin();
             ~ISkin();
+
+            /**
+            * Clears the skin content
+            */
+            void Clear();
+
+            /**
+            * Copies content from another skin
+            *@param other - other skin to copy from
+            */
+            void Copy(const ISkin& other);
 
             /**
             * Reads data from file
@@ -79,15 +120,25 @@ class QR_MD2Parser : public QR_ModelParser
 
         /**
         * MD2 vertex
-        *@note This class cannot be inherited
         */
-        struct IVertex : QR_Sealed(IVertex)
+        struct IVertex
         {
             QR_UInt8 m_Vertex[3];
             QR_UInt8 m_NormalIndex;
 
             IVertex();
             ~IVertex();
+
+            /**
+            * Clears the vertex content
+            */
+            void Clear();
+
+            /**
+            * Copies content from another vertex
+            *@param other - other vertex to copy from
+            */
+            void Copy(const IVertex& other);
 
             /**
             * Reads data from file
@@ -98,15 +149,25 @@ class QR_MD2Parser : public QR_ModelParser
 
         /**
         * MD2 texture coordinate
-        *@note This class cannot be inherited
         */
-        struct ITextureCoord : QR_Sealed(ITextureCoord)
+        struct ITextureCoord
         {
             QR_UInt16 m_U;
             QR_UInt16 m_V;
 
             ITextureCoord();
             ~ITextureCoord();
+
+            /**
+            * Clears the texture coordinate content
+            */
+            void Clear();
+
+            /**
+            * Copies content from another texture coordinate
+            *@param other - other texture coordinate to copy from
+            */
+            void Copy(const ITextureCoord& other);
 
             /**
             * Reads data from file
@@ -117,9 +178,8 @@ class QR_MD2Parser : public QR_ModelParser
 
         /**
         * MD2 frame
-        *@note This class cannot be inherited
         */
-        struct IFrame : QR_Sealed(IFrame)
+        struct IFrame
         {
             std::string m_Name;
             QR_Float    m_Scale[3];
@@ -128,6 +188,18 @@ class QR_MD2Parser : public QR_ModelParser
 
             IFrame();
             ~IFrame();
+
+            /**
+            * Clears the frame content
+            */
+            void Clear();
+
+            /**
+            * Copies content from another frame
+            *@param other - other frame to copy from
+            *@param header - MD2 file header
+            */
+            void Copy(const IFrame& other, const IHeader& header);
 
             /**
             * Reads data from file
@@ -139,15 +211,25 @@ class QR_MD2Parser : public QR_ModelParser
 
         /**
         * MD2 polygon
-        *@note This class cannot be inherited
         */
-        struct IPolygon : QR_Sealed(IPolygon)
+        struct IPolygon
         {
             QR_UInt16 m_VertexIndex[3];
             QR_UInt16 m_TextureCoordIndex[3];
 
             IPolygon();
             ~IPolygon();
+
+            /**
+            * Clears the polygon content
+            */
+            void Clear();
+
+            /**
+            * Copies content from another polygon
+            *@param other - other polygon to copy from
+            */
+            void Copy(const IPolygon& other);
 
             /**
             * Reads data from file
@@ -167,22 +249,39 @@ class QR_MD2Parser : public QR_ModelParser
         virtual ~QR_MD2Parser();
 
         /**
+        * Clears model parser
+        */
+        virtual void Clear();
+
+        /**
+        * Copies content from another model parser
+        *@param other - other model parser to copy from
+        */
+        virtual void Copy(const QR_ModelParser& other);
+
+        /**
         * Loads MD2 from file
         *@param fileName - file name
-        *@return 0 on success, otherwise warning (positive value) or error (negative value) code
+        *@return true on success, otherwise false
         */
-        virtual QR_Int32 Load(const std::string&  fileName);
-        virtual QR_Int32 Load(const std::wstring& fileName);
+        virtual bool Load(const std::string&  fileName);
+        virtual bool Load(const std::wstring& fileName);
 
         /**
         * Loads MD2 from buffer
         *@param buffer - buffer
         *@param length - length to read in buffer, in bytes (not used here, can be 0)
-        *@return 0 on success, otherwise warning (positive value) or error (negative value) code
+        *@return true on success, otherwise false
         *@note Read will begin from current offset
         */
-        virtual QR_Int32 Load(      QR_Buffer&            buffer,
-                              const QR_Buffer::ISizeType& length);
+        virtual bool Load(      QR_Buffer&            buffer,
+                          const QR_Buffer::ISizeType& length);
+
+    private:
+        /**
+        * Deletes and clears all resources
+        */
+        void DelAndClear();
 };
 
-#endif // QR_MD2ParserH
+#endif

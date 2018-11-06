@@ -1,9 +1,31 @@
-/******************************************************************************
- * ==> QR_Vertex -------------------------------------------------------------*
- ******************************************************************************
- * Description : Vertex descriptor, contains global enumeration and types     *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_Vertex -----------------------------------------------------------*
+ ****************************************************************************
+ * Description : Provides the classes required to manage the vertices and   *
+ *               meshes                                                     *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_VertexH
 #define QR_VertexH
@@ -56,11 +78,12 @@ class QR_Vertex
 
         typedef std::vector<M_Precision> IBuffer;
 
-        QR_SizeT    m_Stride;    // vertex stride (i.e. length between each vertex) in bytes
-        IEType      m_Type;      // vertex type (i.e. how vertex is organized: triangle list, triangle fan, ...)
-        IEFormat    m_Format;    // vertex format (i.e. what data vertex contains: position, normal, texture, ...)
-        IECoordType m_CoordType; // vertex coordinate type (i.e. 2D coordinates, 3D coordinates, ...)
-        IBuffer     m_Buffer;    // vertex buffer
+        std::wstring m_Name;
+        QR_SizeT     m_Stride;    // vertex stride (i.e. length between each vertex) in bytes
+        IEType       m_Type;      // vertex type (i.e. how vertex is organized: triangle list, triangle fan, ...)
+        IEFormat     m_Format;    // vertex format (i.e. what data vertex contains: position, normal, texture, ...)
+        IECoordType  m_CoordType; // vertex coordinate type (i.e. 2D coordinates, 3D coordinates, ...)
+        IBuffer      m_Buffer;    // vertex buffer
 
         QR_Vertex();
         virtual ~QR_Vertex();
@@ -98,79 +121,4 @@ class QR_Vertex
 */
 typedef std::vector<QR_Vertex*> QR_Mesh;
 
-/**
-* Indexes, used to get vertices from faces (e.g. MD3 files contain a list of faces from which
-* vertices are get)
-*@author Jean-Milost Reymond
-*/
-typedef std::vector<QR_SizeT> QR_Indexes;
-
-/**
-* Vertex index buffer
-*@note This class is cross-platform
-*@author Jean-Milost Reymond
-*/
-class QR_IndexBuffer
-{
-    public:
-        QR_Vertex* m_pVertex;
-        QR_Indexes m_Indexes;
-
-        /**
-        * Constructor
-        */
-        QR_IndexBuffer();
-
-        /**
-        * Constructor
-        *@param pVertex - vertex containing source buffer
-        */
-        QR_IndexBuffer(QR_Vertex* pVertex);
-
-        /**
-        * Destructor
-        */
-        virtual ~QR_IndexBuffer();
-
-        /**
-        * Populates index buffer from vertex buffer
-        *@param pVertex - vertex containing source buffer
-        */
-        virtual void Populate(QR_Vertex* pVertex);
-};
-
-/**
-* Structure containing texture coordinates
-*@author Jean-Milost Reymond
-*/
-struct QR_TexCoord
-{
-    M_Precision m_U;
-    M_Precision m_V;
-
-    /**
-    * Constructor
-    */
-    QR_TexCoord();
-
-    /**
-    * Constructor
-    *@param u - texture u coordinate
-    *@param v - texture v coordinate
-    */
-    QR_TexCoord(M_Precision u, M_Precision v);
-
-    /**
-    * Destructor
-    */
-    virtual ~QR_TexCoord();
-};
-
-/**
-* Texture coordinates
-* vertices are get)
-*@author Jean-Milost Reymond
-*/
-typedef std::vector<QR_TexCoord*> QR_TexCoords;
-
-#endif // QR_VertexH
+#endif

@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_Vector3D -----------------------------------------------------------*
- ******************************************************************************
- * Description : Euclidean vector 3D                                          *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_Vector3D ---------------------------------------------------------*
+ ****************************************************************************
+ * Description : 3D vector                                                  *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_Vector3DH
 #define QR_Vector3DH
@@ -11,16 +32,9 @@
 // std
 #include <math.h>
 
-// do use without others QR Engine classes?
-#ifndef USE_QR_GEOMETRY_OLNY
-    // qr engine
-    #include "QR_Types.h"
-    #include "QR_Exception.h"
-#else
-    #define M_THROW_EXCEPTION(message) throw message
-    #define QR_Float                   float
-    #define QR_Double                  double
-#endif
+// qr engine
+#include "QR_Types.h"
+#include "QR_Exception.h"
 
 /**
 * Vector 3D
@@ -46,7 +60,7 @@ class QR_Vector3D
         *@param y - vector y value
         *@param z - vector z value
         */
-        inline QR_Vector3D(const T& x, const T& y, const T& z);
+        inline QR_Vector3D(T x, T y, T z);
 
         /**
         * Copy constructor
@@ -236,119 +250,113 @@ class QR_Vector3D
         *@param position - interpolation position, in percent (between 0.0f and 1.0f)
         *@return interpolation vector
         */
-        virtual inline QR_Vector3D Interpolate(const QR_Vector3D& other,
-                                               const QR_Float&    position) const;
+        virtual inline QR_Vector3D Interpolate(const QR_Vector3D& other, QR_Float position) const;
 };
 
-#ifdef USE_QR_GEOMETRY_OLNY
-    // formatted vector 3d using float or double
-    typedef QR_Vector3D<QR_Float>  QR_Vector3DF;
-    typedef QR_Vector3D<QR_Double> QR_Vector3DD;
-#else
-    // formatted vector 3d using global precision
-    typedef QR_Vector3D<M_Precision> QR_Vector3DP;
-#endif
+typedef QR_Vector3D<QR_Float>    QR_Vector3DF;
+typedef QR_Vector3D<QR_Double>   QR_Vector3DD;
+typedef QR_Vector3D<M_Precision> QR_Vector3DP;
 
-//------------------------------------------------------------------------------
-// QR_Vector3D implementation - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_Vector3D
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T>::QR_Vector3D() :
-    m_X(0),
-    m_Y(0),
-    m_Z(0)
+    m_X(T(0.0)),
+    m_Y(T(0.0)),
+    m_Z(T(0.0))
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
-QR_Vector3D<T>::QR_Vector3D(const T& x, const T& y, const T& z) :
+QR_Vector3D<T>::QR_Vector3D(T x, T y, T z) :
     m_X(x),
     m_Y(y),
     m_Z(z)
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template<class T>
 QR_Vector3D<T>::QR_Vector3D(const QR_Vector3D& other)
 {
     Copy(other);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T>::~QR_Vector3D()
 {}
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template<class T>
 QR_Vector3D<T>& QR_Vector3D<T>::operator =(const QR_Vector3D& other)
 {
     Copy(other);
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator + (T value) const
 {
     return QR_Vector3D<T>(m_X + value, m_Y + value, m_Z + value);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator + (const QR_Vector3D<T>& other) const
 {
     return QR_Vector3D<T>(m_X + other.m_X, m_Y + other.m_Y, m_Z + other.m_Z);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator - () const
 {
     return QR_Vector3D<T>(-m_X, -m_Y, -m_Z);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator - (T value) const
 {
     return QR_Vector3D<T>(m_X - value, m_Y - value, m_Z - value);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator - (const QR_Vector3D<T>& other) const
 {
     return QR_Vector3D<T>(m_X - other.m_X, m_Y - other.m_Y, m_Z - other.m_Z);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator * (T value) const
 {
     return QR_Vector3D<T>(m_X * value, m_Y * value, m_Z * value);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator * (const QR_Vector3D<T>& other) const
 {
     return QR_Vector3D<T>(m_X * other.m_X, m_Y * other.m_Y, m_Z * other.m_Z);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator / (T value) const
 {
-    if (value == 0.0f)
+    if (!value)
         M_THROW_EXCEPTION("Division by 0 is prohibited");
 
     return QR_Vector3D<T>(m_X / value, m_Y / value, m_Z / value);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::operator / (const QR_Vector3D<T>& other) const
 {
-    if (other.m_X == 0.0f)
+    if (!other.m_X)
         M_THROW_EXCEPTION("Vector x axis - division by 0 is prohibited");
 
-    if (other.m_Y == 0.0f)
+    if (!other.m_Y)
         M_THROW_EXCEPTION("Vector y axis - division by 0 is prohibited");
 
-    if (other.m_Z == 0.0f)
+    if (!other.m_Z)
         M_THROW_EXCEPTION("Vector z axis - division by 0 is prohibited");
 
     return QR_Vector3D<T>(m_X / other.m_X, m_Y / other.m_Y, m_Z / other.m_Z);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 const QR_Vector3D<T>& QR_Vector3D<T>::operator += (T value)
 {
@@ -358,7 +366,7 @@ const QR_Vector3D<T>& QR_Vector3D<T>::operator += (T value)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 const QR_Vector3D<T>& QR_Vector3D<T>::operator += (const QR_Vector3D<T>& other)
 {
@@ -368,7 +376,7 @@ const QR_Vector3D<T>& QR_Vector3D<T>::operator += (const QR_Vector3D<T>& other)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 const QR_Vector3D<T>& QR_Vector3D<T>::operator -= (T value)
 {
@@ -378,7 +386,7 @@ const QR_Vector3D<T>& QR_Vector3D<T>::operator -= (T value)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 const QR_Vector3D<T>& QR_Vector3D<T>::operator -= (const QR_Vector3D<T>& other)
 {
@@ -388,7 +396,7 @@ const QR_Vector3D<T>& QR_Vector3D<T>::operator -= (const QR_Vector3D<T>& other)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 const QR_Vector3D<T>& QR_Vector3D<T>::operator *= (T value)
 {
@@ -398,7 +406,7 @@ const QR_Vector3D<T>& QR_Vector3D<T>::operator *= (T value)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 const QR_Vector3D<T>& QR_Vector3D<T>::operator *= (const QR_Vector3D<T>& other)
 {
@@ -408,11 +416,11 @@ const QR_Vector3D<T>& QR_Vector3D<T>::operator *= (const QR_Vector3D<T>& other)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 const QR_Vector3D<T>& QR_Vector3D<T>::operator /= (T value)
 {
-    if (value == 0.0f)
+    if (!value)
         M_THROW_EXCEPTION("Division by 0 is prohibited");
 
     m_X /= value;
@@ -421,17 +429,17 @@ const QR_Vector3D<T>& QR_Vector3D<T>::operator /= (T value)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 const QR_Vector3D<T>& QR_Vector3D<T>::operator /= (const QR_Vector3D<T>& other)
 {
-    if (other.m_X == 0.0f)
+    if (!other.m_X)
         M_THROW_EXCEPTION("Vector x axis - division by 0 is prohibited");
 
-    if (other.m_Y == 0.0f)
+    if (!other.m_Y)
         M_THROW_EXCEPTION("Vector y axis - division by 0 is prohibited");
 
-    if (other.m_Z == 0.0f)
+    if (!other.m_Z)
         M_THROW_EXCEPTION("Vector z axis - division by 0 is prohibited");
 
     m_X /= other.m_X;
@@ -440,19 +448,19 @@ const QR_Vector3D<T>& QR_Vector3D<T>::operator /= (const QR_Vector3D<T>& other)
 
     return *this;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Vector3D<T>::operator == (const QR_Vector3D<T>& other) const
 {
     return ((m_X == other.m_X) && (m_Y == other.m_Y) && (m_Z == other.m_Z));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 bool QR_Vector3D<T>::operator != (const QR_Vector3D<T>& other) const
 {
     return ((m_X != other.m_X) || (m_Y != other.m_Y) || (m_Z != other.m_Z));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 void QR_Vector3D<T>::Copy(const QR_Vector3D& other)
 {
@@ -460,24 +468,24 @@ void QR_Vector3D<T>::Copy(const QR_Vector3D& other)
     m_Y = other.m_Y;
     m_Z = other.m_Z;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 T QR_Vector3D<T>::Length() const
 {
     return sqrt((m_X * m_X) + (m_Y * m_Y) + (m_Z * m_Z));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::Normalize() const
 {
-    T len = Length();
+    const T len = Length();
 
-    if (len == 0.0f)
+    if (len == T(0.0))
         return QR_Vector3D<T>();
 
     return QR_Vector3D<T>((m_X / len), (m_Y / len), (m_Z / len));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 QR_Vector3D<T> QR_Vector3D<T>::Cross(const QR_Vector3D<T>& vector) const
 {
@@ -485,16 +493,15 @@ QR_Vector3D<T> QR_Vector3D<T>::Cross(const QR_Vector3D<T>& vector) const
                           (m_Z * vector.m_X) - (vector.m_Z * m_X),
                           (m_X * vector.m_Y) - (vector.m_X * m_Y));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 T QR_Vector3D<T>::Dot(const QR_Vector3D<T>& vector) const
 {
     return ((m_X * vector.m_X) + (m_Y * vector.m_Y) + (m_Z * vector.m_Z));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
-QR_Vector3D<T> QR_Vector3D<T>::Interpolate(const QR_Vector3D<T>& other,
-                                           const QR_Float&       position) const
+QR_Vector3D<T> QR_Vector3D<T>::Interpolate(const QR_Vector3D<T>& other, QR_Float position) const
 {
     // is position out of bounds? Limit to min or max values in this case
     if (position < 0.0f)
@@ -512,15 +519,16 @@ QR_Vector3D<T> QR_Vector3D<T>::Interpolate(const QR_Vector3D<T>& other,
 
     return interpolation;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // RAD studio
-//------------------------------------------------------------------------------
-#ifdef __CODEGEARC__
-    // needed to avoid the W8058 error "Cannot create pre-compiled header: header incomplete" warning in BCC compilers
+//---------------------------------------------------------------------------
+#if defined(CP_EMBARCADERO)
+    // needed to avoid the W8058 error "Cannot create pre-compiled header: header incomplete"
+    // warning in BCC compilers
     ;
 #endif
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-#endif // QR_Vector3DH
+#endif

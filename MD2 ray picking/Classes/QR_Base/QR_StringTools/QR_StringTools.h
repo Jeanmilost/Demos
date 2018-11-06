@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_StringTools --------------------------------------------------------*
- ******************************************************************************
- * Description : Tools for string manipulation                                *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_StringTools ------------------------------------------------------*
+ ****************************************************************************
+ * Description : Tools to work with strings                                 *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_StringToolsH
 #define QR_StringToolsH
@@ -14,14 +35,14 @@
 // qr engine
 #include "QR_Types.h"
 
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // Specific VCL macros
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #define M_UniToChar(str)  (str.IsEmpty() ? ""  : AnsiString(str).c_str())
 #define M_UniToWChar(str) (str.IsEmpty() ? L"" : str.c_str())
 #define M_StrToUni(str)   (str.empty()   ? ""  : UnicodeString(AnsiString(str.c_str()))
 #define M_WStrToUni(str)  (str.empty()   ? L"" : UnicodeString(str.c_str())
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 /**
 * Tools for string manipulation
@@ -147,9 +168,9 @@ class QR_StringTools
         static bool StrToBool(const std::string&  str);
         static bool StrToBool(const std::wstring& str);
 };
-//------------------------------------------------------------------------------
-// QR_StringTools - c++ cross-platform
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_StringTools
+//---------------------------------------------------------------------------
 template<class T>
 std::basic_string<T> QR_StringTools::Fill(const std::basic_string<T> & text,
                                                 T                      fillChar,
@@ -165,7 +186,7 @@ std::basic_string<T> QR_StringTools::Fill(const std::basic_string<T> & text,
     rawLine.replace(startPos, text.length(), text);
     return rawLine;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template<class T>
 std::basic_string<T> QR_StringTools::Trim(const std::basic_string<T>& value)
 {
@@ -200,7 +221,7 @@ std::basic_string<T> QR_StringTools::Trim(const std::basic_string<T>& value)
     // return trimmed string
     return value.substr(startPos, endPos - startPos);
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template<class T>
 std::basic_string<T> QR_StringTools::ToLowerCase(const std::basic_string<T>& text)
 {
@@ -217,7 +238,7 @@ std::basic_string<T> QR_StringTools::ToLowerCase(const std::basic_string<T>& tex
 
     return result;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template<class T>
 std::basic_string<T> QR_StringTools::ToUpperCase(const std::basic_string<T>& text)
 {
@@ -234,7 +255,7 @@ std::basic_string<T> QR_StringTools::ToUpperCase(const std::basic_string<T>& tex
 
     return result;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template<class T>
 std::basic_string<T> QR_StringTools::SearchAndReplace(const std::basic_string<T>& str,
                                                       const std::basic_string<T>& search,
@@ -270,26 +291,26 @@ std::basic_string<T> QR_StringTools::SearchAndReplace(const std::basic_string<T>
 
     return result;
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StringTools::IsASCIILetter(char digit)
 {
     return ((digit >= 'a' && digit <= 'z') || (digit >= 'A' && digit <= 'Z'));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StringTools::IsASCIILetter(wchar_t digit)
 {
     return ((digit >= L'a' && digit <= L'z') || (digit >= L'A' && digit <= L'Z'));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StringTools::IsNumeric(char digit, bool strict)
 {
     return ((digit >= '0' && digit <= '9') || (!strict && (digit == '-' || digit == '.')));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 bool QR_StringTools::IsNumeric(wchar_t digit, bool strict)
 {
     return ((digit >= L'0' && digit <= L'9') || (!strict && (digit == L'-' || digit == L'.')));
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 #endif

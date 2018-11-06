@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_AABBTree -----------------------------------------------------------*
- ******************************************************************************
- * Description : Aligned-axis bounding box tree                               *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_AABBTree ---------------------------------------------------------*
+ ****************************************************************************
+ * Description : Aligned-axis bounding box tree                             *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_AABBTreeH
 #define QR_AABBTreeH
@@ -13,148 +34,34 @@
 #include "QR_Vector3D.h"
 #include "QR_Plane.h"
 #include "QR_Polygon.h"
-#include "QR_Sphere.h"
 #include "QR_Box.h"
 #include "QR_Ray.h"
 
 /**
-* Algorithm to use for division
-*/
-enum EAABBDivisionType
-{
-    E_AABB_Unknown = 0,
-    E_AABB_BestAxis,
-    E_AABB_LongestAxis,
-};
-
-/**
-* Aligned axis bounding box tree info, contains global information about tree
-*@author Jean-Milost Reymond
-*/
-struct QR_AABBTreeInfo
-{
-    QR_UInt32         m_MaxDeep;
-    QR_SizeT          m_MinVertices;
-    EAABBDivisionType m_DivisionType;
-
-    QR_AABBTreeInfo();
-    virtual ~QR_AABBTreeInfo();
-
-    /**
-    * Tests if max deep is reached
-    *@param deep - current deep
-    *@return true if max deep is reached, otherwise false
-    */
-    virtual bool TestDeep(QR_UInt32 deep) const;
-
-    /**
-    * Tests if minimum vertices pes leaf is reached
-    *@param vertices - current vertice count
-    *@return true if minimum vertices per leaf is reached, otherwise false
-    */
-    virtual bool TestMinVertices(QR_SizeT vertices) const;
-};
-
-/**
-* Aligned axis bounding box tree node
+* Aligned-axis bounding box tree node
+*@note This class is cross-platform
 *@author Jean-Milost Reymond
 */
 struct QR_AABBNode
 {
-    public:
-        /**
-        * Plane side result
-        */
-        enum IE_Side
-        {
-            IE_Front,
-            IE_Back,
-            IE_Splitted,
-            IE_Coplanar,
-        };
+    QR_AABBNode* m_pParent;
+    QR_AABBNode* m_pLeft;
+    QR_AABBNode* m_pRight;
+    QR_BoxP*     m_pBox;
+    QR_PolygonsP m_Polygons;
 
-        QR_AABBNode*   m_pParent;
-        QR_AABBNode*   m_pLeft;
-        QR_AABBNode*   m_pRight;
-        QR_PolygonList m_PolygonList;
-        QR_Box         m_Box;
-        QR_PlaneP      m_SplittingPlane;
-        QR_UInt32      m_Deep;
+    /**
+    * Constructor
+    *@param pParent - parent node
+    */
+    QR_AABBNode(QR_AABBNode* pParent);
 
-        /**
-        * Constructor
-        *@param pParent - parent node, can be NULL
-        */
-        QR_AABBNode(QR_AABBNode* pParent);
-        virtual ~QR_AABBNode();
-
-        /**
-        * Creates children nodes
-        *@param deep - tree deep
-        *@param info - tree info
-        *@param[out] deepCount - deep that children really reached
-        *@param[out] childrenCount - children count
-        *@return true on success, otherwise false
-        */
-        virtual bool CreateChildren(QR_UInt32              deep,
-                                    const QR_AABBTreeInfo& info,
-                                    QR_UInt32&             deepCount,
-                                    QR_UInt32&             childrenCount);
-
-        /**
-        * Resolves node
-        *@param sphere - sphere to test
-        *@param[out] polygonList - polygon list containing polygons to check
-        *@return true if node is resolved, otherwise false
-        */
-        virtual bool Resolve(const QR_Sphere& sphere, QR_PolygonList& polygonList) const;
-
-        /**
-        * Resolves node
-        *@param ray - ray
-        *@param[out] polygonList - polygon list containing polygons to check
-        *@return true if tree was resolved, otherwise false
-        */
-        virtual bool Resolve(const QR_RayP& ray, QR_PolygonList& polygonList) const;
-
-    private:
-        /**
-        * Calculates center of all polygons contained in the list
-        *@return polygons center
-        */
-        QR_Vector3DP FindPolygonsCenter() const;
-
-        /**
-        * Finds polygon list bounding box longest axis
-        *@return longest axis
-        */
-        QR_Box::IE_Axis FindLongestAxis() const;
-
-        /**
-        * Finds polygon list bounding box best axis for division
-        *@return longest axis
-        */
-        QR_Box::IE_Axis FindBestAxis() const;
-
-        /**
-        * Tests on which side of the bounding box plane the polygon is
-        *@param pPolygon - polygon to test
-        *@param plane - bounding box plane
-        *@return side
-        */
-        IE_Side TestPolygonWithBBoxPlane(const QR_Polygon* pPolygon,
-                                         const QR_PlaneP&  plane) const;
-
-        /**
-        * Adds polygon to result list
-        *@param[in, out] - pPolygonList - polygon list to populate
-        *@return true on success, otherwise false
-        */
-        bool AddPolygons(QR_PolygonList& polygonList) const;
+    virtual ~QR_AABBNode();
 };
 
 /**
-* Aligned axis bounding box tree
+*Aligned-axis bounding box tree
+*@note This class is cross-platform
 *@author Jean-Milost Reymond
 */
 class QR_AABBTree
@@ -166,59 +73,91 @@ class QR_AABBTree
         QR_AABBTree();
 
         /**
-        * Constructor
-        *@param polygonList - polygon list to partition
+        * Destructor
         */
-        QR_AABBTree(const QR_PolygonList& polygonList);
-
         virtual ~QR_AABBTree();
 
         /**
-        * Gets children count
-        *@return children count
+        * Gets the model bounding box
+        *@return the model bounding box, NULL if not found or on error
         */
-        virtual QR_UInt32 GetChildrenCount() const;
+        virtual QR_BoxP* GetBoundingBox() const;
 
         /**
-        * Gets deep
-        *@return deep
-        */
-        virtual QR_UInt32 GetDeep() const;
-
-        /**
-        * Sets tree information
-        *@param info - tree information
-        */
-        virtual void SetInfo(const QR_AABBTreeInfo& info);
-
-        /**
-        * Initializes tree
-        *@param polygonList - polygon list to partition
+        * Populates AABB tree
+        *@param polygons - source polygon array
         *@return true on success, otherwise false
         */
-        virtual bool Initialize(const QR_PolygonList& polygonList);
+        virtual bool Populate(const QR_PolygonsP& polygons);
 
         /**
-        * Resolves tree
-        *@param sphere - sphere to test
-        *@param[out] polygonList - resulting polygon list to check
-        *@return true if tree was resolved, otherwise false
+        * Resolves AABB tree
+        *@param pRay - ray against which tree boxes will be tested
+        *@param[in, out] polygons - polygons belonging to boxes hit by ray
+        *@return true on success, otherwise false
+        *@note Polygon list content should be deleted when useless
         */
-        virtual bool Resolve(const QR_Sphere& sphere, QR_PolygonList& polygonList) const;
+        virtual bool Resolve(const QR_RayP* pRay, QR_PolygonsP& polygons) const;
+
+    protected:
+        /**
+        * Checks if a value is between 2 values
+        *@param value - value to test
+        *@param valueStart - start value
+        *@param valueEnd - end value
+        *@param epsilon - epsilon value for tolerance
+        *@return true if value is between values, otherwise false
+        */
+        virtual bool ValueIsBetween(M_Precision value,
+                                    M_Precision valueStart,
+                                    M_Precision valueEnd,
+                                    M_Precision epsilon) const;
 
         /**
-        * Resolves tree
-        *@param r - ray
-        *@param[out] polygonList - resulting polygon list to check
-        *@return true if tree was resolved, otherwise false
+        * Checks if a point is between 2 vertices
+        *@param point - point to test
+        *@param pointStart - start vertex
+        *@param pointEnd - end vertex
+        *@param epsilon - epsilon value for tolerance
+        *@return true if value is between points, otherwise false
         */
-        virtual bool Resolve(const QR_RayP& ray, QR_PolygonList& polygonList) const;
+        virtual bool VectorIsBetween(const QR_Vector3DP& point,
+                                     const QR_Vector3DP& pointStart,
+                                     const QR_Vector3DP& pointEnd,
+                                           M_Precision   epsilon) const;
+
+        /**
+        * Adds a polygon inside an existing bounding box
+        *@param polygon - polygon to add
+        *@param box - bounding box in which polygon should be added
+        *@param[in, out] empty - if true, box is empty an still no contains any polygon
+        */
+        virtual void AddPolygonToBoundingBox(const QR_PolygonP& polygon,
+                                                   QR_BoxP*     pBox,
+                                                   bool&        empty) const;
+
+        /**
+        * Populates AABB tree
+        *@param pNode - root or parent node to create from
+        *@param polygons - source polygon array
+        *@return true on success, otherwise false
+        */
+        virtual bool Populate(QR_AABBNode* pNode, const QR_PolygonsP& polygons);
+
+        /**
+        * Resolves AABB tree
+        *@param pRay - ray against which tree boxes will be tested
+        *@param pNode - root or parent node to resolve
+        *@param[in, out] polygons - polygons belonging to boxes hit by ray
+        *@return true on success, otherwise false
+        *@note Polygon list content should be deleted when useless
+        */
+        virtual bool Resolve(const QR_RayP*      pRay,
+                             const QR_AABBNode*  pNode,
+                                   QR_PolygonsP& polygons) const;
 
     private:
-        QR_AABBNode*    m_pRoot;
-        QR_AABBTreeInfo m_Info;
-        QR_UInt32       m_Deep;
-        QR_UInt32       m_ChildrenCount;
+        QR_AABBNode* m_pRoot;
 };
 
-#endif // QR_AABBTreeH
+#endif

@@ -5,34 +5,21 @@
  * Developer   : Jean-Milost Reymond                                          *
  ******************************************************************************/
 
-
 #include <vcl.h>
 #pragma hdrstop
 #include "Main.h"
 
-// vcl
-#include <Vcl.Graphics.hpp>
-
-// std
-#include <sstream>
-
 // qr engine
 #include "QR_STDTools.h"
-#include "QR_MemoryBuffer.h"
-#include "QR_3DCollisionHelper.h"
-#include "QR_WinOpenGLHelper.h"
-#include "QR_DrawablePolygon_OpenGL.h"
+#include "QR_GeometryHelper.h"
 
 // resources
 #include "Resources.rh"
 
 #pragma package(smart_init)
+#pragma link "glewSL.lib"
 #pragma resource "*.dfm"
 
-//------------------------------------------------------------------------------
-// Global defines
-//------------------------------------------------------------------------------
-#define GL_CLAMP_TO_EDGE 0x812F
 //------------------------------------------------------------------------------
 // TMainForm
 //------------------------------------------------------------------------------
@@ -40,81 +27,33 @@ TMainForm* MainForm;
 //------------------------------------------------------------------------------
 __fastcall TMainForm::TMainForm(TComponent* pOwner) :
     TForm(pOwner),
-    m_hDC(NULL),
-    m_hRC(NULL),
-    m_pMD2Animation(NULL),
-    m_pTexture(NULL),
+    m_pMemoryDir(NULL),
     m_PreviousTime(::GetTickCount())
 {
-    // load resources
-    std::auto_ptr<TResourceStream> pModelStream(new TResourceStream((int)HInstance,
-                                                                    ID_MD2_MODEL,
-                                                                    L"DATA"));
-    std::auto_ptr<TResourceStream> pTextureStream(new TResourceStream((int)HInstance,
-                                                                      ID_MD2_TEXTURE,
-                                                                      L"DATA"));
-    std::auto_ptr<TResourceStream> pNTStream(new TResourceStream((int)HInstance,
-                                                                 ID_MD2_NORMALS_TABLE,
-                                                                 L"DATA"));
-
-    // load MD2 texture
-    m_pTexture = new TBitmap();
-    m_pTexture->LoadFromStream(pTextureStream.get());
-
-    // load MD2 model
-    QR_MemoryBuffer modelBuffer;
-    modelBuffer.Write(pModelStream->Memory, pModelStream->Size);
-    modelBuffer.Seek(0, 0);
-    m_MD2.Load(modelBuffer, modelBuffer.GetSize());
-
-    // load normals table
-    QR_MemoryBuffer normalsTableBuffer;
-    normalsTableBuffer.Write(pNTStream->Memory, pNTStream->Size);
-    normalsTableBuffer.Seek(0, 0);
-    m_MD2.LoadNormals(normalsTableBuffer, normalsTableBuffer.GetSize());
-
-    m_MD2Collision.SetModel(&m_MD2);
-
-    // set vertex format to use
-    m_MD2.SetVertexFormat((QR_Vertex::IEFormat)(QR_Vertex::IE_VF_Colors    |
-                                                QR_Vertex::IE_VF_TexCoords |
-                                                QR_Vertex::IE_VF_Normals));
-
-    // configure precalculated light
-    QR_MD2::ILight light;
-    light.m_Ambient   = QR_Color(32, 32, 32, 255);
-    light.m_Light     = QR_Color(255, 255, 255, 255);
-    light.m_Direction = QR_Vector3DP(0.0f, -1.0f, 0.0f);
-    m_MD2.SetLight(light);
-
-    // configure color
-    m_MD2.SetColor(QR_Color(255, 255, 255, 255));
-
-    // by default, use color mode
-    m_MD2.SetLightningMode(QR_MD2::IE_LM_None);
-
-    // build animation generator
-    BuildAnimation();
+    m_pMemoryDir = new QR_MemoryDir(true);
 }
 //------------------------------------------------------------------------------
 __fastcall TMainForm::~TMainForm()
 {
-    // delete animation generator
-    if (m_pMD2Animation)
-        delete m_pMD2Animation;
+    // delete model
+    if (m_pMD2)
+    {
+        delete m_pMD2;
+        m_pMD2 = NULL;
+    }
 
-    // delete used texture
-    if (m_pTexture)
-        delete m_pTexture;
+    // delete memory dir
+    if (m_pMemoryDir)
+        delete m_pMemoryDir;
 
     // shutdown OpenGL
-    QR_WinOpenGLHelper::DisableOpenGL(Handle, m_hDC, m_hRC);
+    m_Renderer.DisableOpenGL(Handle);
 }
 //------------------------------------------------------------------------------
 void __fastcall TMainForm::FormCreate(TObject* pSender)
 {
     // initialize OpenGL
-    if (!QR_WinOpenGLHelper::EnableOpenGL(Handle, m_hDC, m_hRC))
+    if (!m_Renderer.EnableOpenGL(Handle))
     {
         MessageDlg("OpenGL could not be initialized.\r\n\r\nApplication will close.", mtError,
                 TMsgDlgButtons() << mbOK, 0);;
@@ -122,30 +61,95 @@ void __fastcall TMainForm::FormCreate(TObject* pSender)
         return;
     }
 
-    // configure OpenGL
     ConfigOpenGL();
 
-    BYTE* pPixels = NULL;
+    // calculate aspect ratio
+    const float aspect = float(ClientWidth) / float(ClientHeight);
 
-    try
-    {
-        // convert bitmap to pixel array, and create OpenGL texture from array
-        BytesFromBitmap(m_pTexture, pPixels, false, false);
-        CreateTexture(m_pTexture->Width,
-                      m_pTexture->Height,
-                      m_pTexture->PixelFormat == pf32bit ? GL_RGBA : GL_RGB,
-                      pPixels,
-                      GL_NEAREST,
-                      GL_NEAREST,
-                      GL_TEXTURE_2D);
+    // calculate the projection matrix
+    m_Projection = m_Renderer.GetPerspective(45.0f, aspect, 0.1f, 100.0f);
 
-        glEnable(GL_TEXTURE_2D);
-    }
-    __finally
-    {
-        if (pPixels)
-            delete[] pPixels;
-    }
+    m_Renderer.CreateViewport(ClientWidth, ClientHeight);
+
+    // load resources
+    std::auto_ptr<TResourceStream> pModelStream(new TResourceStream((int)HInstance,
+                                                                    ID_MD2_MODEL,
+                                                                    L"DATA"));
+    std::auto_ptr<TResourceStream> pTextureStream(new TResourceStream((int)HInstance,
+                                                                      ID_MD2_TEXTURE,
+                                                                      L"DATA"));
+    std::auto_ptr<TResourceStream> pConfigStream(new TResourceStream((int)HInstance,
+                                                                     ID_MD2_CONFIGURATION,
+                                                                     L"DATA"));
+    std::auto_ptr<TResourceStream> pNTStream(new TResourceStream((int)HInstance,
+                                                                 ID_MD2_NORMALS_TABLE,
+                                                                 L"DATA"));
+
+    // convert model stream to memory file
+    std::auto_ptr<QR_MemoryBuffer> pModelBuffer(new QR_MemoryBuffer());
+    pModelStream->Seek(0, 0);
+    pModelBuffer->Write(pModelStream->Memory, pModelStream->Size);
+
+    // convert texture stream to memory file
+    std::auto_ptr<QR_MemoryBuffer> pTextureBuffer(new QR_MemoryBuffer());
+    pTextureStream->Seek(0, 0);
+    pTextureBuffer->Write(pTextureStream->Memory, pTextureStream->Size);
+
+    // convert configuration stream to memory file
+    std::auto_ptr<QR_MemoryBuffer> pConfigBuffer(new QR_MemoryBuffer());
+    pConfigStream->Seek(0, 0);
+    pConfigBuffer->Write(pConfigStream->Memory, pConfigStream->Size);
+
+    // convert normals table stream to memory file
+    std::auto_ptr<QR_MemoryBuffer> pNTBuffer(new QR_MemoryBuffer());
+    pNTStream->Seek(0, 0);
+    pNTBuffer->Write(pNTStream->Memory, pNTStream->Size);
+
+    // add model file to memory dir
+    m_pMemoryDir->AddFile(L"marvin.md2", pModelBuffer.get(), false);
+    pModelBuffer.release();
+
+    // add texture file to memory dir
+    m_pMemoryDir->AddFile(L"marvin.bmp", pTextureBuffer.get(), false);
+    pTextureBuffer.release();
+
+    // add configuration file to memory dir
+    m_pMemoryDir->AddFile(L"marvin.cfg", pConfigBuffer.get(), false);
+    pConfigBuffer.release();
+
+    // add normals table file to memory dir
+    m_pMemoryDir->AddFile(L"normals.bin", pNTBuffer.get(), false);
+    pNTBuffer.release();
+
+    // create and populate model info
+    QR_MD2Group::IInfo md2Info;
+    md2Info.m_ModelFileName   = L"marvin.md2";
+    md2Info.m_TextureFileName = L"marvin.bmp";
+    md2Info.m_ConfigFileName  = L"marvin.cfg";
+    md2Info.m_NormalsFileName = L"normals.bin";
+
+    // create and load model
+    std::auto_ptr<QR_MD2Group> pMD2(new QR_MD2Group(&m_Renderer, &m_Resources));
+    pMD2->Load(*m_pMemoryDir, md2Info);
+    pMD2->SetTranslation(QR_Vector3DF(0.0f, 0.0f, -10.0f));
+    pMD2->SetRotationX(-M_PI / 2.0f);
+    pMD2->SetRotationY(-M_PI / 4.0f);
+    pMD2->SetScaling(QR_Vector3DF(0.125f, 0.125f, 0.125f));
+    pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Stand);
+
+    QR_DirectionalLight light;
+    light.m_Color     = QR_Color(255, 255, 255, 255);
+    light.m_Ambient   = QR_Color(32, 32, 32, 255);
+    light.m_Direction = QR_Vector3DP(0.5f, 0.0f, 0.5f);
+    light.m_Enabled   = false;
+
+    pMD2->SetLight(light);
+    pMD2->SetVertexFormat(QR_Vertex::IEFormat(QR_Vertex::IE_VF_Normals |
+                                              QR_Vertex::IE_VF_Colors  |
+                                              QR_Vertex::IE_VF_TexCoords));
+
+    m_pMD2 = pMD2.release();
+    m_pMD2->Set_OnDetectCollision(OnDetectCollision);
 
     // from now, OpenGL will draw scene every time the thread do nothing else
     Application->OnIdle = IdleLoop;
@@ -153,32 +157,13 @@ void __fastcall TMainForm::FormCreate(TObject* pSender)
 //------------------------------------------------------------------------------
 void __fastcall TMainForm::FormResize(TObject* pSender)
 {
-    // get client size
-    int w = ClientWidth;
-    int h = ClientHeight;
+    // calculate aspect ratio
+    const float aspect = float(ClientWidth) / float(ClientHeight);
 
-    // invalid width?
-    if (!w)
-        w = 1;
+    // calculate the projection matrix
+    m_Projection = m_Renderer.GetPerspective(45.0f, aspect, 0.1f, 100.0f);
 
-    // invalid height?
-    if (!h)
-        h = 1;
-
-    // set viewport
-    glViewport(0, 0, w, h);
-
-    // load projection matrix and initialize it
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    // apply perspective correction
-    GLfloat aspect = (GLfloat)w/(GLfloat)h;
-    gluPerspective(45.0f, aspect, 0.1f, 10000.0f);
-
-    // load model view matrix and initialize it
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    m_Renderer.CreateViewport(ClientWidth, ClientHeight);
 }
 //------------------------------------------------------------------------------
 void __fastcall TMainForm::FormPaint(TObject* pSender)
@@ -192,144 +177,141 @@ void __fastcall TMainForm::miLightingClick(TObject* pSender)
     miLighting->Checked = !miLighting->Checked;
 
     // switch between color or precalculated light mode
-    m_MD2.SetLightningMode(miLighting->Checked ? QR_MD2::IE_LM_Precalculated : QR_MD2::IE_LM_None);
-
-    // mesh changed, rebuild animation generator
-    BuildAnimation();
+    m_pMD2->EnableLight(miLighting->Checked);
 }
 //------------------------------------------------------------------------------
 void __fastcall TMainForm::miPrevAnimClick(TObject* pSender)
 {
     // get current running animation
-    const std::string name = m_pMD2Animation->GetRunningAnimationName();
+    const QR_MD2CfgFile::IEGesture gesture = m_pMD2->GetGesture();
 
     // select prev animation
-    if (name == "Stand")
-        m_pMD2Animation->Set("CRDeath4");
+    if (gesture == QR_MD2CfgFile::IE_AG_Stand)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRDeath4);
     else
-    if (name == "Run")
-        m_pMD2Animation->Set("Stand");
+    if (gesture == QR_MD2CfgFile::IE_AG_Run)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Stand);
     else
-    if (name == "Attack")
-        m_pMD2Animation->Set("Run");
+    if (gesture == QR_MD2CfgFile::IE_AG_Attack)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Run);
     else
-    if (name == "Pain1")
-        m_pMD2Animation->Set("Attack");
+    if (gesture == QR_MD2CfgFile::IE_AG_Pain1)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Attack);
     else
-    if (name == "Pain2")
-        m_pMD2Animation->Set("Pain1");
+    if (gesture == QR_MD2CfgFile::IE_AG_Pain2)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Pain1);
     else
-    if (name == "Pain3")
-        m_pMD2Animation->Set("Pain2");
+    if (gesture == QR_MD2CfgFile::IE_AG_Pain3)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Pain2);
     else
-    if (name == "Jump")
-        m_pMD2Animation->Set("Pain3");
+    if (gesture == QR_MD2CfgFile::IE_AG_Jump)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Pain3);
     else
-    if (name == "Flip")
-        m_pMD2Animation->Set("Jump");
+    if (gesture == QR_MD2CfgFile::IE_AG_Flip)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Jump);
     else
-    if (name == "Salute")
-        m_pMD2Animation->Set("Flip");
+    if (gesture == QR_MD2CfgFile::IE_AG_Salute)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Flip);
     else
-    if (name == "Taunt")
-        m_pMD2Animation->Set("Salute");
+    if (gesture == QR_MD2CfgFile::IE_AG_Taunt)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Salute);
     else
-    if (name == "Wave")
-        m_pMD2Animation->Set("Taunt");
+    if (gesture == QR_MD2CfgFile::IE_AG_Wave)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Taunt);
     else
-    if (name == "Point")
-        m_pMD2Animation->Set("Wave");
+    if (gesture == QR_MD2CfgFile::IE_AG_Point)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Wave);
     else
-    if (name == "CRStand")
-        m_pMD2Animation->Set("Point");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRStand)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Point);
     else
-    if (name == "CRWalk")
-        m_pMD2Animation->Set("CRStand");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRWalk)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRStand);
     else
-    if (name == "CRAttack")
-        m_pMD2Animation->Set("CRWalk");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRAttack)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRWalk);
     else
-    if (name == "CRPain")
-        m_pMD2Animation->Set("CRAttack");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRPain)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRAttack);
     else
-    if (name == "CRDeath")
-        m_pMD2Animation->Set("CRPain");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRDeath)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRPain);
     else
-    if (name == "CRDeath2")
-        m_pMD2Animation->Set("CRDeath");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRDeath2)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRDeath);
     else
-    if (name == "CRDeath3")
-        m_pMD2Animation->Set("CRDeath2");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRDeath3)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRDeath2);
     else
-    if (name == "CRDeath4")
-        m_pMD2Animation->Set("CRDeath3");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRDeath4)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRDeath3);
 }
 //------------------------------------------------------------------------------
 void __fastcall TMainForm::miNextAnimClick(TObject* pSender)
 {
     // get current running animation
-    const std::string name = m_pMD2Animation->GetRunningAnimationName();
+    const QR_MD2CfgFile::IEGesture gesture = m_pMD2->GetGesture();
 
     // select next animation
-    if (name == "Stand")
-        m_pMD2Animation->Set("Run");
+    if (gesture == QR_MD2CfgFile::IE_AG_Stand)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Run);
     else
-    if (name == "Run")
-        m_pMD2Animation->Set("Attack");
+    if (gesture == QR_MD2CfgFile::IE_AG_Run)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Attack);
     else
-    if (name == "Attack")
-        m_pMD2Animation->Set("Pain1");
+    if (gesture == QR_MD2CfgFile::IE_AG_Attack)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Pain1);
     else
-    if (name == "Pain1")
-        m_pMD2Animation->Set("Pain2");
+    if (gesture == QR_MD2CfgFile::IE_AG_Pain1)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Pain2);
     else
-    if (name == "Pain2")
-        m_pMD2Animation->Set("Pain3");
+    if (gesture == QR_MD2CfgFile::IE_AG_Pain2)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Pain3);
     else
-    if (name == "Pain3")
-        m_pMD2Animation->Set("Jump");
+    if (gesture == QR_MD2CfgFile::IE_AG_Pain3)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Jump);
     else
-    if (name == "Jump")
-        m_pMD2Animation->Set("Flip");
+    if (gesture == QR_MD2CfgFile::IE_AG_Jump)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Flip);
     else
-    if (name == "Flip")
-        m_pMD2Animation->Set("Salute");
+    if (gesture == QR_MD2CfgFile::IE_AG_Flip)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Salute);
     else
-    if (name == "Salute")
-        m_pMD2Animation->Set("Taunt");
+    if (gesture == QR_MD2CfgFile::IE_AG_Salute)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Taunt);
     else
-    if (name == "Taunt")
-        m_pMD2Animation->Set("Wave");
+    if (gesture == QR_MD2CfgFile::IE_AG_Taunt)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Wave);
     else
-    if (name == "Wave")
-        m_pMD2Animation->Set("Point");
+    if (gesture == QR_MD2CfgFile::IE_AG_Wave)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Point);
     else
-    if (name == "Point")
-        m_pMD2Animation->Set("CRStand");
+    if (gesture == QR_MD2CfgFile::IE_AG_Point)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRStand);
     else
-    if (name == "CRStand")
-        m_pMD2Animation->Set("CRWalk");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRStand)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRWalk);
     else
-    if (name == "CRWalk")
-        m_pMD2Animation->Set("CRAttack");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRWalk)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRAttack);
     else
-    if (name == "CRAttack")
-        m_pMD2Animation->Set("CRPain");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRAttack)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRPain);
     else
-    if (name == "CRPain")
-        m_pMD2Animation->Set("CRDeath");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRPain)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRDeath);
     else
-    if (name == "CRDeath")
-        m_pMD2Animation->Set("CRDeath2");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRDeath)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRDeath2);
     else
-    if (name == "CRDeath2")
-        m_pMD2Animation->Set("CRDeath3");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRDeath2)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRDeath3);
     else
-    if (name == "CRDeath3")
-        m_pMD2Animation->Set("CRDeath4");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRDeath3)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_CRDeath4);
     else
-    if (name == "CRDeath4")
-        m_pMD2Animation->Set("Stand");
+    if (gesture == QR_MD2CfgFile::IE_AG_CRDeath4)
+        m_pMD2->SetAnimation(QR_MD2CfgFile::IE_AG_Stand);
 }
 //------------------------------------------------------------------------------
 void __fastcall TMainForm::IdleLoop(TObject* pSender, bool& done)
@@ -345,345 +327,241 @@ void __fastcall TMainForm::RenderGLScene()
     const double      elapsedTime    = (now - m_PreviousTime);
                       m_PreviousTime = now;
 
-    // clear scene
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // begin the scene
+    m_Renderer.BeginScene(m_Color,
+                          QR_Renderer::IESceneFlags(QR_Renderer::IE_SF_ClearColor |
+                                                    QR_Renderer::IE_SF_ClearDepth));
 
-    // draw scene
-    Draw(elapsedTime);
+    // load the projection and view matrices
+    m_Renderer.SetProjectionMatrix(m_Projection);
+    m_Renderer.SetViewMatrix(m_View);
 
-    glFlush();
+    if (m_pMD2)
+        m_pMD2->Draw(elapsedTime);
 
-    SwapBuffers(m_hDC);
+    // end the scene
+    m_Renderer.EndScene();
 }
-//------------------------------------------------------------------------------
-void __fastcall TMainForm::Draw(const double& elapsedTime)
+//--------------------------------------------------------------------------------------------------
+void TMainForm::DrawPolygons(const QR_PolygonsP& polygons, const QR_Matrix16P& matrix) const
 {
-    const QR_SizeT fps = 10;
+    const QR_SizeT polygonCount = polygons.size();
 
-    // get mesh vertex format (all the meshes of the model will share the same)
-    const QR_Vertex::IEFormat format = m_MD2.GetVertexFormat();
-
-    // calculate vertex size
-    std::size_t vertexSize = 3;
-
-    // do include normals?
-    if (format & QR_Vertex::IE_VF_Normals)
-        vertexSize += 3;
-
-    // do include texture coordinates?
-    if (format & QR_Vertex::IE_VF_TexCoords)
-        vertexSize += 2;
-
-    // do include vertex color?
-    if (format & QR_Vertex::IE_VF_Colors)
-        vertexSize += 4;
+    // polygons to draw?
+    if (!polygonCount)
+        return;
 
     QR_Mesh mesh;
+    mesh.resize(1);
 
-    // get next frame to draw
-    m_pMD2Animation->GetMesh(elapsedTime, fps, mesh);
-
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, -100.0f);
-    glRotatef(-90, 1.0f, 0.0f, 0.0f);
-    glRotatef(-45, 0.0f, 0.0f, 1.0f);
-
-    QR_SizeT polyCount = 0;
-
-    // iterate through frame meshes
-    for (unsigned i = 0; i < mesh.size(); ++i)
+    try
     {
-        // bind vertex array
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, vertexSize * sizeof(M_Precision), &mesh[i]->m_Buffer[0]);
+        // create a vertex buffer and populate it with polygons in collisions
+        mesh[0]              = new QR_Vertex();
+        mesh[0]->m_Type      = QR_Vertex::IE_VT_Triangles;
+        mesh[0]->m_CoordType = QR_Vertex::IE_VC_XYZ;
+        mesh[0]->m_Stride    = 7;
+        mesh[0]->m_Format    = QR_Vertex::IE_VF_Colors;
+        mesh[0]->m_Buffer.resize(polygonCount * (mesh[0]->m_Stride * 3));
 
-        std::size_t offset = 3;
+        QR_SizeT offset = 0;
 
-        // bind normals array
-        if (format & QR_Vertex::IE_VF_Normals)
+        // iterate through polygons to draw
+        for (QR_PolygonsP::const_iterator it = polygons.begin(); it != polygons.end(); ++it)
         {
-            glEnableClientState(GL_NORMAL_ARRAY);
-            glNormalPointer(GL_FLOAT,
-                            vertexSize * sizeof(M_Precision),
-                            &mesh[i]->m_Buffer[offset]);
+            // build polygon to show
+            mesh[0]->m_Buffer[offset]      = (*it)->GetVertex1().m_X;
+            mesh[0]->m_Buffer[offset + 1]  = (*it)->GetVertex1().m_Y;
+            mesh[0]->m_Buffer[offset + 2]  = (*it)->GetVertex1().m_Z;
+            mesh[0]->m_Buffer[offset + 3]  = 1.0f;
+            mesh[0]->m_Buffer[offset + 4]  = 0.0f;
+            mesh[0]->m_Buffer[offset + 5]  = 0.0f;
+            mesh[0]->m_Buffer[offset + 6]  = 1.0f;
+            mesh[0]->m_Buffer[offset + 7]  = (*it)->GetVertex2().m_X;
+            mesh[0]->m_Buffer[offset + 8]  = (*it)->GetVertex2().m_Y;
+            mesh[0]->m_Buffer[offset + 9]  = (*it)->GetVertex2().m_Z;
+            mesh[0]->m_Buffer[offset + 10] = 0.8f;
+            mesh[0]->m_Buffer[offset + 11] = 0.0f;
+            mesh[0]->m_Buffer[offset + 12] = 0.2f;
+            mesh[0]->m_Buffer[offset + 13] = 1.0f;
+            mesh[0]->m_Buffer[offset + 14] = (*it)->GetVertex3().m_X;
+            mesh[0]->m_Buffer[offset + 15] = (*it)->GetVertex3().m_Y;
+            mesh[0]->m_Buffer[offset + 16] = (*it)->GetVertex3().m_Z;
+            mesh[0]->m_Buffer[offset + 17] = 1.0f;
+            mesh[0]->m_Buffer[offset + 18] = 0.12f;
+            mesh[0]->m_Buffer[offset + 19] = 0.2f;
+            mesh[0]->m_Buffer[offset + 20] = 1.0f;
 
-            offset += 3;
+            // go to next polygon
+            offset += (mesh[0]->m_Stride * 3);
         }
 
-        // bind texture coordinates array
-        if (format & QR_Vertex::IE_VF_TexCoords)
-        {
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer(2,
-                              GL_FLOAT,
-                              vertexSize * sizeof(M_Precision),
-                              &mesh[i]->m_Buffer[offset]);
+        // configure OpenGL to draw polygons in collision
+        glDisable(GL_TEXTURE_2D);
+        glCullFace(GL_NONE);
+        glDisable(GL_DEPTH_TEST);
 
-            offset += 2;
-        }
+        #ifdef USE_SHADER
+            // prepare shader to draw the model
+            m_Renderer.ConnectProjectionMatrixToShader(m_pMouseColDetShader,
+                                                      *m_pScene->GetProjectionMatrix());
+            m_Renderer.ConnectViewMatrixToShader(m_pMouseColDetShader,
+                                                *m_pScene->GetViewMatrix());
 
-        // bind colors array
-        if (format & QR_Vertex::IE_VF_Colors)
-        {
-            glEnableClientState(GL_COLOR_ARRAY);
-            glColorPointer(4,
-                           GL_FLOAT,
-                           vertexSize * sizeof(M_Precision),
-                           &mesh[i]->m_Buffer[offset]);
-        }
+            QR_ModelTextures textures;
 
-        // calculate polygons to draw count
-        const QR_SizeT drawCount = mesh[i]->m_Buffer.size() / vertexSize;
+            // draw polygons in collision with mouse pointer
+            m_Renderer.Draw(mesh, matrix, textures, m_pMouseColDetShader);
+        #else
+            glMatrixMode(GL_MODELVIEW);
 
-        // draw MD2 mesh
-        switch (mesh[i]->m_Type)
-        {
-            case QR_Vertex::IE_VT_TriangleStrip:
-                glDrawArrays(GL_TRIANGLE_STRIP, 0, drawCount);
-                break;
+            glPushMatrix();
 
-            case QR_Vertex::IE_VT_TriangleFan:
-                glDrawArrays(GL_TRIANGLE_FAN, 0, drawCount);
-                break;
-        }
+            // place triangles into 3D world
+            glLoadMatrixf(const_cast<QR_Matrix16P&>(matrix).GetPtr());
 
-        // update number of polygons drawn count
-        polyCount += drawCount;
+            QR_ModelTextures textures;
 
-        // unbind vertex array
-        glDisableClientState(GL_VERTEX_ARRAY);
+            // draw polygons in collision with mouse pointer
+            m_Renderer.Draw(mesh, matrix, textures);
 
-        // unbind normals array
-        if (format & QR_Vertex::IE_VF_Normals)
-            glDisableClientState(GL_NORMAL_ARRAY);
+            glPopMatrix();
+        #endif
 
-        // unbind texture coordinates array
-        if (format & QR_Vertex::IE_VF_TexCoords)
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        // restore previous OpenGL parameters
+        glEnable(GL_DEPTH_TEST);
+        glCullFace(GL_FRONT);
+        glEnable(GL_TEXTURE_2D);
 
-        // unbind colors array
-        if (format & QR_Vertex::IE_VF_Colors)
-            glDisableClientState(GL_COLOR_ARRAY);
+        glFlush();
+    }
+    catch (...)
+    {
+        if (mesh.size() && mesh[0])
+            delete mesh[0];
 
-        // mesh is now useless, delete it
-        delete mesh[i];
+        throw;
     }
 
-    // convert mouse position to OpenGL point, that will be used as ray start pos, and create ray dir
-    QR_Vector3DP rayPos = QR_WinOpenGLHelper::MousePosToGLPoint(Handle,
-                                                                QR_Rect<float>(-1.0f, 1.0f, 2.0f, 2.0f));
-    QR_Vector3DP rayDir(0.0f, 0.0f, 1.0f);
+    if (mesh.size() && mesh[0])
+        delete mesh[0];
+}
+//--------------------------------------------------------------------------------------------------
+void TMainForm::OnDetectCollision(const QR_ModelGroup* pSender,
+                                  const QR_Mesh*       pMesh,
+                                  const QR_Matrix16P&  modelMatrix,
+                                  const QR_AABBTree*   pAABBTree)
+{
+    if (!pAABBTree)
+        return;
 
-    rayPos *= 40.0f;
+    // calculate client rect in OpenGL coordinates
+    QR_RectP rect(-1.0f, 1.0f, 1.0f, 3.0f);
 
-    // // rotate 90° on X axis
-    QR_Matrix16P rotateMatrixX = QR_Matrix16P::Identity();
-    rotateMatrixX.Rotate(1.57f, QR_Vector3DP(1.0f, 0.0f, 0.0f));
+    int   width  = ClientWidth;
+    int   height = ClientHeight;
+    float zNear  = 0.1f;
+    float zFar   = 100.0f;
 
-    // rotate 45° on Z axis
-    QR_Matrix16P rotateMatrixZ = QR_Matrix16P::Identity();
-    rotateMatrixZ.Rotate(0.785f, QR_Vector3DP(0.0f, 0.0f, 1.0f));
+    TPoint mousePos = Mouse->CursorPos;
 
-    // rotate ray position and direction
-    rayPos = rotateMatrixX.Transform(rayPos);
-    rayPos = rotateMatrixZ.Transform(rayPos);
-    rayDir = rotateMatrixX.Transform(rayDir);
-    rayDir = rotateMatrixZ.Transform(rayDir);
+    if (!::ScreenToClient(Handle, &mousePos))
+        return;
 
-    QR_PolygonList polygonList;
+    // convert mouse position to viewport, that will be used as ray start pos
+    QR_Vector3DP rayPos = QR_Renderer::MousePosToViewportPos(QR_PointI(mousePos.X, mousePos.Y),
+                                                             QR_RectI(0, 0, width, height),
+                                                             rect);
 
-    // resolve aligned-axis bounding box tree
-    m_MD2Collision.ResolveAnimation(elapsedTime, fps, m_pMD2Animation, QR_RayP(rayPos, rayDir), polygonList);
+    // create ray dir
+    #ifdef COLLISION_DETECTION_FIRST_SHOOTER_MODE
+        QR_Vector3DP rayDir(0.0f, 0.0f, -1.0f);
+    #else
+        QR_Vector3DP rayDir(rayPos.m_X, rayPos.m_Y, -1.0f);
+    #endif
 
-    QR_PolygonList polygonsToDraw;
+    // unproject the ray to make it inside the 3d world coordinates
+    QR_Renderer::Unproject(m_Projection, m_View, rayPos, rayDir);
 
-    // found polygons to check?
-    if (polygonList.size())
+    #ifdef COLLISION_DETECTION_DRAW_DEBUG_RAY
+        const QR_Vector3DF farRayPos(rayPos.m_X + (rayDir.m_X * 100.0f),
+                                     rayPos.m_Y + (rayDir.m_Y * 100.0f),
+                                     rayPos.m_Z + (rayDir.m_Z * 100.0f));
+
+        glDisable(GL_TEXTURE_2D);
+        glLineWidth(2.5f);
+        glBegin(GL_LINES);
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glVertex3f(rayPos.m_X, rayPos.m_Y, rayPos.m_Z);
+        glColor3f(0.0f, 1.0f, 0.0f);
+        glVertex3f(farRayPos.m_X, farRayPos.m_Y, farRayPos.m_Z);
+        glEnd();
+        glEnable(GL_TEXTURE_2D);
+    #endif
+
+    float determinant;
+
+    // now transform the ray to match with the model position
+    const QR_Matrix16P invertModel = const_cast<QR_Matrix16P&>(modelMatrix).Inverse(determinant);
+    rayPos                         = invertModel.Transform(rayPos);
+    rayDir                         = invertModel.TransformNormal(rayDir);
+    rayDir                         = rayDir.Normalize();
+
+    #ifdef USE_DETECTION_COLLISION_DEBUG_TOOLS
+        #ifdef OS_WIN
+            #ifdef CP_EMBARCADERO
+                m_pCollisionToolbox->vmProjection->Show(L"Projection matrix", projectionMatrix);
+                m_pCollisionToolbox->vmView->Show(L"View matrix", viewMatrix);
+                m_pCollisionToolbox->vmModel->Show(L"Model matrix", modelMatrix);
+                m_pCollisionToolbox->vvRayPos->Show(L"Ray pos", rayPos);
+                m_pCollisionToolbox->vvRayDir->Show(L"Ray dir", rayDir);
+
+                QR_BoxP* pBBox = pAABBTree->GetBoundingBox();
+
+                if (pBBox)
+                {
+                    m_pCollisionToolbox->vvBoxMin->Show(L"Bounding box min", pBBox->m_Min);
+                    m_pCollisionToolbox->vvBoxMax->Show(L"Bounding box max", pBBox->m_Max);
+                }
+            #endif
+        #endif
+    #endif
+
+    // create and populate ray from mouse position
+    std::auto_ptr<QR_RayP> pRay(new QR_RayP());
+    pRay->SetPos(rayPos);
+    pRay->SetDir(rayDir);
+
+    QR_PolygonsP polygons;
+
+    try
+    {
+        // get polygons to check for collision by resolving AABB tree
+        pAABBTree->Resolve(pRay.get(), polygons);
+
+        QR_PolygonsP pickedPolygons;
+        QR_SizeT     polygonCount = polygons.size();
+
         // iterate through polygons to check
-        for (QR_PolygonList::iterator it = polygonList.begin(); it != polygonList.end(); ++it)
-            // is polygon intersecting ray?
-            if (QR_3DCollisionHelper::GetTriRayCollision(QR_RayP(rayPos, rayDir), *(*it)))
-                // add polygon to draw list
-                polygonsToDraw.push_back(*it);
+        if (polygonCount > 0)
+            for (QR_PolygonsP::const_iterator it = polygons.begin(); it != polygons.end(); ++it)
+                // is polygon intersecting ray?
+                if (QR_GeometryHelper::RayIntersectsPolygon(*(pRay.get()), *(*it)))
+                    // add polygon in collision to resulting list
+                    pickedPolygons.push_back(*it);
 
-    glDisable(GL_BLEND);
-    glDisable(GL_TEXTURE_2D);
-    glCullFace(GL_NONE);
-    glDisable(GL_DEPTH_TEST);
-
-    // found collide polygons to draw?
-    for (QR_PolygonList::iterator it = polygonsToDraw.begin(); it != polygonsToDraw.end(); ++it)
+        // found collision?
+        if (pickedPolygons.size())
+            // draw polygons in collision if required
+            DrawPolygons(pickedPolygons, modelMatrix);
+    }
+    catch (...)
     {
-        QR_DrawablePolygon_OpenGL drawablePoly((*it), true);
-        drawablePoly.SetVertexColor(0, QR_Color(255, 0,  0));
-        drawablePoly.SetVertexColor(1, QR_Color(230, 0,  54));
-        drawablePoly.SetVertexColor(2, QR_Color(255, 65, 54));
-        drawablePoly.Draw();
+        QR_STDTools::DelAndClear(polygons);
+        throw;
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glCullFace(GL_FRONT);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-
-    glPopMatrix();
-
-    glFlush();
-
-    // log found polygon count
-    std::wostringstream sstr;
-    sstr << L"Polygons - total - " << polyCount          <<
-            L" - found - "         << polygonList.size() <<
-            L" - collide - "       << polygonsToDraw.size();
-    Caption = UnicodeString(sstr.str().c_str());
-
-    QR_STDTools::DelAndClear(polygonList);
-}
-//------------------------------------------------------------------------------
-bool TMainForm::BytesFromBitmap(TBitmap* pBitmap, BYTE*& pPixels, bool flipY, bool bgr)
-{
-    // no bitmap?
-    if (!pBitmap)
-        return false;
-
-    // is bitmap empty?
-    if ((pBitmap->Width <= 0) || (pBitmap->Height <= 0))
-        return false;
-
-    // get bitmap and pixel size
-    const std::size_t width     = pBitmap->Width;
-    const std::size_t height    = pBitmap->Height;
-    const std::size_t pixelSize = (pBitmap->PixelFormat == pf32bit) ? sizeof(TRGBQuad) : sizeof(TRGBTriple);
-
-    // calculate line size
-    const std::size_t lineSize = width * pixelSize;
-
-    // create pixels buffer
-    pPixels = new BYTE[height * lineSize];
-
-    // iterate through bitmap lines
-    for (std::size_t y = 0; y < height; ++y)
-    {
-        // calculate next offset
-        const std::size_t offset = flipY ? ((height - 1) - y) * lineSize : y * lineSize;
-
-        // is 24 or 32 bit bitmap?
-        if (pBitmap->PixelFormat == pf24bit)
-        {
-            // get pixels line from bitmap
-            TRGBTriple* pLineRGB = reinterpret_cast<TRGBTriple*>(pBitmap->ScanLine[y]);
-
-            // do swap pixels?
-            if (bgr)
-                // memory copy 24 bit pixels line, as pixels are already in RGB format
-                std::memcpy(&pPixels[offset], pLineRGB, lineSize);
-            else
-                // iterate through line pixels
-                for (std::size_t x = 0; x < width; ++x)
-                {
-                    // calculate next pixel offset
-                    const std::size_t offsetX = offset + (x * pixelSize);
-
-                    // copy and swap pixel
-                    pPixels[offsetX]     = pLineRGB[x].rgbtRed;
-                    pPixels[offsetX + 1] = pLineRGB[x].rgbtGreen;
-                    pPixels[offsetX + 2] = pLineRGB[x].rgbtBlue;
-                }
-        }
-        else
-        {
-            // get pixels line from bitmap
-            TRGBQuad* pLineRGBA = reinterpret_cast<TRGBQuad*>(pBitmap->ScanLine[y]);
-
-            // do swap pixels?
-            if (bgr)
-                // memory copy 32 bit pixels line, as pixels are already in RGB format
-                std::memcpy(&pPixels[offset], pLineRGBA, lineSize);
-            else
-                // iterate through line pixels
-                for (std::size_t x = 0; x < width; ++x)
-                {
-                    // calculate next pixel offset
-                    const std::size_t offsetX = offset + (x * pixelSize);
-
-                    // copy and swap pixel
-                    pPixels[offsetX]     = pLineRGBA[x].rgbRed;
-                    pPixels[offsetX + 1] = pLineRGBA[x].rgbGreen;
-                    pPixels[offsetX + 2] = pLineRGBA[x].rgbBlue;
-                    pPixels[offsetX + 3] = pLineRGBA[x].rgbReserved;
-                }
-        }
-    }
-
-    return true;
-}
-//------------------------------------------------------------------------------
-int TMainForm::CreateTexture(WORD width, WORD height, WORD format, void* pPixels, GLuint minFilter,
-        GLuint magFilter, GLuint targetID)
-{
-    GLuint texture;
-
-    // create and bind new OpenGL texture
-    glGenTextures(1, &texture);
-    glBindTexture(targetID, texture);
-
-    // set texture environment parameters
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-    // set texture filtering
-    glTexParameteri(targetID, GL_TEXTURE_MIN_FILTER, minFilter);
-    glTexParameteri(targetID, GL_TEXTURE_MAG_FILTER, magFilter);
-
-    // set texture wrapping mode
-    glTexParameteri(targetID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(targetID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // generate texture from bitmap data
-    glTexImage2D(targetID, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, pPixels);
-
-    return texture;
-}
-//------------------------------------------------------------------------------
-void TMainForm::BuildAnimation()
-{
-    std::string animName;
-
-    // do delete animation generator?
-    if (m_pMD2Animation)
-    {
-        // keep current animation name and delete animation generator
-        animName = m_pMD2Animation->GetRunningAnimationName();
-        delete m_pMD2Animation;
-    }
-
-    m_pMD2Animation = new QR_MD2Animation(&m_MD2, true);
-    m_pMD2Animation->Add("Stand",     0,  39);
-    m_pMD2Animation->Add("Run",      40,  45);
-    m_pMD2Animation->Add("Attack",   46,  53);
-    m_pMD2Animation->Add("Pain1",    54,  57);
-    m_pMD2Animation->Add("Pain2",    58,  61);
-    m_pMD2Animation->Add("Pain3",    62,  65);
-    m_pMD2Animation->Add("Jump",     66,  71);
-    m_pMD2Animation->Add("Flip",     72,  83);
-    m_pMD2Animation->Add("Salute",   84,  94);
-    m_pMD2Animation->Add("Taunt",    95,  111);
-    m_pMD2Animation->Add("Wave",     112, 122);
-    m_pMD2Animation->Add("Point",    123, 134);
-    m_pMD2Animation->Add("CRStand",  135, 153);
-    m_pMD2Animation->Add("CRWalk",   154, 159);
-    m_pMD2Animation->Add("CRAttack", 160, 168);
-    m_pMD2Animation->Add("CRPain",   169, 172);
-    m_pMD2Animation->Add("CRDeath",  173, 177);
-    m_pMD2Animation->Add("CRDeath2", 178, 183);
-    m_pMD2Animation->Add("CRDeath3", 184, 189);
-    m_pMD2Animation->Add("CRDeath4", 190, 197);
-
-    // set start animation
-    if (animName.empty())
-        m_pMD2Animation->Set("Stand");
-    else
-        m_pMD2Animation->Set(animName);
+    QR_STDTools::DelAndClear(polygons);
 }
 //------------------------------------------------------------------------------
 void TMainForm::ConfigOpenGL()
@@ -696,6 +574,7 @@ void TMainForm::ConfigOpenGL()
     // enable blender (not required but add a nice ghosted effect)
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_SRC_COLOR);
+
+    glEnable(GL_TEXTURE_2D);
 }
 //------------------------------------------------------------------------------
-

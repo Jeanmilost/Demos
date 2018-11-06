@@ -4,6 +4,7 @@
 // MD2 model
 #define ID_MD2_MODEL            1001
 #define ID_MD2_TEXTURE          1002
-#define ID_MD2_NORMALS_TABLE    1003
+#define ID_MD2_CONFIGURATION    1003
+#define ID_MD2_NORMALS_TABLE    1004
 
 #endif

@@ -1,9 +1,30 @@
-/******************************************************************************
- * ==> QR_STDTools -----------------------------------------------------------*
- ******************************************************************************
- * Description : Some basic STD library helper functions                      *
- * Developer   : Jean-Milost Reymond                                          *
- ******************************************************************************/
+/****************************************************************************
+ * ==> QR_STDTools ---------------------------------------------------------*
+ ****************************************************************************
+ * Description : Some basic STD library helper functions                    *
+ * Developer   : Jean-Milost Reymond                                        *
+ ****************************************************************************
+ * MIT License - QR Engine                                                  *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, sublicense, and/or sell copies of the Software, and to       *
+ * permit persons to whom the Software is furnished to do so, subject to    *
+ * the following conditions:                                                *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY     *
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,     *
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        *
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
+ ****************************************************************************/
 
 #ifndef QR_STDToolsH
 #define QR_STDToolsH
@@ -45,9 +66,9 @@ class QR_STDTools
         template <class T, class U>
         static void DelAndClear(std::map<T, U*>& mp);
 };
-//------------------------------------------------------------------------------
-// Implementation
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// QR_STDTools
+//---------------------------------------------------------------------------
 template <class T>
 void QR_STDTools::DelAndClear(std::vector<T*>& vec)
 {
@@ -62,19 +83,19 @@ void QR_STDTools::DelAndClear(std::vector<T*>& vec)
     // clear vector completely
     vec.clear();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T>
 void QR_STDTools::DelAndClear(std::list<T*>& lst)
 {
     // iterate through list items
     for (typename std::list<T*>::iterator it = lst.begin(); it != lst.end(); ++it)
-        // delete vector item
+        // delete list item
         delete (*it);
 
-    // clear vector completely
+    // clear list completely
     lst.clear();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 template <class T, class U>
 void QR_STDTools::DelAndClear(std::map<T, U*>& mp)
 {
@@ -86,15 +107,16 @@ void QR_STDTools::DelAndClear(std::map<T, U*>& mp)
     // clear vector completely
     mp.clear();
 }
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // RAD studio
-//------------------------------------------------------------------------------
-#ifdef __CODEGEARC__
-    // needed to avoid the W8058 error "Cannot create pre-compiled header: header incomplete" warning in BCC compilers
+//---------------------------------------------------------------------------
+#if defined(CP_EMBARCADERO)
+    // needed to avoid the W8058 error "Cannot create pre-compiled header: header incomplete"
+    // warning in BCC compilers
     ;
 #endif
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
-#endif // QR_STDToolsH
+#endif

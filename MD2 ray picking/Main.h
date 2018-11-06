@@ -13,14 +13,18 @@
 #include <Vcl.Controls.hpp>
 #include <Vcl.StdCtrls.hpp>
 #include <Vcl.Forms.hpp>
-
-// qr engine
-#include "QR_MD2Collision.h"
-#include "QR_MD2.h"
-#include "QR_MD2Animation.h"
 #include <Vcl.Menus.hpp>
 
+// qr engine
+#include "QR_Color.h"
+#include "QR_Matrix16.h"
+#include "QR_MD2Group.h"
+#include "QR_Renderer_OpenGL.h"
+#include "QR_Resources.h"
+
 // opengl
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include <gl\gl.h>
 #include <gl\glu.h>
 
@@ -81,42 +85,33 @@ class TMainForm : public TForm
         void __fastcall Draw(const double& elapsedTime);
 
     private:
-        HDC              m_hDC;
-        HGLRC            m_hRC;
-        QR_MD2           m_MD2;
-        QR_MD2Animation* m_pMD2Animation;
-        QR_MD2Collision  m_MD2Collision;
-        TBitmap*         m_pTexture;
-        std::time_t      m_PreviousTime;
+        QR_Renderer_OpenGL m_Renderer;
+        QR_Resources       m_Resources;
+        QR_Matrix16P       m_Projection;
+        QR_Matrix16P       m_View;
+        QR_MemoryDir*      m_pMemoryDir;
+        QR_MD2Group*       m_pMD2;
+        QR_Color           m_Color;
+        std::time_t        m_PreviousTime;
 
         /**
-        * Convert bitmap in pixels byte array
-        *@param pBitmap - bitmap to convert
-        *@param[out] pPixels - pixels array when function returns, user is responsible to delete it
-        *@param flipY - if true, image will be mirrored on the Y axis
-        *@param bgr - if true, image will be converted from RGB to BGR (or RGBA to ABGR) format
-        *@return true on success, otherwise false
+        * Draws a polygon list
+        *@param polygons - polygon list to draw
+        *@param matrix - matrix to apply to polygons
         */
-        bool BytesFromBitmap(TBitmap* pBitmap, BYTE*& pPixels, bool flipY, bool bgr);
+        void DrawPolygons(const QR_PolygonsP& polygons, const QR_Matrix16P& matrix) const;
 
         /**
-        * Creates texture
-        *@param width - texture width
-        *@param height - texture height
-        *@param format - texture format, can be GL_RGB or GL_RGBA
-        *@param pPixels - texture pixels array
-        *@param minFiltter - min filter to apply
-        *@param magFilter - mag filter to apply
-        *@param targetID - OpenGL target identigier, e.g. GL_TEXTURE_2D
-        *@return newly created texture identifier
+        * Called when collision should be detected
+        *@param pSender - model group that raised the event
+        *@param pMesh - mesh to check
+        *@param modelMatrix - model matrix
+        *@param pAABBTree - aligned-axis bounding box tree containing polygons to check
         */
-        int CreateTexture(WORD width, WORD height, WORD format, void* pPixels, GLuint minFilter,
-                GLuint magFilter, GLuint targetID);
-
-        /**
-        * Builds animation list
-        */
-        void BuildAnimation();
+        void OnDetectCollision(const QR_ModelGroup* pSender,
+                               const QR_Mesh*       pMesh,
+                               const QR_Matrix16P&  modelMatrix,
+                               const QR_AABBTree*   pAABBTree);
 
         /**
         * Configures OpenGL
