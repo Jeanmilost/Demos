@@ -1,19 +1,19 @@
 # Project: Animation
 # Compiler: Default GCC compiler
 # Compiler Type: MingW 3
-# Makefile created by wxDev-C++ IDE 7.4.2.569 on 08.11.18 13:10
+# Makefile created by wxDev-C++ IDE 7.4.2.569 on 08.11.18 16:44
 
 WXLIBNAME = wxmsw29u
 CPP       = g++.exe
 CC        = gcc.exe
 WINDRES   = "windres.exe"
-OBJ       = DEFAUL~1/e_camera.o DEFAUL~1/e_md2mesh.o DEFAUL~1/animationlist.o DEFAUL~1/application.o DEFAUL~1/main.o DEFAUL~1/Animation_private.res
-LINKOBJ   = "DEFAUL~1/e_camera.o" "DEFAUL~1/e_md2mesh.o" "DEFAUL~1/animationlist.o" "DEFAUL~1/application.o" "DEFAUL~1/main.o" DEFAUL~1/Animation_private.res
-LIBS      = -L"C:/Program Files (x86)/Dev-Cpp/lib/wx/gcc_lib" -L"C:/Program Files (x86)/Dev-Cpp/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW32/lib" -L"C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/" "C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/d3d9.lib" "C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/d3dx9.lib" "C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/dinput8.lib" "C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x86/dxguid.lib" "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17134.0/um/x86/WinMM.Lib"  -g3 
-INCS      = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Include/"
-CXXINCS   = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/" -I"C:/Program Files (x86)/Dev-Cpp/include/common" -I"C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Include/"
+OBJ       = Win32/Debug/e_camera.o Win32/Debug/e_md2mesh.o Win32/Debug/animationlist.o Win32/Debug/application.o Win32/Debug/main.o Win32/Debug/Animation_private.res
+LINKOBJ   = "Win32/Debug/e_camera.o" "Win32/Debug/e_md2mesh.o" "Win32/Debug/animationlist.o" "Win32/Debug/application.o" "Win32/Debug/main.o" Win32/Debug/Animation_private.res
+LIBS      = -L"C:/Program Files (x86)/Dev-Cpp/lib/wx/gcc_lib" -L"C:/Program Files (x86)/Dev-Cpp/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW32/lib" "C:/Program Files (x86)/Dev-Cpp/lib/libd3d9.a" "C:/Program Files (x86)/Dev-Cpp/lib/libd3dx9.a" "C:/Program Files (x86)/Dev-Cpp/lib/libdinput8.a" "C:/Program Files (x86)/Dev-Cpp/lib/libdxguid.a" "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17134.0/um/x86/WinMM.Lib"  -g3 
+INCS      = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/include/"
+CXXINCS   = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/" -I"C:/Program Files (x86)/Dev-Cpp/include/common" -I"C:/Program Files (x86)/Dev-Cpp/include/"
 RCINCS    = --include-dir "C:/PROGRA~2/Dev-Cpp/include/common"
-BIN       = DEFAUL~1/Animation.exe
+BIN       = Win32/Debug/Animation.exe
 DEFINES   = 
 CXXFLAGS  = $(CXXINCS) $(DEFINES)   -g3
 CFLAGS    = $(INCS) $(DEFINES)   -g3
@@ -36,20 +36,20 @@ clean: clean-custom
 $(BIN): $(OBJ)
 	$(LINK) $(LINKOBJ) -o "$(BIN)" $(LIBS) 
 
-DEFAUL~1/e_camera.o: $(GLOBALDEPS) e_camera.cpp e_camera.h
-	$(CPP) -c e_camera.cpp -o DEFAUL~1/e_camera.o $(CXXFLAGS)
+Win32/Debug/e_camera.o: $(GLOBALDEPS) e_camera.cpp e_camera.h
+	$(CPP) -c e_camera.cpp -o Win32/Debug/e_camera.o $(CXXFLAGS)
 
-DEFAUL~1/e_md2mesh.o: $(GLOBALDEPS) e_md2mesh.cpp e_md2mesh.h
-	$(CPP) -c e_md2mesh.cpp -o DEFAUL~1/e_md2mesh.o $(CXXFLAGS)
+Win32/Debug/e_md2mesh.o: $(GLOBALDEPS) e_md2mesh.cpp e_md2mesh.h
+	$(CPP) -c e_md2mesh.cpp -o Win32/Debug/e_md2mesh.o $(CXXFLAGS)
 
-DEFAUL~1/animationlist.o: $(GLOBALDEPS) animationlist.cpp animationlist.h e_md2mesh.h
-	$(CPP) -c animationlist.cpp -o DEFAUL~1/animationlist.o $(CXXFLAGS)
+Win32/Debug/animationlist.o: $(GLOBALDEPS) animationlist.cpp animationlist.h e_md2mesh.h
+	$(CPP) -c animationlist.cpp -o Win32/Debug/animationlist.o $(CXXFLAGS)
 
-DEFAUL~1/application.o: $(GLOBALDEPS) application.cpp application.h e_camera.h e_md2mesh.h animationlist.h e_md2mesh.h
-	$(CPP) -c application.cpp -o DEFAUL~1/application.o $(CXXFLAGS)
+Win32/Debug/application.o: $(GLOBALDEPS) application.cpp application.h e_camera.h e_md2mesh.h animationlist.h e_md2mesh.h
+	$(CPP) -c application.cpp -o Win32/Debug/application.o $(CXXFLAGS)
 
-DEFAUL~1/main.o: $(GLOBALDEPS) main.cpp application.h e_camera.h e_md2mesh.h animationlist.h e_md2mesh.h
-	$(CPP) -c main.cpp -o DEFAUL~1/main.o $(CXXFLAGS)
+Win32/Debug/main.o: $(GLOBALDEPS) main.cpp application.h e_camera.h e_md2mesh.h animationlist.h e_md2mesh.h
+	$(CPP) -c main.cpp -o Win32/Debug/main.o $(CXXFLAGS)
 
-DEFAUL~1/Animation_private.res: DEFAUL~1/Animation_private.rc 
-	$(WINDRES) --input-format=rc -o DEFAUL~1/Animation_private.res $(RCINCS) DEFAUL~1/ANIMAT~1.RC -O coff
+Win32/Debug/Animation_private.res: Win32/Debug/Animation_private.rc 
+	$(WINDRES) --input-format=rc -o Win32/Debug/Animation_private.res $(RCINCS) Win32/Debug/ANIMAT~1.RC -O coff

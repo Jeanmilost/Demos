@@ -1,0 +1,26 @@
+/*****************************************************************************
+ * ==> Ressources des menus -------------------------------------------------*
+ * ***************************************************************************
+ * Description : Ce fichier permet la configuration des menus de             *
+ *               l'application.                                              *
+ * Version     : 1.0                                                         *
+ * Développeur : Jean-Milost Reymond                                         *
+ *****************************************************************************/
+
+#include <windows.h>
+#include "resources.h"
+
+501 MENU
+BEGIN
+    POPUP "Fichier"
+    BEGIN
+        MENUITEM "Quitter",               IDM_APPEXIT
+    END
+
+    POPUP "Configuration du moteur"
+    BEGIN
+        MENUITEM "Sans collisions",       IDM_NOCOLLISIONS
+        MENUITEM "Collisions simples",    IDM_COLLISIONSONLY
+        MENUITEM "Collisions et sliding", IDM_COLLISIONSANDSLIDING
+    END
+END

@@ -1,0 +1,70 @@
+# Project: Shadow of the Beast
+# Compiler: Default GCC compiler
+# Compiler Type: MingW 3
+# Makefile created by wxDev-C++ IDE 7.4.2.569 on 08.11.18 17:56
+
+WXLIBNAME = wxmsw29u
+CPP       = g++.exe
+CC        = gcc.exe
+WINDRES   = "windres.exe"
+OBJ       = Win32/Debug/e_audio.o Win32/Debug/e_camera.o Win32/Debug/e_texture.o Win32/Debug/e_sprite.o Win32/Debug/sotb_element.o Win32/Debug/sotb_landscapecoord.o Win32/Debug/sotb_landscapedesc.o Win32/Debug/sotb_landscape.o Win32/Debug/application.o Win32/Debug/main.o Win32/Debug/Shadow_of_the_Beast_private.res
+LINKOBJ   = "Win32/Debug/e_audio.o" "Win32/Debug/e_camera.o" "Win32/Debug/e_texture.o" "Win32/Debug/e_sprite.o" "Win32/Debug/sotb_element.o" "Win32/Debug/sotb_landscapecoord.o" "Win32/Debug/sotb_landscapedesc.o" "Win32/Debug/sotb_landscape.o" "Win32/Debug/application.o" "Win32/Debug/main.o" Win32/Debug/Shadow_of_the_Beast_private.res
+LIBS      = -L"C:/Program Files (x86)/Dev-Cpp/lib/wx/gcc_lib" -L"C:/Program Files (x86)/Dev-Cpp/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW32/lib" "C:/Program Files (x86)/Dev-Cpp/lib/libd3d9.a" "C:/Program Files (x86)/Dev-Cpp/lib/libd3dx9.a" "C:/Program Files (x86)/Dev-Cpp/lib/libdinput8.a" "C:/Program Files (x86)/Dev-Cpp/lib/libdsound.a" "C:/Program Files (x86)/Dev-Cpp/lib/libdxguid.a" "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17134.0/um/x86/Ole32.Lib"  -g3 
+INCS      = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/include/"
+CXXINCS   = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/" -I"C:/Program Files (x86)/Dev-Cpp/include/common" -I"C:/Program Files (x86)/Dev-Cpp/include/"
+RCINCS    = --include-dir "C:/PROGRA~2/Dev-Cpp/include/common"
+BIN       = Win32/Debug/Shadow of the Beast.exe
+DEFINES   = 
+CXXFLAGS  = $(CXXINCS) $(DEFINES)   -g3
+CFLAGS    = $(INCS) $(DEFINES)   -g3
+GPROF     = gprof.exe
+ifeq ($(OS),Windows_NT)
+   RM = del /Q
+   FixPath = $(subst /,\,$1)
+else
+   RM = rm -f
+   FixPath = $1
+endif
+LINK      = g++.exe
+
+.PHONY: all all-before all-after clean clean-custom
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	$(RM) $(call FixPath,$(LINKOBJ)) "$(call FixPath,$(BIN))"
+
+$(BIN): $(OBJ)
+	$(LINK) $(LINKOBJ) -o "$(BIN)" $(LIBS) 
+
+Win32/Debug/e_audio.o: $(GLOBALDEPS) e_audio.cpp e_audio.h
+	$(CPP) -c e_audio.cpp -o Win32/Debug/e_audio.o $(CXXFLAGS)
+
+Win32/Debug/e_camera.o: $(GLOBALDEPS) e_camera.cpp e_camera.h
+	$(CPP) -c e_camera.cpp -o Win32/Debug/e_camera.o $(CXXFLAGS)
+
+Win32/Debug/e_texture.o: $(GLOBALDEPS) e_texture.cpp e_texture.h
+	$(CPP) -c e_texture.cpp -o Win32/Debug/e_texture.o $(CXXFLAGS)
+
+Win32/Debug/e_sprite.o: $(GLOBALDEPS) e_sprite.cpp e_sprite.h
+	$(CPP) -c e_sprite.cpp -o Win32/Debug/e_sprite.o $(CXXFLAGS)
+
+Win32/Debug/sotb_element.o: $(GLOBALDEPS) sotb_element.cpp sotb_element.h e_sprite.h e_texture.h
+	$(CPP) -c sotb_element.cpp -o Win32/Debug/sotb_element.o $(CXXFLAGS)
+
+Win32/Debug/sotb_landscapecoord.o: $(GLOBALDEPS) sotb_landscapecoord.cpp sotb_landscapecoord.h
+	$(CPP) -c sotb_landscapecoord.cpp -o Win32/Debug/sotb_landscapecoord.o $(CXXFLAGS)
+
+Win32/Debug/sotb_landscapedesc.o: $(GLOBALDEPS) sotb_landscapedesc.cpp sotb_landscapedesc.h sotb_landscapecoord.h
+	$(CPP) -c sotb_landscapedesc.cpp -o Win32/Debug/sotb_landscapedesc.o $(CXXFLAGS)
+
+Win32/Debug/sotb_landscape.o: $(GLOBALDEPS) sotb_landscape.cpp sotb_landscape.h sotb_element.h e_sprite.h e_texture.h sotb_landscapedesc.h sotb_landscapecoord.h e_sprite.h
+	$(CPP) -c sotb_landscape.cpp -o Win32/Debug/sotb_landscape.o $(CXXFLAGS)
+
+Win32/Debug/application.o: $(GLOBALDEPS) application.cpp application.h e_audio.h e_camera.h sotb_landscape.h sotb_element.h e_sprite.h e_texture.h sotb_landscapedesc.h sotb_landscapecoord.h e_sprite.h
+	$(CPP) -c application.cpp -o Win32/Debug/application.o $(CXXFLAGS)
+
+Win32/Debug/main.o: $(GLOBALDEPS) main.cpp application.h e_audio.h e_camera.h sotb_landscape.h sotb_element.h e_sprite.h e_texture.h sotb_landscapedesc.h sotb_landscapecoord.h e_sprite.h
+	$(CPP) -c main.cpp -o Win32/Debug/main.o $(CXXFLAGS)
+
+Win32/Debug/Shadow_of_the_Beast_private.res: Win32/Debug/Shadow_of_the_Beast_private.rc 
+	$(WINDRES) --input-format=rc -o Win32/Debug/Shadow_of_the_Beast_private.res $(RCINCS) Win32/Debug/SHADOW~1.RC -O coff

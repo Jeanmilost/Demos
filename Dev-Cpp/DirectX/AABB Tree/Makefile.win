@@ -1,0 +1,76 @@
+# Project: AABB Tree
+# Compiler: Default GCC compiler
+# Compiler Type: MingW 3
+# Makefile created by wxDev-C++ IDE 7.4.2.569 on 08.11.18 17:36
+
+WXLIBNAME = wxmsw29u
+CPP       = g++.exe
+CC        = gcc.exe
+WINDRES   = "windres.exe"
+OBJ       = Win32/Debug/e_maths.o Win32/Debug/e_camera.o Win32/Debug/e_text.o Win32/Debug/e_polygon.o Win32/Debug/e_polygonlist.o Win32/Debug/e_boundingbox.o Win32/Debug/e_boundingsphere.o Win32/Debug/e_collisions.o Win32/Debug/e_aabbtree.o Win32/Debug/e_mesh.o Win32/Debug/application.o Win32/Debug/main.o Win32/Debug/AABB_Tree_private.res
+LINKOBJ   = "Win32/Debug/e_maths.o" "Win32/Debug/e_camera.o" "Win32/Debug/e_text.o" "Win32/Debug/e_polygon.o" "Win32/Debug/e_polygonlist.o" "Win32/Debug/e_boundingbox.o" "Win32/Debug/e_boundingsphere.o" "Win32/Debug/e_collisions.o" "Win32/Debug/e_aabbtree.o" "Win32/Debug/e_mesh.o" "Win32/Debug/application.o" "Win32/Debug/main.o" Win32/Debug/AABB_Tree_private.res
+LIBS      = -L"C:/Program Files (x86)/Dev-Cpp/lib/wx/gcc_lib" -L"C:/Program Files (x86)/Dev-Cpp/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW32/lib" "C:/Program Files (x86)/Dev-Cpp/lib/libd3d9.a" "C:/Program Files (x86)/Dev-Cpp/lib/libd3dx9.a" "C:/Program Files (x86)/Dev-Cpp/lib/libdinput8.a" "C:/Program Files (x86)/Dev-Cpp/lib/libdxguid.a" "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17134.0/um/x86/Gdi32.Lib" "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17134.0/um/x86/ComDlg32.Lib"  -g3 
+INCS      = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/include/"
+CXXINCS   = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/" -I"C:/Program Files (x86)/Dev-Cpp/include/common" -I"C:/Program Files (x86)/Dev-Cpp/include/"
+RCINCS    = --include-dir "C:/PROGRA~2/Dev-Cpp/include/common"
+BIN       = Win32/Debug/AABB Tree.exe
+DEFINES   = 
+CXXFLAGS  = $(CXXINCS) $(DEFINES)   -g3
+CFLAGS    = $(INCS) $(DEFINES)   -g3
+GPROF     = gprof.exe
+ifeq ($(OS),Windows_NT)
+   RM = del /Q
+   FixPath = $(subst /,\,$1)
+else
+   RM = rm -f
+   FixPath = $1
+endif
+LINK      = g++.exe
+
+.PHONY: all all-before all-after clean clean-custom
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	$(RM) $(call FixPath,$(LINKOBJ)) "$(call FixPath,$(BIN))"
+
+$(BIN): $(OBJ)
+	$(LINK) $(LINKOBJ) -o "$(BIN)" $(LIBS) 
+
+Win32/Debug/e_maths.o: $(GLOBALDEPS) Sources/e_maths.cpp Sources/e_maths.h
+	$(CPP) -c Sources/e_maths.cpp -o Win32/Debug/e_maths.o $(CXXFLAGS)
+
+Win32/Debug/e_camera.o: $(GLOBALDEPS) Sources/e_camera.cpp Sources/e_camera.h
+	$(CPP) -c Sources/e_camera.cpp -o Win32/Debug/e_camera.o $(CXXFLAGS)
+
+Win32/Debug/e_text.o: $(GLOBALDEPS) Sources/e_text.cpp Sources/e_text.h
+	$(CPP) -c Sources/e_text.cpp -o Win32/Debug/e_text.o $(CXXFLAGS)
+
+Win32/Debug/e_polygon.o: $(GLOBALDEPS) Sources/e_polygon.cpp Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_maths.h
+	$(CPP) -c Sources/e_polygon.cpp -o Win32/Debug/e_polygon.o $(CXXFLAGS)
+
+Win32/Debug/e_polygonlist.o: $(GLOBALDEPS) Sources/e_polygonlist.cpp Sources/e_polygonlist.h Sources/e_maths.h Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_maths.h Sources/e_boundingbox.h Sources/e_boundingsphere.h
+	$(CPP) -c Sources/e_polygonlist.cpp -o Win32/Debug/e_polygonlist.o $(CXXFLAGS)
+
+Win32/Debug/e_boundingbox.o: $(GLOBALDEPS) Sources/e_boundingbox.cpp Sources/e_boundingbox.h Sources/e_maths.h
+	$(CPP) -c Sources/e_boundingbox.cpp -o Win32/Debug/e_boundingbox.o $(CXXFLAGS)
+
+Win32/Debug/e_boundingsphere.o: $(GLOBALDEPS) Sources/e_boundingsphere.cpp Sources/e_boundingsphere.h
+	$(CPP) -c Sources/e_boundingsphere.cpp -o Win32/Debug/e_boundingsphere.o $(CXXFLAGS)
+
+Win32/Debug/e_collisions.o: $(GLOBALDEPS) Sources/e_collisions.cpp Sources/e_collisions.h Sources/e_maths.h Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_maths.h
+	$(CPP) -c Sources/e_collisions.cpp -o Win32/Debug/e_collisions.o $(CXXFLAGS)
+
+Win32/Debug/e_aabbtree.o: $(GLOBALDEPS) Sources/e_aabbtree.cpp Sources/e_aabbtree.h Sources/e_maths.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_boundingsphere.h Sources/e_polygonlist.h Sources/e_maths.h Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_boundingbox.h Sources/e_boundingsphere.h Sources/e_collisions.h Sources/e_maths.h Sources/e_polygon.h
+	$(CPP) -c Sources/e_aabbtree.cpp -o Win32/Debug/e_aabbtree.o $(CXXFLAGS)
+
+Win32/Debug/e_mesh.o: $(GLOBALDEPS) Sources/e_mesh.cpp Sources/e_mesh.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_polygonlist.h Sources/e_maths.h Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_boundingbox.h Sources/e_boundingsphere.h
+	$(CPP) -c Sources/e_mesh.cpp -o Win32/Debug/e_mesh.o $(CXXFLAGS)
+
+Win32/Debug/application.o: $(GLOBALDEPS) Sources/application.cpp Sources/application.h Sources/resources.h Sources/e_camera.h Sources/e_text.h Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_maths.h Sources/e_polygonlist.h Sources/e_maths.h Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_boundingsphere.h Sources/e_boundingbox.h Sources/e_boundingsphere.h Sources/e_aabbtree.h Sources/e_maths.h Sources/e_boundingbox.h Sources/e_boundingsphere.h Sources/e_polygonlist.h Sources/e_collisions.h Sources/e_maths.h Sources/e_polygon.h Sources/e_collisions.h Sources/e_mesh.h Sources/e_boundingbox.h Sources/e_polygonlist.h
+	$(CPP) -c Sources/application.cpp -o Win32/Debug/application.o $(CXXFLAGS)
+
+Win32/Debug/main.o: $(GLOBALDEPS) Sources/main.cpp Sources/application.h Sources/resources.h Sources/e_camera.h Sources/e_text.h Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_maths.h Sources/e_maths.h Sources/e_polygonlist.h Sources/e_maths.h Sources/e_polygon.h Sources/e_boundingbox.h Sources/e_boundingsphere.h Sources/e_boundingbox.h Sources/e_boundingsphere.h Sources/e_aabbtree.h Sources/e_maths.h Sources/e_boundingbox.h Sources/e_boundingsphere.h Sources/e_polygonlist.h Sources/e_collisions.h Sources/e_maths.h Sources/e_polygon.h Sources/e_collisions.h Sources/e_mesh.h Sources/e_boundingbox.h Sources/e_polygonlist.h
+	$(CPP) -c Sources/main.cpp -o Win32/Debug/main.o $(CXXFLAGS)
+
+Win32/Debug/AABB_Tree_private.res: Win32/Debug/AABB_Tree_private.rc Sources/Menus.rc 
+	$(WINDRES) --input-format=rc -o Win32/Debug/AABB_Tree_private.res $(RCINCS) Win32/Debug/AABB_T~1.RC -O coff

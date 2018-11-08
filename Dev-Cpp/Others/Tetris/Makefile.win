@@ -1,0 +1,79 @@
+# Project: Tetris
+# Compiler: Default GCC compiler
+# Compiler Type: MingW 3
+# Makefile created by wxDev-C++ IDE 7.4.2.569 on 08.11.18 18:02
+
+WXLIBNAME = wxmsw29u
+CPP       = g++.exe
+CC        = gcc.exe
+WINDRES   = "windres.exe"
+OBJ       = Win32/Debug/main.o Win32/Debug/playfield.o Win32/Debug/cell.o Win32/Debug/piece.o Win32/Debug/rubis.o Win32/Debug/emerald.o Win32/Debug/saphyr.o Win32/Debug/diamond.o Win32/Debug/engine.o Win32/Debug/agatha.o Win32/Debug/citrin.o Win32/Debug/aquamarine.o Win32/Debug/gameinterface.o Win32/Debug/Tetris_private.res
+LINKOBJ   = "Win32/Debug/main.o" "Win32/Debug/playfield.o" "Win32/Debug/cell.o" "Win32/Debug/piece.o" "Win32/Debug/rubis.o" "Win32/Debug/emerald.o" "Win32/Debug/saphyr.o" "Win32/Debug/diamond.o" "Win32/Debug/engine.o" "Win32/Debug/agatha.o" "Win32/Debug/citrin.o" "Win32/Debug/aquamarine.o" "Win32/Debug/gameinterface.o" Win32/Debug/Tetris_private.res
+LIBS      = -L"C:/Program Files (x86)/Dev-Cpp/lib/wx/gcc_lib" -L"C:/Program Files (x86)/Dev-Cpp/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW32/lib"  -g3 
+INCS      = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include"
+CXXINCS   = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/" -I"C:/Program Files (x86)/Dev-Cpp/include/common"
+RCINCS    = --include-dir "C:/PROGRA~2/Dev-Cpp/include/common"
+BIN       = Win32/Debug/Tetris.exe
+DEFINES   = 
+CXXFLAGS  = $(CXXINCS) $(DEFINES)   -g3
+CFLAGS    = $(INCS) $(DEFINES)   -g3
+GPROF     = gprof.exe
+ifeq ($(OS),Windows_NT)
+   RM = del /Q
+   FixPath = $(subst /,\,$1)
+else
+   RM = rm -f
+   FixPath = $1
+endif
+LINK      = g++.exe
+
+.PHONY: all all-before all-after clean clean-custom
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	$(RM) $(call FixPath,$(LINKOBJ)) "$(call FixPath,$(BIN))"
+
+$(BIN): $(OBJ)
+	$(LINK) $(LINKOBJ) -o "$(BIN)" $(LIBS) 
+
+Win32/Debug/main.o: $(GLOBALDEPS) main.cpp engine.h playfield.h Cell.h rubis.h piece.h cell.h playfield.h emerald.h piece.h saphyr.h piece.h diamond.h piece.h agatha.h piece.h citrin.h piece.h aquamarine.h piece.h gameinterface.h engine.h
+	$(CPP) -c main.cpp -o Win32/Debug/main.o $(CXXFLAGS)
+
+Win32/Debug/playfield.o: $(GLOBALDEPS) playfield.cpp playfield.h Cell.h
+	$(CPP) -c playfield.cpp -o Win32/Debug/playfield.o $(CXXFLAGS)
+
+Win32/Debug/cell.o: $(GLOBALDEPS) cell.cpp cell.h
+	$(CPP) -c cell.cpp -o Win32/Debug/cell.o $(CXXFLAGS)
+
+Win32/Debug/piece.o: $(GLOBALDEPS) piece.cpp piece.h cell.h playfield.h Cell.h
+	$(CPP) -c piece.cpp -o Win32/Debug/piece.o $(CXXFLAGS)
+
+Win32/Debug/rubis.o: $(GLOBALDEPS) rubis.cpp rubis.h piece.h cell.h playfield.h Cell.h
+	$(CPP) -c rubis.cpp -o Win32/Debug/rubis.o $(CXXFLAGS)
+
+Win32/Debug/emerald.o: $(GLOBALDEPS) emerald.cpp emerald.h piece.h cell.h playfield.h Cell.h
+	$(CPP) -c emerald.cpp -o Win32/Debug/emerald.o $(CXXFLAGS)
+
+Win32/Debug/saphyr.o: $(GLOBALDEPS) saphyr.cpp Saphyr.h piece.h cell.h playfield.h Cell.h
+	$(CPP) -c saphyr.cpp -o Win32/Debug/saphyr.o $(CXXFLAGS)
+
+Win32/Debug/diamond.o: $(GLOBALDEPS) diamond.cpp diamond.h piece.h cell.h playfield.h Cell.h
+	$(CPP) -c diamond.cpp -o Win32/Debug/diamond.o $(CXXFLAGS)
+
+Win32/Debug/engine.o: $(GLOBALDEPS) engine.cpp engine.h playfield.h Cell.h rubis.h piece.h cell.h playfield.h emerald.h piece.h saphyr.h piece.h diamond.h piece.h agatha.h piece.h citrin.h piece.h aquamarine.h piece.h
+	$(CPP) -c engine.cpp -o Win32/Debug/engine.o $(CXXFLAGS)
+
+Win32/Debug/agatha.o: $(GLOBALDEPS) agatha.cpp agatha.h piece.h cell.h playfield.h Cell.h
+	$(CPP) -c agatha.cpp -o Win32/Debug/agatha.o $(CXXFLAGS)
+
+Win32/Debug/citrin.o: $(GLOBALDEPS) citrin.cpp citrin.h piece.h cell.h playfield.h Cell.h
+	$(CPP) -c citrin.cpp -o Win32/Debug/citrin.o $(CXXFLAGS)
+
+Win32/Debug/aquamarine.o: $(GLOBALDEPS) aquamarine.cpp Aquamarine.h piece.h cell.h playfield.h Cell.h
+	$(CPP) -c aquamarine.cpp -o Win32/Debug/aquamarine.o $(CXXFLAGS)
+
+Win32/Debug/gameinterface.o: $(GLOBALDEPS) gameinterface.cpp gameinterface.h engine.h playfield.h Cell.h rubis.h piece.h cell.h playfield.h emerald.h piece.h saphyr.h piece.h diamond.h piece.h agatha.h piece.h citrin.h piece.h aquamarine.h piece.h
+	$(CPP) -c gameinterface.cpp -o Win32/Debug/gameinterface.o $(CXXFLAGS)
+
+Win32/Debug/Tetris_private.res: Win32/Debug/Tetris_private.rc 
+	$(WINDRES) --input-format=rc -o Win32/Debug/Tetris_private.res $(RCINCS) Win32/Debug/TETRIS~1.RC -O coff
