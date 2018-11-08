@@ -68,7 +68,7 @@ void __fastcall TMainForm::aeEventsIdle(TObject* pSender, bool& done)
                          &frame);
     else
         Raster::Rasterize(Raster::Vertex(polygon2.GetVertex1(), 0.0f, 1.0f, 1.0f),
-                          Raster::Vertex(polygon2.GetVertex2(), 0.0f, 1.0f, 1.0f),
+                          Raster::Vertex(polygon2.GetVertex2(), 1.0f, 0.0f, 1.0f),
                           Raster::Vertex(polygon2.GetVertex3(), 1.0f, 1.0f, 0.0f),
                          &frame);
 
