@@ -1,0 +1,55 @@
+# Project: iPhone_Starfield
+# Compiler: Default GCC compiler
+# Compiler Type: MingW 3
+# Makefile created by wxDev-C++ IDE 7.4.2.569 on 09.11.18 13:22
+
+WXLIBNAME = wxmsw29u
+CPP       = g++.exe
+CC        = gcc.exe
+WINDRES   = "windres.exe"
+OBJ       = Obj/Main.o Obj/IP_Camera.o Obj/IP_Random.o Obj/IP_Star.o Obj/IP_Constants.o Obj/iPhone_Starfield_private.res
+LINKOBJ   = "Obj/Main.o" "Obj/IP_Camera.o" "Obj/IP_Random.o" "Obj/IP_Star.o" "Obj/IP_Constants.o" Obj/iPhone_Starfield_private.res
+LIBS      = -L"C:/Program Files (x86)/Dev-Cpp/lib/wx/gcc_lib" -L"C:/Program Files (x86)/Dev-Cpp/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW32/lib" -lopengl32 -lglu32  -lgdi32 -mwindows  -g3 
+INCS      = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include"
+CXXINCS   = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/" -I"C:/Program Files (x86)/Dev-Cpp/include/common"
+RCINCS    = --include-dir "C:/PROGRA~2/Dev-Cpp/include/common"
+BIN       = Bin/iPhone_Starfield.exe
+DEFINES   = 
+CXXFLAGS  = $(CXXINCS) $(DEFINES)   -g3
+CFLAGS    = $(INCS) $(DEFINES)   -g3
+GPROF     = gprof.exe
+ifeq ($(OS),Windows_NT)
+   RM = del /Q
+   FixPath = $(subst /,\,$1)
+else
+   RM = rm -f
+   FixPath = $1
+endif
+LINK      = g++.exe
+
+.PHONY: all all-before all-after clean clean-custom
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	$(RM) $(call FixPath,$(LINKOBJ)) "$(call FixPath,$(BIN))"
+
+$(BIN): $(OBJ)
+	$(LINK) $(LINKOBJ) -o "$(BIN)" $(LIBS) 
+
+Obj/Main.o: $(GLOBALDEPS) Main.cpp iPhone/IP_Constants.h Classes/IP_Camera.h Classes/IP_Random.h Classes/IP_Star.h Classes/IP_Random.h
+	$(CPP) -c Main.cpp -o Obj/Main.o $(CXXFLAGS)
+
+Obj/IP_Camera.o: $(GLOBALDEPS) Classes/IP_Camera.cpp Classes/IP_Camera.h
+	$(CPP) -c Classes/IP_Camera.cpp -o Obj/IP_Camera.o $(CXXFLAGS)
+
+Obj/IP_Random.o: $(GLOBALDEPS) Classes/IP_Random.cpp Classes/IP_Random.h
+	$(CPP) -c Classes/IP_Random.cpp -o Obj/IP_Random.o $(CXXFLAGS)
+
+Obj/IP_Star.o: $(GLOBALDEPS) Classes/IP_Star.cpp Classes/IP_Star.h Classes/IP_Random.h
+	$(CPP) -c Classes/IP_Star.cpp -o Obj/IP_Star.o $(CXXFLAGS)
+
+Obj/IP_Constants.o: $(GLOBALDEPS) iPhone/IP_Constants.cpp
+	$(CPP) -c iPhone/IP_Constants.cpp -o Obj/IP_Constants.o $(CXXFLAGS)
+
+Obj/iPhone_Starfield_private.res: Obj/iPhone_Starfield_private.rc 
+	$(WINDRES) --input-format=rc -o Obj/iPhone_Starfield_private.res $(RCINCS) Obj/IPHONE~1.RC -O coff

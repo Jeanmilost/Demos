@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Starfield" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Starfield" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Starfield" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-D__WIN32__" />
+			<Add directory="Classes/QREngine/QR_3D/QR_Camera" />
+			<Add directory="Classes/QREngine/QR_Base/Classes/QR_Random" />
+			<Add directory="Classes/QREngine/QR_Geometry/Classes/QR_Math/QR_Vector" />
+			<Add directory="Classes/QREngine/QR_Graphics/Classes/QR_Color" />
+			<Add directory="Classes/QREngine/QR_Graphics/Classes/QR_GfxCommon" />
+			<Add directory="Classes" />
+		</Compiler>
+		<Linker>
+			<Add library="opengl32" />
+			<Add library="glu32" />
+			<Add library="gdi32" />
+		</Linker>
+		<Unit filename="Classes/QREngine/QR_3D/QR_Camera/QR_Camera.cpp" />
+		<Unit filename="Classes/QREngine/QR_3D/QR_Camera/QR_Camera.h" />
+		<Unit filename="Classes/QREngine/QR_Base/Classes/QR_Random/QR_Random.cpp" />
+		<Unit filename="Classes/QREngine/QR_Base/Classes/QR_Random/QR_Random.h" />
+		<Unit filename="Classes/QREngine/QR_Geometry/Classes/QR_Math/QR_Vector/QR_Vector2D.cpp" />
+		<Unit filename="Classes/QREngine/QR_Geometry/Classes/QR_Math/QR_Vector/QR_Vector2D.h" />
+		<Unit filename="Classes/QREngine/QR_Geometry/Classes/QR_Math/QR_Vector/QR_Vector3D.cpp" />
+		<Unit filename="Classes/QREngine/QR_Geometry/Classes/QR_Math/QR_Vector/QR_Vector3D.h" />
+		<Unit filename="Classes/QREngine/QR_Graphics/Classes/QR_Color/QR_Color.cpp" />
+		<Unit filename="Classes/QREngine/QR_Graphics/Classes/QR_Color/QR_Color.h" />
+		<Unit filename="Classes/QREngine/QR_Graphics/Classes/QR_GfxCommon/QR_GfxCommon.cpp" />
+		<Unit filename="Classes/QREngine/QR_Graphics/Classes/QR_GfxCommon/QR_GfxCommon.h" />
+		<Unit filename="Classes/QR_Constants.cpp" />
+		<Unit filename="Classes/QR_Constants.h" />
+		<Unit filename="Classes/QR_Star.cpp" />
+		<Unit filename="Classes/QR_Star.h" />
+		<Unit filename="Classes/QR_Starfield.cpp" />
+		<Unit filename="Classes/QR_Starfield.h" />
+		<Unit filename="Main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

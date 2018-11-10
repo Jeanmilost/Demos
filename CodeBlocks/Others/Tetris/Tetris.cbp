@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Tetris" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="default">
+				<Option output="Win32/Tetris" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="Build" />
+				<Option object_output="Build" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+			</Target>
+		</Build>
+		<Compiler>
+			<Add directory="Classes" />
+		</Compiler>
+		<Unit filename="Classes/QR_Agathe.cpp" />
+		<Unit filename="Classes/QR_Agathe.h" />
+		<Unit filename="Classes/QR_Aquamarine.cpp" />
+		<Unit filename="Classes/QR_Aquamarine.h" />
+		<Unit filename="Classes/QR_Cell.cpp" />
+		<Unit filename="Classes/QR_Cell.h" />
+		<Unit filename="Classes/QR_Citrine.cpp" />
+		<Unit filename="Classes/QR_Citrine.h" />
+		<Unit filename="Classes/QR_Diamond.cpp" />
+		<Unit filename="Classes/QR_Diamond.h" />
+		<Unit filename="Classes/QR_Emerald.cpp" />
+		<Unit filename="Classes/QR_Emerald.h" />
+		<Unit filename="Classes/QR_GameEngine.cpp" />
+		<Unit filename="Classes/QR_GameEngine.h" />
+		<Unit filename="Classes/QR_GameInterface.cpp" />
+		<Unit filename="Classes/QR_GameInterface.h" />
+		<Unit filename="Classes/QR_Piece.cpp" />
+		<Unit filename="Classes/QR_Piece.h" />
+		<Unit filename="Classes/QR_Playfield.cpp" />
+		<Unit filename="Classes/QR_Playfield.h" />
+		<Unit filename="Classes/QR_Ruby.cpp" />
+		<Unit filename="Classes/QR_Ruby.h" />
+		<Unit filename="Classes/QR_Sapphire.cpp" />
+		<Unit filename="Classes/QR_Sapphire.h" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

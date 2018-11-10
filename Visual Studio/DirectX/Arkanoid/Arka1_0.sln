@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Arka1_0", "Arka1_0.vcxproj", "{C8D34360-8C73-4968-AF51-66BB8906E9CC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+		Template|x86 = Template|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C8D34360-8C73-4968-AF51-66BB8906E9CC}.Debug|x86.ActiveCfg = Debug|Win32
+		{C8D34360-8C73-4968-AF51-66BB8906E9CC}.Debug|x86.Build.0 = Debug|Win32
+		{C8D34360-8C73-4968-AF51-66BB8906E9CC}.Release|x86.ActiveCfg = Release|Win32
+		{C8D34360-8C73-4968-AF51-66BB8906E9CC}.Release|x86.Build.0 = Release|Win32
+		{C8D34360-8C73-4968-AF51-66BB8906E9CC}.Template|x86.ActiveCfg = Template|Win32
+		{C8D34360-8C73-4968-AF51-66BB8906E9CC}.Template|x86.Build.0 = Template|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {56A816C5-009B-4216-8F4A-7E485CA23B49}
+	EndGlobalSection
+EndGlobal
