@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IP_Calculator", "IP_Calculator.vcxproj", "{68A1AEB7-E338-4070-A594-14C7790D939B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{68A1AEB7-E338-4070-A594-14C7790D939B}.Debug|x86.ActiveCfg = Debug|Win32
+		{68A1AEB7-E338-4070-A594-14C7790D939B}.Debug|x86.Build.0 = Debug|Win32
+		{68A1AEB7-E338-4070-A594-14C7790D939B}.Release|x86.ActiveCfg = Release|Win32
+		{68A1AEB7-E338-4070-A594-14C7790D939B}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4641D04-D72C-4DD7-89D2-39BA293FB6F8}
+	EndGlobalSection
+EndGlobal

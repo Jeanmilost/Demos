@@ -1,0 +1,355 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// French (France) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+#ifdef _WIN32
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_IP_CALCULATOR_DIALOG DIALOGEX 0, 0, 297, 236
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Calculateur d'adresses IP"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Quitter",IDOK,7,219,50,14
+    PUSHBUTTON      "&Calculer",IDC_CALCULATE,65,219,50,14
+    PUSHBUTTON      "&Réinitialiser",IDC_RESET,123,219,50,14
+    PUSHBUTTON      "&?",ID_HELP,239,219,50,14
+    GROUPBOX        "Paramètres",IDC_STATIC,5,0,285,65
+    EDITTEXT        IDC_IP1,110,15,25,12,ES_CENTER | ES_NUMBER
+    EDITTEXT        IDC_IP2,145,15,25,12,ES_CENTER | ES_NUMBER
+    EDITTEXT        IDC_IP3,180,15,25,12,ES_CENTER | ES_NUMBER
+    EDITTEXT        IDC_IP4,215,15,25,12,ES_CENTER | ES_NUMBER
+    EDITTEXT        IDC_NBBITS,255,15,25,12,ES_CENTER | ES_NUMBER
+    EDITTEXT        IDC_USERP,110,30,170,12,ES_CENTER | ES_NUMBER
+    EDITTEXT        IDC_USERSR,110,45,170,12,ES_CENTER | ES_NUMBER
+    LTEXT           "Adresse IP / Masque",IDC_STATIC,15,15,90,12,
+                    SS_CENTERIMAGE
+    LTEXT           "Nombre de postes",IDC_STATIC,15,30,90,12,SS_CENTERIMAGE
+    LTEXT           "Nombre de sous-réseaux",IDC_STATIC,15,45,90,12,
+                    SS_CENTERIMAGE
+    CTEXT           ".",IDC_STATIC,135,15,10,12,SS_CENTERIMAGE
+    CTEXT           ".",IDC_STATIC,170,15,10,12,SS_CENTERIMAGE
+    CTEXT           ".",IDC_STATIC,205,15,10,12,SS_CENTERIMAGE
+    CTEXT           "/",IDC_STATIC,240,15,15,12,SS_CENTERIMAGE
+    GROUPBOX        "Résultats",IDC_STATIC,5,70,285,145
+    EDITTEXT        IDC_MASK1,110,85,25,12,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    LTEXT           "Masque de sous-réseaux",IDC_STATIC,15,85,90,12,
+                    SS_CENTERIMAGE
+    EDITTEXT        IDC_MASK2,145,85,25,12,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    EDITTEXT        IDC_MASK3,180,85,25,12,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    EDITTEXT        IDC_MASK4,215,85,25,12,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    CTEXT           ".",IDC_STATIC,135,85,10,12,SS_CENTERIMAGE
+    CTEXT           ".",IDC_STATIC,170,85,10,12,SS_CENTERIMAGE
+    CTEXT           ".",IDC_STATIC,205,85,10,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_MAXP,10,115,60,15,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    CTEXT           "Nombre max. de postes / Bits",IDC_STATIC,10,100,95,12,
+                    SS_CENTERIMAGE
+    EDITTEXT        IDC_MAXSR,125,115,60,15,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    CTEXT           "Nombre max. de sous-réseaux / Bits",IDC_STATIC,115,100,
+                    115,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_PAS,245,115,40,12,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    CTEXT           "Pas",IDC_STATIC,245,100,40,12,SS_CENTERIMAGE
+    CTEXT           "Plage des sous-réseaux",IDC_STATIC,10,135,275,10,
+                    SS_CENTERIMAGE
+    EDITTEXT        IDC_PLAGE1,10,145,275,10,ES_CENTER | ES_READONLY
+    CTEXT           "Plage pour chaque sous-réseau",IDC_STATIC,10,160,275,10,
+                    SS_CENTERIMAGE
+    EDITTEXT        IDC_PLAGE2,10,170,275,40,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY | WS_VSCROLL
+    EDITTEXT        IDC_NBBITSP,80,115,15,15,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    EDITTEXT        IDC_NBBITSSR,195,115,15,15,ES_CENTER | ES_READONLY | 
+                    ES_NUMBER
+    CTEXT           "/",IDC_STATIC,70,115,10,15,SS_CENTERIMAGE
+    CTEXT           "/",IDC_STATIC,185,115,10,15,SS_CENTERIMAGE
+    PUSHBUTTON      "&Options",IDC_OPTIONS,181,219,50,14
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,2
+ PRODUCTVERSION 1,0,0,2
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040c04b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "Calculateur d'adresses IP\0"
+            VALUE "FileVersion", "1, 0, 0, 2\0"
+            VALUE "InternalName", "Calculateur d'adresses IP\0"
+            VALUE "LegalCopyright", "Copyright (C) 2004\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "IP_Calculator.EXE\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "Calculateur d'adresses IP\0"
+            VALUE "ProductVersion", "1, 0, 0, 2\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x40c, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_IP_CALCULATOR_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 290
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 229
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "&A propos de IP_Calculator..."
+    IDP_SOCKETS_INIT_FAILED "Echec de l'initialisation des sockets Windows."
+END
+
+#endif    // French (France) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// French (Switzerland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRS)
+#ifdef _WIN32
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH_SWISS
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ATTRIBUATION DIALOG DISCARDABLE  0, 0, 226, 116
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Bits non attribués"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,90,100,45,14
+    CONTROL         "Ajouter les bits restants aux postes",IDC_PONLY,"Button",
+                    BS_AUTORADIOBUTTON,15,35,145,10
+    CONTROL         "Ajouter les bits restants aux sous-réseaux",IDC_SRONLY,
+                    "Button",BS_AUTORADIOBUTTON,15,50,145,10
+    CONTROL         "Ajouter",IDC_NP_SR,"Button",BS_AUTORADIOBUTTON,15,65,38,
+                    10
+    CONTROL         "Ajouter",IDC_NSR_P,"Button",BS_AUTORADIOBUTTON,15,80,38,
+                    10
+    EDITTEXT        IDC_POSTES,58,65,20,12,ES_CENTER | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "bits aux postes, le reste au sous-réseau",IDC_STATIC,83,
+                    65,124,10,SS_CENTERIMAGE
+    EDITTEXT        IDC_SOUS_RESEAUX,58,80,20,12,ES_CENTER | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "bits au sous-réseau, le reste aux postes",IDC_STATIC,83,
+                    80,124,10,SS_CENTERIMAGE
+    GROUPBOX        "Voulez-vous :",IDC_STATIC,10,20,204,75
+    LTEXT           "Il y a",IDC_STATIC,10,5,20,10
+    EDITTEXT        IDC_EDIT2,30,5,15,12,ES_CENTER | ES_READONLY | NOT 
+                    WS_BORDER
+    LTEXT           "bits non attribués",IDC_STATIC,50,5,65,10
+END
+
+IDD_PROPERTIES DIALOG DISCARDABLE  0, 0, 157, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Options du calculateur"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,10,45,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,95,45,50,14
+    GROUPBOX        "Options",IDC_STATIC,5,5,145,35
+    CONTROL         "Déverrouiller le masque de bits d'entrée",IDC_CHECK1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,20,135,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ATTRIBUATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 219
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 109
+    END
+
+    IDD_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 150
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 12, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\IP_Calculator.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""l.fra\\afxres.rc""          // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\IP_Calculator.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE 
+BEGIN
+    "C",            IDC_CALCULATE,          VIRTKEY, ALT, NOINVERT
+    "O",            IDC_OPTIONS,            VIRTKEY, ALT, NOINVERT
+    "Q",            IDOK,                   VIRTKEY, ALT, NOINVERT
+    "R",            IDC_RESET,              VIRTKEY, ALT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_CURSOR1             CURSOR  DISCARDABLE     "res\\cursor1.cur"
+IDC_CURSOR2             CURSOR  DISCARDABLE     "res\\cursor2.cur"
+#endif    // French (Switzerland) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+#ifdef _WIN32
+LANGUAGE 12, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\IP_Calculator.rc2"  // non-Microsoft Visual C++ edited resources
+#include "l.fra\afxres.rc"          // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

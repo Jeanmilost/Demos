@@ -1,7 +1,7 @@
 # Project: iPhone_Starfield
 # Compiler: Default GCC compiler
 # Compiler Type: MingW 3
-# Makefile created by wxDev-C++ IDE 7.4.2.569 on 09.11.18 13:22
+# Makefile created by wxDev-C++ IDE 7.4.2.569 on 14.01.19 13:26
 
 WXLIBNAME = wxmsw29u
 CPP       = g++.exe
