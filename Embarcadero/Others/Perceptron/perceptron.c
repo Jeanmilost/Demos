@@ -11,7 +11,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
- 
+
 //-----------------------------------------------------------------------------
 #define M_INPUT_PATTERNS          13
 #define M_LEAST_MEAN_SQUARE_ERROR 0.001f
@@ -71,24 +71,24 @@ QR_Perceptron* Create(int inputNumber, EActivationFuncs function)
 {
     int            i;
     QR_Perceptron* pPerceptron;
- 
+
     // seed the random function with the current time
     srand((unsigned)time(0));
- 
+
     // create a perceptron
     pPerceptron = (QR_Perceptron*)malloc(sizeof(QR_Perceptron));
- 
+
     // create memory for inputs and weights, ans set function to use
     pPerceptron->m_Count              = inputNumber;
     pPerceptron->m_pInputs            = (float*)malloc(inputNumber * sizeof(float));
     pPerceptron->m_pWeights           = (float*)malloc(inputNumber * sizeof(float));
     pPerceptron->m_ActivationFunction = function;
- 
+
     // populate the weight vector with values between -0.5 and 0.5
     for (i = 0; i < inputNumber; ++i)
         pPerceptron->m_pWeights[i] =
                 (((float)rand() / ((float)RAND_MAX + 1.0f)) - 0.5f);
- 
+
     return pPerceptron;
 }
 //-----------------------------------------------------------------------------
@@ -122,11 +122,11 @@ float CalculateNet(QR_Perceptron* pPerceptron)
 {
     int   i;
     float action = 0.0f;
- 
+
     // get the potential action for this input pattern
     for (i = 0; i < pPerceptron->m_Count; ++i)
         action += pPerceptron->m_pInputs[i] * pPerceptron->m_pWeights[i];
- 
+
     // decide what to do depending on the used activation function
     switch (pPerceptron->m_ActivationFunction)
     {
@@ -137,21 +137,21 @@ float CalculateNet(QR_Perceptron* pPerceptron)
                 action = 1.0f;
             else
                 action = 0.0f;
- 
+
             break;
- 
+
         case E_AF_Sigmoid:
             // the sigmoid function is a little more complicated. It forms a
             // sigma "S" in a x-y graph, hence its name. It smoothens the output
             action = 1.0f / (1.0f + exp(-action));
             break;
- 
+
         case E_AF_Hyperbolic_Tangent:
             // the hyperbolic tangent function is sometimes used instead of the sigmoid one
             action = (exp(2.0f * action) - 1.0f) / (exp(2.0f * action) + 1.0f);
             break;
     }
- 
+
     return action;
 }
 //-----------------------------------------------------------------------------
@@ -168,7 +168,7 @@ void AdjustWeights(QR_Perceptron* pPerceptron,
                    float          target)
 {
     int i;
- 
+
     // for all weights, adjust the weight vector to achieve network training
     for (i = 0; i < pPerceptron->m_Count; ++i)
         pPerceptron->m_pWeights[i] +=
@@ -188,7 +188,7 @@ float Recall(QR_Perceptron* pPerceptron, float red, float green, float blue)
     pPerceptron->m_pInputs[0] = red;
     pPerceptron->m_pInputs[1] = green;
     pPerceptron->m_pInputs[2] = blue;
- 
+
     return CalculateNet(pPerceptron);
 }
 //-----------------------------------------------------------------------------
@@ -200,20 +200,20 @@ float Recall(QR_Perceptron* pPerceptron, float red, float green, float blue)
 int IsNumeric(char input[1024])
 {
     int i;
- 
+
     for (i = 0; i < 1024; ++i)
     {
         // found string terminating character?
         if (input[i] == '\0')
            break;
- 
+
         // is digit?
         if (input[i] >= '0' && input[i] <= '9')
             continue;
- 
+
         return 0;
     }
- 
+
     return 1;
 }
 //-----------------------------------------------------------------------------
@@ -255,12 +255,12 @@ int main()
     int            inputCounter;
     int            funcNum;
     QR_Perceptron* pAnn = 0;
- 
+
     // to hold the console input
     char input[1024];
- 
+
     funcNum = -1;
- 
+
     // query user about algorithm to use
     while (funcNum < 0 || funcNum > 2)
     {
@@ -269,16 +269,16 @@ int main()
         printf("2 - Sigmoid\r\n");
         printf("3 - Hyperbolic tangent (NOT WORKING YET)\r\n");
         scanf("%s", input);
- 
+
         if (!IsNumeric(input))
             continue;
- 
+
         funcNum = atoi(input) - 1;
- 
+
         if (funcNum < 0 || funcNum > 2)
             continue;
     }
- 
+
     // dispatch function to use
     switch (funcNum)
     {
@@ -287,30 +287,30 @@ int main()
             // activation function
             pAnn = Create(3, E_AF_Thresold);
             break;
- 
+
         case 1:
             // create a perceptron with 3 inputs, using the sigmoid as
             // activation function
             pAnn = Create(3, E_AF_Sigmoid);
             break;
- 
+
         case 2:
             // create a perceptron with 3 inputs, using the hyprrbolic
             // tangent as activation function
             pAnn = Create(3, E_AF_Hyperbolic_Tangent);
             break;
     }
- 
+
     mse    = 999.0f;
     epochs = 0;
- 
+
     // the training of the neural network
     while (!IsTrained(mse, funcNum))
     {
         error        = 0.0f;
         mse          = 0.0f;
         inputCounter = 0;
- 
+
         // run through all 13 input patterns, what we call an EPOCH
         for (j = 0; j < M_INPUT_PATTERNS; ++j)
         {
@@ -320,31 +320,31 @@ int main()
                 SetInput(pAnn, k, M_Normalize(inputTable[inputCounter]));
                 ++inputCounter;
             }
- 
+
             // get the output of this particular RGB pattern
             output = CalculateNet(pAnn);
- 
+
             // add the error for this iteration to the total error
             error += fabs((float)inputTable[inputCounter] - output);
- 
+
             // adjust the weights according to that error
             AdjustWeights(pAnn, M_TEACHING_STEP, output, inputTable[inputCounter]);
- 
+
             // next pattern
             ++inputCounter;
         }
- 
+
         // compute the mean square error for this epoch
         mse = error / (float)M_INPUT_PATTERNS;
- 
+
         printf("The mean square error of %d epoch is %.8f\r\n", epochs, mse);
         ++epochs;
     }
- 
+
     r = -1;
     g = -1;
     b = -1;
- 
+
     while (true)
     {
         // get red input
@@ -352,57 +352,57 @@ int main()
         {
             printf("Give a RED value (0-255)\r\n");
             scanf("%s", input);
- 
+
             if (!IsNumeric(input))
                 continue;
- 
+
             r = atoi(input);
         }
- 
+
         // get green input
         while (g < 0 || g > 255)
         {
             printf("Give a GREEN value (0-255)\r\n");
             scanf("%s", input);
- 
+
            if (!IsNumeric(input))
                 continue;
- 
+
             g = atoi(input);
         }
- 
+
         // get blue input
         while (b < 0 || b > 255)
         {
             printf("Give a BLUE value (0-255)\r\n");
             scanf("%s", input);
- 
+
             if (!IsNumeric(input))
                 continue;
- 
+
             b = atoi(input);
         }
- 
+
         // recall the neural network
         result = Recall(pAnn, M_Normalize(r), M_Normalize(g), M_Normalize(b));
- 
+
         if (result > 0.5f)
             printf("The value you entered belongs to the BLUE CLASS\r\n");
         else
             printf("The value you entered belongs to the RED CLASS\r\n");
- 
+
         printf("Do you want to continue with trying to recall values from the perceptron?\r\n");
         printf("Press any key for YES and 'N' for no, to exit the program\r\n");
         scanf("%s", input);
- 
+
         // do quit?
         if (input[0] == 'n' || input[0] == 'N')
             break;
- 
+
         // reset for next run
         r = g = b = -1;
     }
- 
+
     Release(pAnn);
     return 0;
 }
