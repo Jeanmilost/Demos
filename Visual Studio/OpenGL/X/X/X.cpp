@@ -42,22 +42,6 @@
 #include <GL/glew.h>
 
 //------------------------------------------------------------------------------
-const char vertexShader2[] = "precision mediump float;"
-"attribute    vec3 aVertices;"
-"uniform      mat4 uProjection;"
-"uniform      mat4 uView;"
-"uniform      mat4 uModel;"
-"void main(void)"
-"{"
-"    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
-"}";
-//------------------------------------------------------------------------------
-const char fragmentShader2[] = "precision mediump float;"
-"void main(void)"
-"{"
-"    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);"
-"}";
-//------------------------------------------------------------------------------
 const char vertexShader[] = "precision mediump float;"
                             "attribute    vec3 aVertices;"
                             "attribute    vec4 aColor;"
@@ -146,7 +130,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     HWND       hWnd;
     MSG        msg;
     BOOL       bQuit = FALSE;
-    float      theta = 0.0f;
 
     // register window class
     wcex.cbSize        = sizeof(WNDCLASSEX);
@@ -180,6 +163,17 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                             NULL);
 
     ::ShowWindow(hWnd, nCmdShow);
+
+    RECT clientRect;
+    ::GetClientRect(hWnd, &clientRect);
+
+    // please wait text
+    HDC hDC = ::GetDC(hWnd);
+    ::SetBkMode(hDC, OPAQUE);
+    ::SetBkColor(hDC, 0x000000);
+    ::SetTextColor(hDC, 0xffffff);
+    ::DrawText(hDC, L"Please wait...", 14, &clientRect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+    ::ReleaseDC(hWnd, hDC);
 
     Renderer_OpenGL renderer;
 
@@ -215,9 +209,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     XModel x;
     x.Set_OnLoadTexture(OnLoadTexture);
     x.Open("Resources\\Models\\Tiny\\tiny_4anim.x");
-
-    RECT clientRect;
-    ::GetClientRect(hWnd, &clientRect);
 
     Matrix4x4F projMatrix;
 
@@ -261,26 +252,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     modelMatrix.m_Table[3][1] =  10.0f;
     modelMatrix.m_Table[3][2] = -50.0f;
 
-    /*REM
-    Mesh mesh;
-    VertexBuffer vb;
-    vb.m_Format.m_Type = VertexFormat::IE_VT_Triangles;
-
-    vb.m_Data.push_back(0.0f);
-    vb.m_Data.push_back(1.0f);
-    vb.m_Data.push_back(-2.0f);
-
-    vb.m_Data.push_back(0.87f);
-    vb.m_Data.push_back(-0.5f);
-    vb.m_Data.push_back(-2.0f);
-
-    vb.m_Data.push_back(-0.87f);
-    vb.m_Data.push_back(-0.5f);
-    vb.m_Data.push_back(-2.0f);
-
-    mesh.m_VB.push_back(&vb);
-    */
-
     // program main loop
     while (!bQuit)
     {
@@ -301,29 +272,11 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             // OpenGL animation code goes here
             renderer.BeginScene(bgColor, (Renderer::IESceneFlags)(Renderer::IE_SF_ClearColor | Renderer::IE_SF_ClearDepth));
 
-            /*REM
-            glPushMatrix();
-            glRotatef(theta, 0.0f, 0.0f, 1.0f);
-
-            glBegin(GL_TRIANGLES);
-
-            glColor3f(1.0f, 0.0f, 0.0f);   glVertex2f(0.0f, 1.0f);
-            glColor3f(0.0f, 1.0f, 0.0f);   glVertex2f(0.87f, -0.5f);
-            glColor3f(0.0f, 0.0f, 1.0f);   glVertex2f(-0.87f, -0.5f);
-
-            glEnd();
-
-            glPopMatrix();
-            */
-
-            //REM renderer.Draw(mesh, Matrix4x4F::Identity(), &shader);
-
             for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
                 renderer.Draw(*pModel->m_Mesh[i], modelMatrix, &shader);
 
             renderer.EndScene();
 
-            theta += 1.0f;
             Sleep(1);
         }
     }
