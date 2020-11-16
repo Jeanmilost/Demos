@@ -167,6 +167,7 @@
     <ClInclude Include="Shader_OpenGL.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureHelper.h" />
     <ClInclude Include="Texture_OpenGL.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vertex.h" />
@@ -180,6 +181,7 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shader_OpenGL.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureHelper.cpp" />
     <ClCompile Include="Texture_OpenGL.cpp" />
     <ClCompile Include="Vector3.cpp" />
     <ClCompile Include="Vertex.cpp" />

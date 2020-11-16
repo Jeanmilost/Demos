@@ -28,6 +28,8 @@
 
  // classes
 #include "XModel.h"
+#include "TextureHelper.h"
+#include "Texture_OpenGL.h"
 #include "Shader_OpenGL.h"
 #include "Renderer_OpenGL.h"
 
@@ -57,29 +59,29 @@ const char fragmentShader2[] = "precision mediump float;"
 "}";
 //------------------------------------------------------------------------------
 const char vertexShader[] = "precision mediump float;"
-"attribute    vec3 aVertices;"
-"attribute    vec4 aColor;"
-"attribute    vec2 aTexCoord;"
-"uniform      mat4 uProjection;"
-"uniform      mat4 uView;"
-"uniform      mat4 uModel;"
-"varying lowp vec4 vColor;"
-"varying      vec2 vTexCoord;"
-"void main(void)"
-"{"
-"    vColor      = aColor;"
-"    vTexCoord   = aTexCoord;"
-"    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
-"}";
+                            "attribute    vec3 aVertices;"
+                            "attribute    vec4 aColor;"
+                            "attribute    vec2 aTexCoord;"
+                            "uniform      mat4 uProjection;"
+                            "uniform      mat4 uView;"
+                            "uniform      mat4 uModel;"
+                            "varying lowp vec4 vColor;"
+                            "varying      vec2 vTexCoord;"
+                            "void main(void)"
+                            "{"
+                            "    vColor      = aColor;"
+                            "    vTexCoord   = aTexCoord;"
+                            "    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
+                            "}";
 //------------------------------------------------------------------------------
 const char fragmentShader[] = "precision mediump float;"
-"uniform      sampler2D sTexture;"
-"varying lowp vec4      vColor;"
-"varying      vec2      vTexCoord;"
-"void main(void)"
-"{"
-"    gl_FragColor = vColor * texture2D(sTexture, vTexCoord);"
-"}";
+                              "uniform      sampler2D sTexture;"
+                              "varying lowp vec4      vColor;"
+                              "varying      vec2      vTexCoord;"
+                              "void main(void)"
+                              "{"
+                              "    gl_FragColor = vColor * texture2D(sTexture, vTexCoord);"
+                              "}";
 //------------------------------------------------------------------------------
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -109,16 +111,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 //------------------------------------------------------------------------------
+Texture* OnLoadTexture(const std::string& textureName)
+{
+    std::size_t width   = 0;
+    std::size_t height  = 0;
+    std::size_t format  = 0;
+    std::size_t length  = 0;
+    void*       pPixels = nullptr;
+
+    if (!TextureHelper::OpenBitmapData("Resources\\Models\\Tiny\\" + textureName, width, height, format, length, pPixels))
+        return nullptr;
+
+    if (!pPixels)
+        return nullptr;
+
+    std::unique_ptr<Texture_OpenGL> pTexture(new Texture_OpenGL());
+    pTexture->m_Width     = width;
+    pTexture->m_Height    = height;
+    pTexture->m_Format    = format == 24 ? Texture::IE_FT_24bit : Texture::IE_FT_32bit;
+    pTexture->m_WrapMode  = Texture::IE_WM_Clamp;
+    pTexture->m_MinFilter = Texture::IE_MI_Linear;
+    pTexture->m_MagFilter = Texture::IE_MA_Linear;
+    pTexture->Create(pPixels);
+
+    return pTexture.release();
+}
+//------------------------------------------------------------------------------
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                       _In_opt_ HINSTANCE hPrevInstance,
                       _In_     LPWSTR    lpCmdLine,
                       _In_     int       nCmdShow)
 {
-    Renderer_OpenGL renderer;
-
-    XModel x;
-    x.Open("Resources\\Models\\Tiny\\tiny_4anim.x");
-
     WNDCLASSEX wcex;
     HWND       hWnd;
     MSG        msg;
@@ -158,6 +181,8 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     ::ShowWindow(hWnd, nCmdShow);
 
+    Renderer_OpenGL renderer;
+
     // enable OpenGL for the window
     renderer.EnableOpenGL(hWnd);
 
@@ -177,14 +202,19 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     }
 
     glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_FRONT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
     Shader_OpenGL shader;
     shader.CreateProgram();
-    shader.Attach(vertexShader2, Shader::IE_ST_Vertex);
-    shader.Attach(fragmentShader2, Shader::IE_ST_Fragment);
+    shader.Attach(vertexShader, Shader::IE_ST_Vertex);
+    shader.Attach(fragmentShader, Shader::IE_ST_Fragment);
     shader.Link(true);
+
+    XModel x;
+    x.Set_OnLoadTexture(OnLoadTexture);
+    x.Open("Resources\\Models\\Tiny\\tiny_4anim.x");
 
     RECT clientRect;
     ::GetClientRect(hWnd, &clientRect);

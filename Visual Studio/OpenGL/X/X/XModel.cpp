@@ -348,7 +348,18 @@ XModel::XModel() :
     m_PoseOnly(false),
     m_fOnGetVertexColor(nullptr),
     m_fOnLoadTexture(nullptr)
-{}
+{
+    // configure the default vertex format
+    m_VertFormatTemplate.m_Format = (VertexFormat::IEFormat)(VertexFormat::IE_VF_Colors | VertexFormat::IE_VF_TexCoords);
+    m_VertFormatTemplate.m_Type   =  VertexFormat::IE_VT_Triangles;
+
+    // configure the default vertex culling
+    m_VertCullingTemplate.m_Type = VertexCulling::CSR_CT_Back;
+    m_VertCullingTemplate.m_Face = VertexCulling::CSR_CF_CCW;
+
+    // configure the default material
+    m_MaterialTemplate.m_Color = ColorF(1.0f, 1.0f, 1.0f, 1.0f);
+}
 //---------------------------------------------------------------------------
 XModel::~XModel()
 {}
@@ -548,6 +559,16 @@ bool XModel::Read(const std::string& data)
 XModel::IModel* XModel::GetModel() const
 {
     return m_pModel;
+}
+//---------------------------------------------------------------------------
+void XModel::Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor)
+{
+    m_fOnGetVertexColor = fOnGetVertexColor;
+}
+//---------------------------------------------------------------------------
+void XModel::Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture)
+{
+    m_fOnLoadTexture = fOnLoadTexture;
 }
 //---------------------------------------------------------------------------
 bool XModel::Parse(const std::string& data, std::size_t& offset, IFileItem*& pItem) const

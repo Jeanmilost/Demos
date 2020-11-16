@@ -217,6 +217,7 @@ class XModel
         * Called when a texture should be loaded
         *@param textureName - texture name to load
         *@return the loaded texture
+        *@note The loaded texture will be deleted internally, and should no longer be deleted from outside
         */
         typedef Texture* (*ITfOnLoadTexture)(const std::string& textureName);
 
@@ -251,7 +252,15 @@ class XModel
         */
         virtual bool Read(const std::string& data);
 
+        /**
+        * Gets the model
+        *@return the model, nullptr if no model or on error
+        */
         virtual IModel* GetModel() const;
+
+        void Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor);
+
+        void Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture);
 
     private:
         /**
