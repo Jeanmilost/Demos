@@ -362,7 +362,10 @@ XModel::XModel() :
 }
 //---------------------------------------------------------------------------
 XModel::~XModel()
-{}
+{
+    if (m_pModel)
+        delete m_pModel;
+}
 //---------------------------------------------------------------------------
 bool XModel::Open(const std::string& fileName)
 {
@@ -506,53 +509,37 @@ bool XModel::Read(const std::string& data)
                      m_fOnGetVertexColor,
                      m_fOnLoadTexture))
     {
-        //REM csrXReleaseItems(pLocalRoot, 0);
-        //REM csrXRelease(pX, fOnDeleteTexture);
         delete m_pModel;
         m_pModel = nullptr;
 
         return false;
     }
-    /*
 
     // build the bones parent hierarchy (could not simply keep the pointer while hierarchy was built
     // because the bone pointers may change several time while their hierarchy is built)
-    if (pX->m_pSkeleton)
+    if (m_pModel->m_pSkeleton)
     {
-        csrXBuildParentHierarchy(pX->m_pSkeleton, 0, pX);
+        BuildParentHierarchy(m_pModel->m_pSkeleton, 0, m_pModel);
 
         // skin weights?
-        if (pX->m_pMeshWeights)
-        {
-            size_t i;
-            size_t j;
-
+        if (m_pModel->m_MeshWeights.size())
             // retrieve the bone linked with each skin weights
-            for (i = 0; i < pX->m_MeshWeightsCount; ++i)
-                for (j = 0; j < pX->m_pMeshWeights[i].m_Count; ++j)
-                    pX->m_pMeshWeights[i].m_pSkinWeights[j].m_pBone =
-                    csrBoneFind(pX->m_pSkeleton, pX->m_pMeshWeights[i].m_pSkinWeights[j].m_pBoneName);
-        }
+            for (std::size_t i = 0; i < m_pModel->m_MeshWeights.size(); ++i)
+                for (std::size_t j = 0; j < m_pModel->m_MeshWeights[i]->m_SkinWeights.size(); ++j)
+                    m_pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone =
+                            FindBone(m_pModel->m_pSkeleton,
+                                     m_pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_BoneName);
 
         // animation set?
-        if (!pX->m_PoseOnly && pX->m_pAnimationSet)
-        {
-            size_t i;
-            size_t j;
-
+        if (!m_pModel->m_PoseOnly && m_pModel->m_AnimationSet.size())
             // find each bone linked to animation sets
-            for (i = 0; i < pX->m_AnimationSetCount; ++i)
-                for (j = 0; j < pX->m_pAnimationSet[i].m_Count; ++j)
-                    pX->m_pAnimationSet[i].m_pAnimation[j].m_pBone =
-                    csrBoneFind(pX->m_pSkeleton, pX->m_pAnimationSet[i].m_pAnimation[j].m_pBoneName);
-        }
+            for (std::size_t i = 0; i < m_pModel->m_AnimationSet.size(); ++i)
+                for (std::size_t j = 0; j < m_pModel->m_AnimationSet[i]->m_Animations.size(); ++j)
+                    m_pModel->m_AnimationSet[i]->m_Animations[j]->m_pBone =
+                            FindBone(m_pModel->m_pSkeleton,
+                                     m_pModel->m_AnimationSet[i]->m_Animations[j]->m_BoneName);
     }
 
-    // release the parsed items (since now no longer used)
-    csrXReleaseItems(pLocalRoot, 0);
-
-    return pX;
-    */
     return true;
 }
 //---------------------------------------------------------------------------
@@ -2906,713 +2893,46 @@ bool XModel::VertexBufferAdd(const Vector3F*           pVertex,
     return true;
 }
 //---------------------------------------------------------------------------
-
-/*
-//---------------------------------------------------------------------------
-// X model private functions
-//---------------------------------------------------------------------------
-CSR_Dataset_Header_X* csrXCreateHeaderDataset(void)
+void XModel::BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) const
 {
-    // create the dataset
-    CSR_Dataset_Header_X* pData = malloc(sizeof(CSR_Dataset_Header_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName        = 0;
-    pData->m_Major        = 0;
-    pData->m_Minor        = 0;
-    pData->m_Flags        = 0;
-    pData->m_ReadValCount = 0;
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-CSR_Dataset_Matrix_X* csrXCreateMatrixDataset(void)
-{
-    // create the dataset
-    CSR_Dataset_Matrix_X* pData = malloc(sizeof(CSR_Dataset_Matrix_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName        = 0;
-    pData->m_ReadValCount = 0;
-    csrMat4Identity(&pData->m_Matrix);
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-CSR_Dataset_VertexBuffer_X* csrXCreateVertexBufferDataset(void)
-{
-    // create the dataset
-    CSR_Dataset_VertexBuffer_X* pData = malloc(sizeof(CSR_Dataset_VertexBuffer_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName        = 0;
-    pData->m_pVertices    = 0;
-    pData->m_VerticeCount = 0;
-    pData->m_VerticeTotal = 0;
-    pData->m_pIndices     = 0;
-    pData->m_IndiceCount  = 0;
-    pData->m_IndiceTotal  = 0;
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-CSR_Dataset_TexCoords_X* csrXCreateTexCoordsDataset(void)
-{
-    // create the dataset
-    CSR_Dataset_TexCoords_X* pData = malloc(sizeof(CSR_Dataset_TexCoords_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName   = 0;
-    pData->m_pUV     = 0;
-    pData->m_UVCount = 0;
-    pData->m_UVTotal = 0;
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-CSR_Dataset_MaterialList_X* csrXCreateMaterialListDataset(void)
-{
-    // create the dataset
-    CSR_Dataset_MaterialList_X* pData = malloc(sizeof(CSR_Dataset_MaterialList_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName               = 0;
-    pData->m_MaterialCount       = 0;
-    pData->m_pMaterialIndices    = 0;
-    pData->m_MaterialIndiceCount = 0;
-    pData->m_MaterialIndiceTotal = 0;
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-CSR_Dataset_Material_X* csrXCreateMaterialDataset(void)
-{
-    // create the dataset
-    CSR_Dataset_Material_X* pData = malloc(sizeof(CSR_Dataset_Material_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName        = 0;
-    pData->m_SpecularExp  = 0.0f;
-    pData->m_ReadValCount = 0;
-    csrRGBAToColor(0xFFFFFFFF, &pData->m_Color);
-    csrRGBAToColor(0xFFFFFFFF, &pData->m_SpecularColor);
-    csrRGBAToColor(0xFFFFFFFF, &pData->m_EmisiveColor);
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-CSR_Dataset_Texture_X* csrXCreateTextureDataset(void)
-{
-    // create the dataset
-    CSR_Dataset_Texture_X* pData = malloc(sizeof(CSR_Dataset_Texture_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName     = 0;
-    pData->m_pFileName = 0;
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-CSR_Dataset_SkinWeights_X* csrXCreateSkinWeightsDataset(void)
-{
-    // create the dataset
-    CSR_Dataset_SkinWeights_X* pData = malloc(sizeof(CSR_Dataset_SkinWeights_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName        = 0;
-    pData->m_pBoneName    = 0;
-    pData->m_ItemCount    = 0;
-    pData->m_pIndices     = 0;
-    pData->m_IndiceCount  = 0;
-    pData->m_pWeights     = 0;
-    pData->m_WeightCount  = 0;
-    pData->m_ReadValCount = 0;
-    pData->m_BoneIndex    = 0;
-    pData->m_MeshIndex    = 0;
-    csrMat4Identity(&pData->m_Matrix);
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-CSR_Dataset_AnimationKeys_X* csrXCreateAnimationKeysDataset(void)
-{
-    // create the dataset
-    CSR_Dataset_AnimationKeys_X* pData = malloc(sizeof(CSR_Dataset_AnimationKeys_X));
-
-    // succeeded?
-    if (!pData)
-        return 0;
-
-    // configure it
-    pData->m_pName        = 0;
-    pData->m_Type         = CSR_KT_Unknown;
-    pData->m_pKeys        = 0;
-    pData->m_KeyCount     = 0;
-    pData->m_KeyTotal     = 0;
-    pData->m_KeyIndex     = 0;
-    pData->m_ReadValCount = 0;
-
-    return pData;
-}
-//---------------------------------------------------------------------------
-void csrXInitItem(CSR_Item_X* pItem)
-{
-    // initialize the item content
-    pItem->m_ID            = IE_DS_Unknown;
-    pItem->m_pParent       = 0;
-    pItem->m_pChildren     = 0;
-    pItem->m_ChildrenCount = 0;
-    pItem->m_pData         = 0;
-    pItem->m_Opened        = 0;
-    pItem->m_ContentRead   = 0;
-}
-//---------------------------------------------------------------------------
-void csrXBuildParentHierarchy(CSR_Bone* pBone, CSR_Bone* pParent, CSR_X* pX)
-{
-    size_t i;
+    // no model?
+    if (!pModel)
+        return;
 
     // set bone parent
     pBone->m_pParent = pParent;
 
     // link the bone to the mesh
-    if (pBone->m_pCustomData)
-        for (i = 0; i < pX->m_MeshToBoneDictCount; ++i)
-            if (pX->m_pMeshToBoneDict[i].m_MeshIndex == *((size_t*)pBone->m_pCustomData))
-                pX->m_pMeshToBoneDict[i].m_pBone = pBone;
+    for (std::size_t i = 0; i < pModel->m_MeshToBoneDict.size(); ++i)
+        if (pModel->m_MeshToBoneDict[i]->m_MeshIndex == pBone->m_MeshIndex)
+            pModel->m_MeshToBoneDict[i]->m_pBone = pBone;
 
     // build children hierarchy
-    for (i = 0; i < pBone->m_ChildrenCount; ++i)
-        csrXBuildParentHierarchy(&pBone->m_pChildren[i], pBone, pX);
+    for (std::size_t i = 0; i < pBone->m_Children.size(); ++i)
+        BuildParentHierarchy(pBone->m_Children[i], pBone, pModel);
 }
 //---------------------------------------------------------------------------
-// X model functions
-//---------------------------------------------------------------------------
-CSR_X* csrXCreate(const CSR_Buffer*           pBuffer,
-                  const CSR_VertexFormat*     pVertFormat,
-                  const CSR_VertexCulling*    pVertCulling,
-                  const CSR_Material*         pMaterial,
-                        int                   meshOnly,
-                        int                   poseOnly,
-                  const CSR_fOnGetVertexColor fOnGetVertexColor,
-                  const CSR_fOnLoadTexture    fOnLoadTexture,
-                  const CSR_fOnApplySkin      fOnApplySkin,
-                  const CSR_fOnDeleteTexture  fOnDeleteTexture)
+XModel::IBone* XModel::FindBone(IBone* pBone, const std::string& name) const
 {
-    CSR_X*       pX;
-    CSR_Header_X header;
-    size_t       offset;
-    CSR_Item_X*  pRoot;
-    CSR_Item_X*  pLocalRoot;
+    // no bone?
+    if (!pBone)
+        return nullptr;
 
-    // is buffer valid?
-    if (!pBuffer || !pBuffer->m_Length)
-        return 0;
+    // found the bone?
+    if (!pBone->m_Name.empty() && pBone->m_Name == name)
+        return pBone;
 
-    offset = 0;
-
-    // read the header
-    csrBufferRead(pBuffer, &offset, sizeof(CSR_Header_X), 1, &header);
-
-    // is a .x file?
-    if (header.m_Magic != M_X_FORMAT_MAGIC)
-        return 0;
-
-    // only 3.2 or 3.3 versions are supported
-    if ((header.m_Major_Version != M_X_FORMAT_VERSION03) ||
-        (header.m_Minor_Version != M_X_FORMAT_VERSION03) &&
-        (header.m_Minor_Version != M_X_FORMAT_VERSION02))
-        return 0;
-
-    // is .x file containing text?
-    if (header.m_Format != M_X_FORMAT_TEXT)
-        return 0;
-
-    // create the root item
-    pRoot = (CSR_Item_X*)malloc(sizeof(CSR_Item_X));
-
-    // succeeded?
-    if (!pRoot)
-        return 0;
-
-    // initialize it
-    csrXInitItem(pRoot);
-
-    // as the root pointer itself may change while parsing, keep a local copy of the root pointer
-    pLocalRoot = pRoot;
-
-    // parse the file content
-    if (!csrXParse(pBuffer, &offset, &pRoot))
+    // iterate through the bone children
+    for (std::size_t i = 0; i < pBone->m_Children.size(); ++i)
     {
-        csrXReleaseItems(pLocalRoot, 0);
-        return 0;
+        // search in next children bone
+        IBone* pChildBone = FindBone(pBone->m_Children[i], name);
+
+        // found the bone?
+        if (pChildBone)
+            return pChildBone;
     }
 
-    // create the x model
-    pX = (CSR_X*)malloc(sizeof(CSR_X));
-
-    // succeeded?
-    if (!pX)
-    {
-        csrXReleaseItems(pLocalRoot, 0);
-        return 0;
-    }
-
-    // configure it
-    pX->m_pMesh               = 0;
-    pX->m_MeshCount           = 0;
-    pX->m_pPrint              = 0;
-    pX->m_PrintCount          = 0;
-    pX->m_pMeshWeights        = 0;
-    pX->m_MeshWeightsCount    = 0;
-    pX->m_pMeshToBoneDict     = 0;
-    pX->m_MeshToBoneDictCount = 0;
-    pX->m_pSkeleton           = 0;
-    pX->m_pAnimationSet       = 0;
-    pX->m_AnimationSetCount   = 0;
-    pX->m_MeshOnly            = meshOnly;
-    pX->m_PoseOnly            = poseOnly;
-
-    // convert the read item hierarchy to an x model
-    if (!csrXItemToModel(pLocalRoot,
-                         pX,
-                         0,
-                         pVertFormat,
-                         pVertCulling,
-                         pMaterial,
-                         fOnGetVertexColor,
-                         fOnLoadTexture,
-                         fOnApplySkin,
-                         fOnDeleteTexture))
-    {
-        csrXReleaseItems(pLocalRoot, 0);
-        csrXRelease(pX, fOnDeleteTexture);
-        return 0;
-    }
-
-    // build the bones parent hierarchy (could not simply keep the pointer while hierarchy was built
-    // because the bone pointers may change several time while their hierarchy is built)
-    if (pX->m_pSkeleton)
-    {
-        csrXBuildParentHierarchy(pX->m_pSkeleton, 0, pX);
-
-        // skin weights?
-        if (pX->m_pMeshWeights)
-        {
-            size_t i;
-            size_t j;
-
-            // retrieve the bone linked with each skin weights
-            for (i = 0; i < pX->m_MeshWeightsCount; ++i)
-                for (j = 0; j < pX->m_pMeshWeights[i].m_Count; ++j)
-                    pX->m_pMeshWeights[i].m_pSkinWeights[j].m_pBone =
-                            csrBoneFind(pX->m_pSkeleton, pX->m_pMeshWeights[i].m_pSkinWeights[j].m_pBoneName);
-        }
-
-        // animation set?
-        if (!pX->m_PoseOnly && pX->m_pAnimationSet)
-        {
-            size_t i;
-            size_t j;
-
-            // find each bone linked to animation sets
-            for (i = 0; i < pX->m_AnimationSetCount; ++i)
-                for (j = 0; j < pX->m_pAnimationSet[i].m_Count; ++j)
-                    pX->m_pAnimationSet[i].m_pAnimation[j].m_pBone =
-                            csrBoneFind(pX->m_pSkeleton, pX->m_pAnimationSet[i].m_pAnimation[j].m_pBoneName);
-        }
-    }
-
-    // release the parsed items (since now no longer used)
-    csrXReleaseItems(pLocalRoot, 0);
-
-    return pX;
+    return nullptr;
 }
-//---------------------------------------------------------------------------
-void csrXRelease(CSR_X* pX, const CSR_fOnDeleteTexture fOnDeleteTexture)
-{
-    size_t i;
-    size_t j;
-
-    // no X model to release?
-    if (!pX)
-        return;
-
-    // do free the meshes content?
-    if (pX->m_pMesh)
-    {
-        // iterate through meshes to free
-        for (i = 0; i < pX->m_MeshCount; ++i)
-        {
-            // delete the skin
-            csrSkinContentRelease(&pX->m_pMesh[i].m_Skin, fOnDeleteTexture);
-
-            // do free the mesh vertex buffer?
-            if (pX->m_pMesh[i].m_pVB)
-            {
-                // free the mesh vertex buffer content
-                for (j = 0; j < pX->m_pMesh[i].m_Count; ++j)
-                    if (pX->m_pMesh[i].m_pVB[j].m_pData)
-                        free(pX->m_pMesh[i].m_pVB[j].m_pData);
-
-                // free the mesh vertex buffer
-                free(pX->m_pMesh[i].m_pVB);
-            }
-        }
-
-        // free the meshes
-        free(pX->m_pMesh);
-    }
-
-    // release the print
-    if (pX->m_pPrint)
-    {
-        // free the print content
-        for (i = 0; i < pX->m_PrintCount; ++i)
-            if (pX->m_pPrint[i].m_pData)
-                free(pX->m_pPrint[i].m_pData);
-
-        // free the print
-        free(pX->m_pPrint);
-    }
-
-    // release the weights
-    if (pX->m_pMeshWeights)
-    {
-        // release the mesh weights content
-        for (i = 0; i < pX->m_MeshWeightsCount; ++i)
-        {
-            // release the mesh skin weights content
-            for (j = 0; j < pX->m_pMeshWeights[i].m_Count; ++j)
-                csrSkinWeightsRelease(&pX->m_pMeshWeights[i].m_pSkinWeights[j], 1);
-
-            // free the mesh skin weights
-            free(pX->m_pMeshWeights[i].m_pSkinWeights);
-        }
-
-        // free the mesh weights
-        free(pX->m_pMeshWeights);
-    }
-
-    // release the mesh-to-bone dictionary
-    if (pX->m_pMeshToBoneDict)
-        free(pX->m_pMeshToBoneDict);
-
-    // release the bones
-    csrBoneRelease(pX->m_pSkeleton, 0, 1);
-
-    // release the animation sets
-    if (pX->m_pAnimationSet)
-    {
-        // release the animation set content
-        for (i = 0; i < pX->m_AnimationSetCount; ++i)
-            csrAnimationSetRelease(&pX->m_pAnimationSet[i], 1);
-
-        // free the animation sets
-        free(pX->m_pAnimationSet);
-    }
-
-    // release the model
-    free(pX);
-}
-//---------------------------------------------------------------------------
-void csrXInit(CSR_X* pX)
-{
-    // no X model to initialize?
-    if (!pX)
-        return;
-}
-//---------------------------------------------------------------------------
-void csrXReleaseItems(CSR_Item_X* pItem, int contentOnly)
-{
-    size_t i;
-
-    // no item to release?
-    if (!pItem)
-        return;
-
-    // release the dataset
-    switch (pItem->m_ID)
-    {
-        case IE_DS_Template_ID:
-        case IE_DS_Frame_ID:
-        case IE_DS_Animation_Set_ID:
-        case IE_DS_Animation_ID:
-        case IE_DS_Link_ID:
-        case IE_DS_Unknown:
-        {
-            // get the dataset
-            CSR_Dataset_Generic_X* pData = (CSR_Dataset_Generic_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Header_ID:
-        {
-            // get the dataset
-            CSR_Dataset_Header_X* pData = (CSR_Dataset_Header_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Frame_Transform_Matrix_ID:
-        {
-            // get the dataset
-            CSR_Dataset_Matrix_X* pData = (CSR_Dataset_Matrix_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Mesh_ID:
-        case IE_DS_Mesh_Normals_ID:
-        {
-            // get the dataset
-            CSR_Dataset_VertexBuffer_X* pData = (CSR_Dataset_VertexBuffer_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                if (pData->m_pVertices)
-                    free(pData->m_pVertices);
-
-                if (pData->m_pIndices)
-                    free(pData->m_pIndices);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Mesh_Texture_Coords_ID:
-        {
-            // get the dataset
-            CSR_Dataset_TexCoords_X* pData = (CSR_Dataset_TexCoords_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                if (pData->m_pUV)
-                    free(pData->m_pUV);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Mesh_Material_List_ID:
-        {
-            // get the dataset
-            CSR_Dataset_MaterialList_X* pData = (CSR_Dataset_MaterialList_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                if (pData->m_pMaterialIndices)
-                    free(pData->m_pMaterialIndices);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Material_ID:
-        {
-            // get the dataset
-            CSR_Dataset_Material_X* pData = (CSR_Dataset_Material_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Skin_Mesh_Header_ID:
-        {
-            // get the dataset
-            CSR_Dataset_Header_X* pData = (CSR_Dataset_Header_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Skin_Weights_ID:
-        {
-            // get the dataset
-            CSR_Dataset_SkinWeights_X* pData = (CSR_Dataset_SkinWeights_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                if (pData->m_pBoneName)
-                    free(pData->m_pBoneName);
-
-                if (pData->m_pIndices)
-                    free(pData->m_pIndices);
-
-                if (pData->m_pWeights)
-                    free(pData->m_pWeights);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Texture_Filename_ID:
-        {
-            // get the dataset
-            CSR_Dataset_Texture_X* pData = (CSR_Dataset_Texture_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                if (pData->m_pFileName)
-                    free(pData->m_pFileName);
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-
-        case IE_DS_Animation_Key_ID:
-        {
-            // get the dataset
-            CSR_Dataset_AnimationKeys_X* pData = (CSR_Dataset_AnimationKeys_X*)pItem->m_pData;
-
-            // succeeded?
-            if (pData)
-            {
-                // release its content
-                if (pData->m_pName)
-                    free(pData->m_pName);
-
-                if (pData->m_pKeys)
-                {
-                    for (i = 0; i < pData->m_KeyCount; ++i)
-                        free(pData->m_pKeys[i].m_pValues);
-
-                    free(pData->m_pKeys);
-                }
-
-                free(pItem->m_pData);
-            }
-
-            break;
-        }
-    }
-
-    // release the item children content
-    for (i = 0; i < pItem->m_ChildrenCount; ++i)
-        csrXReleaseItems(&pItem->m_pChildren[i], 1);
-
-    // release the item children
-    if (pItem->m_pChildren)
-        free(pItem->m_pChildren);
-
-    // release the item
-    if (!contentOnly)
-        free(pItem);
-}
-*/
 //---------------------------------------------------------------------------

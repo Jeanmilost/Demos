@@ -637,4 +637,14 @@ class XModel
                                    std::size_t         groupIndex,
                              const ITfOnGetVertexColor fOnGetVertexColor,
                                    VertexBuffer*       pVB) const;
+
+        void BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) const;
+
+        /**
+        * Finds a bone in the skeletton
+        *@param pBone - root boneto search from
+        *@param name - bone name to find
+        *@return the bone, nullptr if not found or on error
+        */
+        IBone* FindBone(IBone* pBone, const std::string& name) const;
 };
