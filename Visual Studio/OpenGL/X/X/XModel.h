@@ -641,7 +641,7 @@ class XModel
         void BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) const;
 
         /**
-        * Finds a bone in the skeletton
+        * Finds a bone in the skeleton
         *@param pBone - root boneto search from
         *@param name - bone name to find
         *@return the bone, nullptr if not found or on error

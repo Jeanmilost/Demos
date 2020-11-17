@@ -2145,7 +2145,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
             // no current bone?
             if (!pBone)
             {
-                // then the skeletton should also be not initalized
+                // then the skeleton should also be not initalized
                 if (pModel->m_pSkeleton)
                     return false;
 
