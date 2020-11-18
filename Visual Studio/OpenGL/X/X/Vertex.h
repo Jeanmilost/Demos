@@ -113,10 +113,10 @@ class VertexCulling
         */
         enum IECullingType
         {
-            CSR_CT_None,
-            CSR_CT_Front,
-            CSR_CT_Back,
-            CSR_CT_Both
+            IE_CT_None,
+            IE_CT_Front,
+            IE_CT_Back,
+            IE_CT_Both
         };
 
         /**
@@ -124,8 +124,8 @@ class VertexCulling
         */
         enum IECullingFace
         {
-            CSR_CF_CW,
-            CSR_CF_CCW
+            IE_CF_CW,
+            IE_CF_CCW
         };
 
         IECullingType m_Type;

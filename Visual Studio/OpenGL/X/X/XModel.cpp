@@ -354,8 +354,8 @@ XModel::XModel() :
     m_VertFormatTemplate.m_Type   =  VertexFormat::IE_VT_Triangles;
 
     // configure the default vertex culling
-    m_VertCullingTemplate.m_Type = VertexCulling::CSR_CT_Back;
-    m_VertCullingTemplate.m_Face = VertexCulling::CSR_CF_CCW;
+    m_VertCullingTemplate.m_Type = VertexCulling::IE_CT_Back;
+    m_VertCullingTemplate.m_Face = VertexCulling::IE_CF_CCW;
 
     // configure the default material
     m_MaterialTemplate.m_Color = ColorF(1.0f, 1.0f, 1.0f, 1.0f);
@@ -547,6 +547,90 @@ XModel::IModel* XModel::GetModel() const
 {
     return m_pModel;
 }
+//---------------------------------------------------------------------------
+void XModel::GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const
+{
+    // no bone?
+    if (!pBone)
+        return;
+
+    // set the output matrix as identity
+    matrix = Matrix4x4F::Identity();
+
+    Matrix4x4F localMatrix;
+
+    // iterate through bones
+    while (pBone)
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        localMatrix = matrix;
+
+        // stack the previously calculated matrix with the current bone one
+        matrix = localMatrix.Multiply(pBone->m_Matrix);
+
+        // go to parent bone
+        pBone = pBone->m_pParent;
+    }
+
+    // initial matrix provided?
+    if (!initialMatrix.IsIdentity())
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        localMatrix = matrix;
+
+        // stack the previously calculated matrix with the initial one
+        matrix = localMatrix.Multiply(initialMatrix);
+    }
+}
+//---------------------------------------------------------------------------
+/*
+void XModel::GetBoneAnimMatrix(const IBone* pBone, const IAnimationSet* pAnimSet,
+                          size_t            frameIndex,
+                          CSR_Matrix4* pInitialMatrix,
+                          CSR_Matrix4* pMatrix)
+{
+    CSR_Matrix4 localMatrix;
+    CSR_Matrix4 animMatrix;
+
+    // no bone?
+    if (!pBone)
+        return;
+
+    // no output matrix to write to?
+    if (!pMatrix)
+        return;
+
+    // set the output matrix as identity
+    csrMat4Identity(pMatrix);
+
+    // iterate through bones
+    while (pBone)
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        localMatrix = *pMatrix;
+
+        // get the animated bone matrix matching with frame. If not found use the identity one
+        if (!csrAnimationGetMatrix(pAnimSet, pBone, frameIndex, &animMatrix))
+            csrMat4Identity(&animMatrix);
+
+        // stack the previously calculated matrix with the current bone one
+        csrMat4Multiply(&localMatrix, &animMatrix, pMatrix);
+
+        // go to parent bone
+        pBone = pBone->m_pParent;
+    }
+
+    // initial matrix provided?
+    if (pInitialMatrix)
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        localMatrix = *pMatrix;
+
+        // stack the previously calculated matrix with the initial one
+        csrMat4Multiply(&localMatrix, pInitialMatrix, pMatrix);
+    }
+}
+*/
 //---------------------------------------------------------------------------
 void XModel::Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor)
 {
@@ -2169,7 +2253,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
 
                 // add it to the parent's children
                 pBone->m_Children.push_back(pChild.get());
-                pChild.release();
+                pCurrent = pChild.release();
             }
 
             // from now current bone should always exist

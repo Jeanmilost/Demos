@@ -257,6 +257,9 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
     if (!pShader)
         return false;
 
+    // certify that depth test is enabled
+    glEnable(GL_DEPTH_TEST);
+
     try
     {
         // bind shader program
@@ -278,6 +281,39 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
         // iterate through OpenGL meshes
         for (std::size_t i = 0; i < count; ++i)
         {
+            // configure the culling
+            switch (mesh.m_VB[i]->m_Culling.m_Type)
+            {
+                case VertexCulling::IE_CT_None:  glDisable(GL_CULL_FACE); glCullFace(GL_NONE);           break;
+                case VertexCulling::IE_CT_Front: glEnable (GL_CULL_FACE); glCullFace(GL_FRONT);          break;
+                case VertexCulling::IE_CT_Back:  glEnable (GL_CULL_FACE); glCullFace(GL_BACK);           break;
+                case VertexCulling::IE_CT_Both:  glEnable (GL_CULL_FACE); glCullFace(GL_FRONT_AND_BACK); break;
+                default:                         glDisable(GL_CULL_FACE); glCullFace(GL_NONE);           break;
+            }
+
+            // configure the culling face
+            switch (mesh.m_VB[i]->m_Culling.m_Face)
+            {
+                case VertexCulling::IE_CF_CW:  glFrontFace(GL_CW);  break;
+                case VertexCulling::IE_CF_CCW: glFrontFace(GL_CCW); break;
+            }
+
+            // configure the alpha blending
+            if (mesh.m_VB[i]->m_Material.m_Transparent)
+            {
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            else
+                glDisable(GL_BLEND);
+
+            // configure the wireframe mode
+            if (mesh.m_VB[i]->m_Material.m_Wireframe)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            else
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
             // get shader position attribute
             GLint posAttrib = GetAttribute(pShader, Shader::IE_SA_Vertices);
 

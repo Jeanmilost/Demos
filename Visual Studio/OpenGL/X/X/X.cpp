@@ -94,6 +94,179 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     return 0;
 }
+//---------------------------------------------------------------------------
+void DrawX(const XModel&          xModel,
+           const XModel::IModel*  pModel,
+           const Matrix4x4F&      modelMatrix,
+           const Shader_OpenGL*   pShader,
+           const Renderer_OpenGL* pRenderer)
+{
+    // no model to draw?
+    if (!pModel || !pModel->m_Mesh.size())
+        return;
+
+    // no renderer?
+    if (!pRenderer)
+        return;
+
+    // no shader?
+    if (!pShader)
+        return;
+
+    // do draw only the mesh and ignore all other data like bones?
+    if (pModel->m_MeshOnly)
+    {
+        // iterate through the meshes to draw
+        for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
+            // draw the model mesh
+            pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
+
+        return;
+    }
+
+    // iterate through the meshes to draw
+    for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
+    {
+        // if mesh has no skeletton, perform a simple draw
+        if (!pModel->m_pSkeleton)
+        {
+            // draw the model mesh
+            pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
+            return;
+        }
+
+        // get the current model mesh to draw
+        Mesh* pMesh = pModel->m_Mesh[i];
+
+        // found it?
+        if (!pMesh)
+            continue;
+
+        // normally each mesh should contain only one vertex buffer
+        if (pMesh->m_VB.size() != 1)
+            // unsupported if not (because cannot know which texture should be binded. If a such model
+            // exists, a custom version of this function should also be written for it)
+            continue;
+
+        // mesh contains skin weights?
+        if (pModel->m_MeshWeights[i]->m_SkinWeights.size())
+        {
+            // clear the previous print vertices (needs to be cleared to properly apply the weights)
+            for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
+            {
+                pModel->m_Print[i]->m_Data[j]     = 0.0f;
+                pModel->m_Print[i]->m_Data[j + 1] = 0.0f;
+                pModel->m_Print[i]->m_Data[j + 2] = 0.0f;
+            }
+
+            // iterate through mesh skin weights
+            for (std::size_t j = 0; j < pModel->m_MeshWeights[i]->m_SkinWeights.size(); ++j)
+            {
+                Matrix4x4F boneMatrix;
+
+                // get the bone matrix
+                //if (pModel->m_PoseOnly)
+                    xModel.GetBoneMatrix(pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
+                // FIXME
+                /*
+                else
+                    csrBoneGetAnimMatrix(pX->m_pMeshWeights[i].m_pSkinWeights[j].m_pBone,
+                                         &pX->m_pAnimationSet[animSetIndex],
+                                         frameIndex,
+                                         0,
+                                         &boneMatrix);
+                */
+
+                // get the final matrix after bones transform
+                const Matrix4x4F finalMatrix = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
+
+                // apply the bone and its skin weights to each vertices
+                for (std::size_t k = 0; k < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable.size(); ++k)
+                    for (std::size_t l = 0; l < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable[k]->m_Data.size(); ++l)
+                    {
+                        // get the next vertex to which the next skin weight should be applied
+                        const std::size_t iX = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable[k]->m_Data[l];
+                        const std::size_t iY = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable[k]->m_Data[l] + 1;
+                        const std::size_t iZ = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable[k]->m_Data[l] + 2;
+
+                        Vector3F inputVertex;
+
+                        // get input vertex
+                        inputVertex.m_X = pMesh->m_VB[0]->m_Data[iX];
+                        inputVertex.m_Y = pMesh->m_VB[0]->m_Data[iY];
+                        inputVertex.m_Z = pMesh->m_VB[0]->m_Data[iZ];
+
+                        // apply bone transformation to vertex
+                        const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
+
+                        // apply the skin weights and calculate the final output vertex
+                        pModel->m_Print[i]->m_Data[iX] += (outputVertex.m_X * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
+                        pModel->m_Print[i]->m_Data[iY] += (outputVertex.m_Y * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
+                        pModel->m_Print[i]->m_Data[iZ] += (outputVertex.m_Z * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
+                    }
+            }
+        }
+
+        //REM CSR_Array* pLocalMatrixArray;
+
+        // use the model print as final vertex buffer
+        VertexBuffer* pSrcBuffer = pMesh->m_VB[0];
+        pMesh->m_VB[0]           = pModel->m_Print[i];
+
+        /*REM
+        int useLocalMatrixArray = 0;
+
+        // has matrix array to transform, and model contain mesh bones?
+        if (pMatrixArray && pMatrixArray->m_Count && pX->m_pMeshToBoneDict[i].m_pBone)
+        {
+            // create a new local matrix array
+            pLocalMatrixArray = (CSR_Array*)malloc(sizeof(CSR_Array));
+            csrArrayInit(pLocalMatrixArray);
+            useLocalMatrixArray = 1;
+
+            // create as array item as in the source matrix list
+            pLocalMatrixArray->m_pItem =
+                (CSR_ArrayItem*)malloc(sizeof(CSR_ArrayItem) * pMatrixArray->m_Count);
+
+            // succeeded?
+            if (pLocalMatrixArray->m_pItem)
+            {
+                // update array count
+                pLocalMatrixArray->m_Count = pMatrixArray->m_Count;
+
+                // iterate through source model matrices
+                for (j = 0; j < pMatrixArray->m_Count; ++j)
+                {
+                    // initialize the local matrix array item
+                    pLocalMatrixArray->m_pItem[j].m_AutoFree = 1;
+                    pLocalMatrixArray->m_pItem[j].m_pData = malloc(sizeof(CSR_Matrix4));
+
+                    // get the final matrix after bones transform
+                    csrBoneGetMatrix(pX->m_pMeshToBoneDict[i].m_pBone,
+                                     (CSR_Matrix4*)pMatrixArray->m_pItem[j].m_pData,
+                                     (CSR_Matrix4*)pLocalMatrixArray->m_pItem[j].m_pData);
+                }
+            }
+        }
+        else
+            // no matrix array or no bone, keep the original array
+            pLocalMatrixArray = (CSR_Array*)pMatrixArray;
+        */
+
+        // draw the model mesh
+        //csrOpenGLDrawMesh(pMesh, pShader, pLocalMatrixArray, fOnGetID);
+        pRenderer->Draw(*pMesh, modelMatrix, pShader);
+
+        // restore the correct mesh vertex buffer
+        pMesh->m_VB[0] = pSrcBuffer;
+
+        /*REM
+        // release the transformed matrix list
+        if (useLocalMatrixArray)
+            csrArrayRelease(pLocalMatrixArray);
+        */
+    }
+}
 //------------------------------------------------------------------------------
 Texture* OnLoadTexture(const std::string& textureName)
 {
@@ -195,11 +368,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         return 0;
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
-
     Shader_OpenGL shader;
     shader.CreateProgram();
     shader.Attach(vertexShader, Shader::IE_ST_Vertex);
@@ -236,10 +404,10 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     // create the rotation matrix
     Matrix4x4F rotMat;
     Vector3F axis;
-    axis.m_X = 0.0f;
+    axis.m_X = 1.0f;
     axis.m_Y = 0.0f;
-    axis.m_Z = 1.0f;
-    rotMat = matrix.Rotate(M_PI, axis);
+    axis.m_Z = 0.0f;
+    rotMat   = matrix.Rotate(-M_PI / 2.0f, axis);
 
     // create the scale matrix
     Matrix4x4F scaleMat = Matrix4x4F::Identity();
@@ -248,8 +416,8 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     scaleMat.m_Table[2][2] = 0.075f;
 
     // place the model in the 3d world (update the matrix directly)
-    Matrix4x4F modelMatrix = scaleMat;//rotMat.Multiply(scaleMat);
-    modelMatrix.m_Table[3][1] =  10.0f;
+    Matrix4x4F modelMatrix    =  rotMat.Multiply(scaleMat);
+    modelMatrix.m_Table[3][1] = -18.0f;
     modelMatrix.m_Table[3][2] = -50.0f;
 
     // program main loop
@@ -272,8 +440,12 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             // OpenGL animation code goes here
             renderer.BeginScene(bgColor, (Renderer::IESceneFlags)(Renderer::IE_SF_ClearColor | Renderer::IE_SF_ClearDepth));
 
+            /*REM
             for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
                 renderer.Draw(*pModel->m_Mesh[i], modelMatrix, &shader);
+            */
+
+            DrawX(x, pModel, modelMatrix, &shader, &renderer);
 
             renderer.EndScene();
 

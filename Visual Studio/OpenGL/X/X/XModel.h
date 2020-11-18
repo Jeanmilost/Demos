@@ -258,6 +258,8 @@ class XModel
         */
         virtual IModel* GetModel() const;
 
+        virtual void GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const;
+
         void Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor);
 
         void Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture);

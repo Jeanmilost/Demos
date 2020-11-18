@@ -87,8 +87,8 @@ bool VertexFormat::CompareFormat(const VertexFormat& other) const
 // VertexBuffer
 //---------------------------------------------------------------------------
 VertexCulling::VertexCulling() :
-    m_Type(CSR_CT_None),
-    m_Face(CSR_CF_CW)
+    m_Type(IE_CT_None),
+    m_Face(IE_CF_CW)
 {}
 //---------------------------------------------------------------------------
 VertexCulling::~VertexCulling()
