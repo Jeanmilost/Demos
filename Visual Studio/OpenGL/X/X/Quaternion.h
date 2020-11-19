@@ -535,9 +535,9 @@ Quaternion<T> Quaternion<T>::FromMatrix(const Matrix4x4<T>& matrix, bool& error)
 template <class T>
 Matrix4x4<T> Quaternion<T>::ToMatrix() const
 {
-    return Matrix4x4<T>(T(1.0) - T(2.0) * (m_Y * m_Y + m_Z * m_Z), T(2.0)          * (m_X * m_Y - m_Z * m_W), T(2.0)          * (m_X * m_Z + m_Y * m_W), T(0.0),
-                        T(2.0)          * (m_X * m_Y + m_Z * m_W), T(1.0) - T(2.0) * (m_X * m_X + m_Z * m_Z), T(2.0)          * (m_Y * m_Z - m_X * m_W), T(0.0),
-                        T(2.0)          * (m_X * m_Z - m_Y * m_W), T(2.0)          * (m_Y * m_Z + m_X * m_W), T(1.0) - T(2.0) * (m_X * m_X + m_Y * m_Y), T(0.0),
+    return Matrix4x4<T>(T(1.0) - T(2.0) * (m_Y * m_Y + m_Z * m_Z),          T(2.0) * (m_X * m_Y + m_Z * m_W),          T(2.0) * (m_X * m_Z - m_Y * m_W), T(0.0),
+                                 T(2.0) * (m_X * m_Y - m_Z * m_W), T(1.0) - T(2.0) * (m_X * m_X + m_Z * m_Z),          T(2.0) * (m_Y * m_Z + m_X * m_W), T(0.0),
+                                 T(2.0) * (m_X * m_Z + m_Y * m_W),          T(2.0) * (m_Y * m_Z - m_X * m_W), T(1.0) - T(2.0) * (m_X * m_X + m_Y * m_Y), T(0.0),
                         T(0.0),                                    T(0.0),                                    T(0.0),                                    T(1.0));
 }
 //---------------------------------------------------------------------------

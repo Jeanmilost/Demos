@@ -99,7 +99,9 @@ void DrawX(const XModel&          xModel,
            const XModel::IModel*  pModel,
            const Matrix4x4F&      modelMatrix,
            const Shader_OpenGL*   pShader,
-           const Renderer_OpenGL* pRenderer)
+           const Renderer_OpenGL* pRenderer,
+                 int              animSetIndex,
+                 int              frameCount)
 {
     // no model to draw?
     if (!pModel || !pModel->m_Mesh.size())
@@ -164,18 +166,18 @@ void DrawX(const XModel&          xModel,
             {
                 Matrix4x4F boneMatrix;
 
+                // calculate the next frame index
+                const int frameIndex = (::GetTickCount() * 5) % frameCount;
+
                 // get the bone matrix
-                //if (pModel->m_PoseOnly)
+                if (pModel->m_PoseOnly)
                     xModel.GetBoneMatrix(pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
-                // FIXME
-                /*
                 else
-                    csrBoneGetAnimMatrix(pX->m_pMeshWeights[i].m_pSkinWeights[j].m_pBone,
-                                         &pX->m_pAnimationSet[animSetIndex],
-                                         frameIndex,
-                                         0,
-                                         &boneMatrix);
-                */
+                    xModel.GetBoneAnimMatrix(pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone,
+                                             pModel->m_AnimationSet[animSetIndex],
+                                             frameIndex,
+                                             Matrix4x4F::Identity(),
+                                             boneMatrix);
 
                 // get the final matrix after bones transform
                 const Matrix4x4F finalMatrix = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
@@ -207,64 +209,15 @@ void DrawX(const XModel&          xModel,
             }
         }
 
-        //REM CSR_Array* pLocalMatrixArray;
-
         // use the model print as final vertex buffer
         VertexBuffer* pSrcBuffer = pMesh->m_VB[0];
         pMesh->m_VB[0]           = pModel->m_Print[i];
 
-        /*REM
-        int useLocalMatrixArray = 0;
-
-        // has matrix array to transform, and model contain mesh bones?
-        if (pMatrixArray && pMatrixArray->m_Count && pX->m_pMeshToBoneDict[i].m_pBone)
-        {
-            // create a new local matrix array
-            pLocalMatrixArray = (CSR_Array*)malloc(sizeof(CSR_Array));
-            csrArrayInit(pLocalMatrixArray);
-            useLocalMatrixArray = 1;
-
-            // create as array item as in the source matrix list
-            pLocalMatrixArray->m_pItem =
-                (CSR_ArrayItem*)malloc(sizeof(CSR_ArrayItem) * pMatrixArray->m_Count);
-
-            // succeeded?
-            if (pLocalMatrixArray->m_pItem)
-            {
-                // update array count
-                pLocalMatrixArray->m_Count = pMatrixArray->m_Count;
-
-                // iterate through source model matrices
-                for (j = 0; j < pMatrixArray->m_Count; ++j)
-                {
-                    // initialize the local matrix array item
-                    pLocalMatrixArray->m_pItem[j].m_AutoFree = 1;
-                    pLocalMatrixArray->m_pItem[j].m_pData = malloc(sizeof(CSR_Matrix4));
-
-                    // get the final matrix after bones transform
-                    csrBoneGetMatrix(pX->m_pMeshToBoneDict[i].m_pBone,
-                                     (CSR_Matrix4*)pMatrixArray->m_pItem[j].m_pData,
-                                     (CSR_Matrix4*)pLocalMatrixArray->m_pItem[j].m_pData);
-                }
-            }
-        }
-        else
-            // no matrix array or no bone, keep the original array
-            pLocalMatrixArray = (CSR_Array*)pMatrixArray;
-        */
-
         // draw the model mesh
-        //csrOpenGLDrawMesh(pMesh, pShader, pLocalMatrixArray, fOnGetID);
         pRenderer->Draw(*pMesh, modelMatrix, pShader);
 
         // restore the correct mesh vertex buffer
         pMesh->m_VB[0] = pSrcBuffer;
-
-        /*REM
-        // release the transformed matrix list
-        if (useLocalMatrixArray)
-            csrArrayRelease(pLocalMatrixArray);
-        */
     }
 }
 //------------------------------------------------------------------------------
@@ -437,16 +390,9 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         }
         else
         {
-            // OpenGL animation code goes here
+            // draw the scene
             renderer.BeginScene(bgColor, (Renderer::IESceneFlags)(Renderer::IE_SF_ClearColor | Renderer::IE_SF_ClearDepth));
-
-            /*REM
-            for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
-                renderer.Draw(*pModel->m_Mesh[i], modelMatrix, &shader);
-            */
-
-            DrawX(x, pModel, modelMatrix, &shader, &renderer);
-
+            DrawX(x, pModel, modelMatrix, &shader, &renderer, 1, 4800);
             renderer.EndScene();
 
             Sleep(1);
