@@ -260,6 +260,12 @@ class XModel
 
         virtual void GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const;
 
+        virtual void GetBoneAnimMatrix(const IBone*         pBone,
+                                       const IAnimationSet* pAnimSet,
+                                             std::size_t    frameIndex,
+                                       const Matrix4x4F&    initialMatrix,
+                                             Matrix4x4F&    matrix) const;
+
         void Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor);
 
         void Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture);
@@ -641,6 +647,11 @@ class XModel
                                    VertexBuffer*       pVB) const;
 
         void BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) const;
+
+        bool GetAnimationMatrix(const IAnimationSet* pAnimSet,
+                                const IBone*         pBone,
+                                      std::size_t    frame,
+                                      Matrix4x4F&    matrix) const;
 
         /**
         * Finds a bone in the skeleton

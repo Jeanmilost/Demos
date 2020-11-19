@@ -33,6 +33,9 @@
 #include <math.h>
 #include <string.h>
 
+// classes
+#include "Quaternion.h"
+
 #pragma warning(disable: 26812)
 
 //---------------------------------------------------------------------------
@@ -557,13 +560,11 @@ void XModel::GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, 
     // set the output matrix as identity
     matrix = Matrix4x4F::Identity();
 
-    Matrix4x4F localMatrix;
-
     // iterate through bones
     while (pBone)
     {
         // get the previously stacked matrix as base to calculate the new one
-        localMatrix = matrix;
+        const Matrix4x4F localMatrix = matrix;
 
         // stack the previously calculated matrix with the current bone one
         matrix = localMatrix.Multiply(pBone->m_Matrix);
@@ -576,61 +577,55 @@ void XModel::GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, 
     if (!initialMatrix.IsIdentity())
     {
         // get the previously stacked matrix as base to calculate the new one
-        localMatrix = matrix;
+        const Matrix4x4F localMatrix = matrix;
 
         // stack the previously calculated matrix with the initial one
         matrix = localMatrix.Multiply(initialMatrix);
     }
 }
 //---------------------------------------------------------------------------
-/*
-void XModel::GetBoneAnimMatrix(const IBone* pBone, const IAnimationSet* pAnimSet,
-                          size_t            frameIndex,
-                          CSR_Matrix4* pInitialMatrix,
-                          CSR_Matrix4* pMatrix)
+void XModel::GetBoneAnimMatrix(const IBone*         pBone,
+                               const IAnimationSet* pAnimSet,
+                                     std::size_t    frameIndex,
+                               const Matrix4x4F&    initialMatrix,
+                                     Matrix4x4F&    matrix) const
 {
-    CSR_Matrix4 localMatrix;
-    CSR_Matrix4 animMatrix;
-
     // no bone?
     if (!pBone)
         return;
 
-    // no output matrix to write to?
-    if (!pMatrix)
-        return;
-
     // set the output matrix as identity
-    csrMat4Identity(pMatrix);
+    matrix = Matrix4x4F::Identity();
+
+    Matrix4x4F animMatrix;
 
     // iterate through bones
     while (pBone)
     {
         // get the previously stacked matrix as base to calculate the new one
-        localMatrix = *pMatrix;
+        const Matrix4x4F localMatrix = matrix;
 
         // get the animated bone matrix matching with frame. If not found use the identity one
-        if (!csrAnimationGetMatrix(pAnimSet, pBone, frameIndex, &animMatrix))
-            csrMat4Identity(&animMatrix);
+        if (!GetAnimationMatrix(pAnimSet, pBone, frameIndex, animMatrix))
+            animMatrix = Matrix4x4F::Identity();
 
         // stack the previously calculated matrix with the current bone one
-        csrMat4Multiply(&localMatrix, &animMatrix, pMatrix);
+        matrix = localMatrix.Multiply(animMatrix);
 
         // go to parent bone
         pBone = pBone->m_pParent;
     }
 
     // initial matrix provided?
-    if (pInitialMatrix)
+    if (!initialMatrix.IsIdentity())
     {
         // get the previously stacked matrix as base to calculate the new one
-        localMatrix = *pMatrix;
+        const Matrix4x4F localMatrix = matrix;
 
         // stack the previously calculated matrix with the initial one
-        csrMat4Multiply(&localMatrix, pInitialMatrix, pMatrix);
+        matrix = localMatrix.Multiply(initialMatrix);
     }
 }
-*/
 //---------------------------------------------------------------------------
 void XModel::Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor)
 {
@@ -1869,7 +1864,7 @@ int XModel::TranslateWord(const std::string& data, std::size_t startOffset, std:
         return IE_T_Name;
 
     // extract word from data
-    std::string word = GetText(data, startOffset, endOffset);
+    const std::string word = GetText(data, startOffset, endOffset);
 
     // get template identifier
     itemType = GetDataStructureID(word);
@@ -1909,10 +1904,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Header_ID:
@@ -1933,10 +1925,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Frame_Transform_Matrix_ID:
@@ -1956,10 +1945,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Mesh_ID:
@@ -1980,10 +1966,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Mesh_Texture_Coords_ID:
@@ -2003,10 +1986,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Mesh_Material_List_ID:
@@ -2026,10 +2006,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Material_ID:
@@ -2049,10 +2026,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Skin_Weights_ID:
@@ -2072,10 +2046,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Texture_Filename_ID:
@@ -2095,16 +2066,13 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         case IE_DS_Animation_Key_ID:
         {
             // get item data
-            IAnimationKeyDataset* pDataset =static_cast<IAnimationKeyDataset*>(pItem->m_pDataset);
+            IAnimationKeyDataset* pDataset = static_cast<IAnimationKeyDataset*>(pItem->m_pDataset);
 
             // found it?
             if (!pDataset)
@@ -2118,10 +2086,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             pDataset->m_Name = GetText(data, startOffset, endOffset);
 
             // succeeded?
-            if (pDataset->m_Name.empty())
-                return false;
-
-            return true;
+            return !pDataset->m_Name.empty();
         }
 
         default:
@@ -2248,7 +2213,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
                 // create a new bone
                 std::unique_ptr<IBone> pChild(new IBone());
 
-                // todo -cCheck -oJean: why parent wasn't assigned here?
+                // set bone parent
                 pChild->m_pParent = pBone;
 
                 // add it to the parent's children
@@ -2338,7 +2303,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
     if (!pMeshDataset)
         return false;
 
-    std::size_t meshWeightsIndex;
+    std::size_t meshWeightsIndex = 0;
 
     // is model supporting animations?
     if (!pModel->m_MeshOnly)
@@ -2353,8 +2318,6 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
         pModel->m_MeshWeights.push_back(pMeshWeights.get());
         pMeshWeights.release();
     }
-    else
-        meshWeightsIndex = 0;
 
     IVertexBufferDataset* pNormalsDataset = nullptr;
     ITexCoordsDataset*    pUVDataset      = nullptr;
@@ -2439,7 +2402,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
                 const std::size_t indiceCount = pSkinWeightsDataset->m_Indices.size();
 
                 // reserve the memory for the index table and initialize them
-                pSkinWeights->m_IndexTable.resize(pSkinWeightsDataset->m_Indices.size());
+                pSkinWeights->m_IndexTable.resize(indiceCount);
 
                 for (std::size_t j = 0; j < indiceCount; ++j)
                     pSkinWeights->m_IndexTable[j] = new ISkinWeightIndexTable();
@@ -2994,6 +2957,210 @@ void XModel::BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) 
     // build children hierarchy
     for (std::size_t i = 0; i < pBone->m_Children.size(); ++i)
         BuildParentHierarchy(pBone->m_Children[i], pBone, pModel);
+}
+//---------------------------------------------------------------------------
+bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
+                                const IBone*         pBone,
+                                      std::size_t    frame,
+                                      Matrix4x4F&    matrix) const
+{
+    // no animation set?
+    if (!pAnimSet)
+        return false;
+
+    // no bone?
+    if (!pBone)
+        return false;
+
+    // iterate through animations
+    for (std::size_t i = 0; i < pAnimSet->m_Animations.size(); ++i)
+    {
+        // found the animation matching with the bone for which the matrix should be get?
+        if (pAnimSet->m_Animations[i]->m_pBone != pBone)
+            continue;
+
+        std::size_t rotFrame       = 0;
+        std::size_t nextRotFrame   = 0;
+        std::size_t posFrame       = 0;
+        std::size_t nextPosFrame   = 0;
+        std::size_t scaleFrame     = 0;
+        std::size_t nextScaleFrame = 0;
+        QuaternionF rotation;
+        QuaternionF nextRotation;
+        QuaternionF finalRotation;
+        Vector3F    position;
+        Vector3F    nextPosition;
+        Vector3F    finalPosition;
+        Vector3F    scaling;
+        Vector3F    nextScaling;
+        Vector3F    finalScaling;
+
+        // iterate through animation keys
+        for (std::size_t j = 0; j < pAnimSet->m_Animations[i]->m_Keys.size(); ++j)
+        {
+            std::size_t keyIndex = 0;
+
+            // iterate through animation key items
+            for (std::size_t k = 0; k < pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size(); ++k)
+                if (frame >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[k]->m_Frame)
+                    keyIndex = k;
+                else
+                    break;
+
+            // search for keys type
+            switch (pAnimSet->m_Animations[i]->m_Keys[j]->m_Type)
+            {
+                case IE_KT_Rotation:
+                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 4)
+                        return false;
+
+                    // get the rotation quaternion at index
+                    rotation.m_W = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[0];
+                    rotation.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[1];
+                    rotation.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[2];
+                    rotation.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[3];
+                    rotFrame     = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Frame;
+
+                    // get the next rotation quaternion
+                    if (keyIndex + 1 >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size())
+                    {
+                        nextRotation.m_W = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[0];
+                        nextRotation.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[1];
+                        nextRotation.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[2];
+                        nextRotation.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[3];
+                        nextRotFrame     = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Frame;
+                    }
+                    else
+                    {
+                        nextRotation.m_W = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[0];
+                        nextRotation.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[1];
+                        nextRotation.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[2];
+                        nextRotation.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[3];
+                        nextRotFrame     = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Frame;
+                    }
+
+                    continue;
+
+                case IE_KT_Scale:
+                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
+                        return false;
+
+                    // get the scale values at index
+                    scaling.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[0];
+                    scaling.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[1];
+                    scaling.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[2];
+                    scaleFrame  = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Frame;
+
+                    // get the next rotation quaternion
+                    if (keyIndex + 1 >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size())
+                    {
+                        nextScaling.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[0];
+                        nextScaling.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[1];
+                        nextScaling.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[2];
+                        nextScaleFrame  = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Frame;
+                    }
+                    else
+                    {
+                        nextScaling.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[0];
+                        nextScaling.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[1];
+                        nextScaling.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[2];
+                        nextScaleFrame  = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Frame;
+                    }
+
+                    continue;
+
+                case IE_KT_Position:
+                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
+                        return false;
+
+                    // get the position values at index
+                    position.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[0];
+                    position.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[1];
+                    position.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[2];
+                    posFrame     = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Frame;
+
+                    // get the next rotation quaternion
+                    if (keyIndex + 1 >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size())
+                    {
+                        nextPosition.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[0];
+                        nextPosition.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[1];
+                        nextPosition.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[2];
+                        nextPosFrame     = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Frame;
+                    }
+                    else
+                    {
+                        nextPosition.m_X = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[0];
+                        nextPosition.m_Y = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[1];
+                        nextPosition.m_Z = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[2];
+                        nextPosFrame     = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Frame;
+                    }
+
+                    continue;
+
+                case IE_KT_MatrixKeys:
+                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 16)
+                        return false;
+
+                    // get the key matrix
+                    for (std::size_t k = 0; k < 16; ++k)
+                        matrix.m_Table[k / 4][k % 4] = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[k];
+
+                    return true;
+
+                default:
+                    continue;
+            }
+        }
+
+        // calculate the frame delta, the frame length and the interpolation for the rotation
+        float frameDelta    = frame        - rotFrame;
+        float frameLength   = nextRotFrame - rotFrame;
+        float interpolation = frameDelta / frameLength;
+
+        bool error = false;
+
+        // interpolate the rotation
+        finalRotation = rotation.Slerp(nextRotation, interpolation, error);
+
+        // calculate the frame delta, the frame length and the interpolation for the scaling
+        frameDelta    = frame          - scaleFrame;
+        frameLength   = nextScaleFrame - scaleFrame;
+        interpolation = frameDelta / frameLength;
+
+        // interpolate the scaling
+        finalScaling.m_X = scaling.m_X + ((nextScaling.m_X - scaling.m_X) * interpolation);
+        finalScaling.m_Y = scaling.m_Y + ((nextScaling.m_Y - scaling.m_Y) * interpolation);
+        finalScaling.m_Z = scaling.m_Z + ((nextScaling.m_Z - scaling.m_Z) * interpolation);
+
+        // calculate the frame delta, the frame length and the interpolation for the rotation
+        frameDelta    = frame        - posFrame;
+        frameLength   = nextPosFrame - posFrame;
+        interpolation = frameDelta / frameLength;
+
+        // interpolate the position
+        finalPosition.m_X = position.m_X + ((nextPosition.m_X - position.m_X) * interpolation);
+        finalPosition.m_Y = position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation);
+        finalPosition.m_Z = position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation);
+
+        Matrix4x4F  scaleMatrix = Matrix4x4F::Identity();
+        Matrix4x4F  rotateMatrix;
+        Matrix4x4F  translateMatrix = Matrix4x4F::Identity();
+
+        // get the rotation quaternion and the scale and translate vectors
+        scaleMatrix.Scale(finalScaling);
+        rotateMatrix = finalRotation.ToMatrix();
+        translateMatrix.Translate(finalPosition);
+
+        Matrix4x4F buildMatrix;
+
+        // build the final matrix
+        buildMatrix = scaleMatrix.Multiply(rotateMatrix);
+        matrix      = buildMatrix.Multiply(translateMatrix);
+
+        return true;
+    }
+
+    return false;
 }
 //---------------------------------------------------------------------------
 XModel::IBone* XModel::FindBone(IBone* pBone, const std::string& name) const

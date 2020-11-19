@@ -79,7 +79,7 @@ class VertexFormat
             IE_VF_None      = 0x00,
             IE_VF_Normals   = 0x01, // each vertex contains a normal
             IE_VF_TexCoords = 0x02, // each vertex contains an UV texture coordinate
-            IE_VF_Colors    = 0x04, // each vertex contains its own color
+            IE_VF_Colors    = 0x04  // each vertex contains its own color
         };
 
         std::size_t  m_Stride; // vertex stride (i.e. length between each vertex) in bytes

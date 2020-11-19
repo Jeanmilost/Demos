@@ -147,7 +147,7 @@ class Matrix4x4
         *@param other - other matrix to multiply with
         *@return multiplied resulting matrix
         */
-        virtual inline Matrix4x4 Multiply(const Matrix4x4<T>& other) const;
+        virtual inline Matrix4x4 Multiply(const Matrix4x4& other) const;
 
         /**
         * Translates matrix
