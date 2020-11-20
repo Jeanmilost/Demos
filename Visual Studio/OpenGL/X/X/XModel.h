@@ -138,7 +138,7 @@ class XModel
             IValues     m_Values;
 
             IAnimationKey();
-            ~IAnimationKey();
+            virtual ~IAnimationKey();
         };
 
         /**
@@ -152,7 +152,7 @@ class XModel
             IKeys         m_Keys;
 
             IAnimationKeys();
-            ~IAnimationKeys();
+            virtual ~IAnimationKeys();
         };
 
         /**
@@ -167,7 +167,7 @@ class XModel
             IKeys       m_Keys;
 
             IAnimation();
-            ~IAnimation();
+            virtual ~IAnimation();
         };
 
         /**
@@ -180,7 +180,7 @@ class XModel
             IAnimations m_Animations;
 
             IAnimationSet();
-            ~IAnimationSet();
+            virtual ~IAnimationSet();
         };
 
         /**
@@ -221,20 +221,6 @@ class XModel
         */
         typedef Texture* (*ITfOnLoadTexture)(const std::string& textureName);
 
-        /**
-        * Called when a skin should be applied to a model
-        *@param index - skin index (in case the model contains several skins)
-        *@param pMaterial - material containing the skin to apply
-        *@param[in, out] pCanRelease - if 1, the skin content may be released after the skin is applied
-        */
-        //REM typedef void (*ITfOnApplySkin)(std::size_t index, const Material* pMaterial, int* pCanRelease);
-
-        /**
-        * Called when a texture should be deleted
-        *@param pTexture - texture to delete
-        */
-        //REM typedef void (*ITfOnDeleteTexture)(const Texture* pTexture);
-
         XModel();
         virtual ~XModel();
 
@@ -258,16 +244,56 @@ class XModel
         */
         virtual IModel* GetModel() const;
 
+        /**
+        * Gets the bone animation matrix
+        *@param pBone - skeleton root bone
+        *@param initialMatrix - the initial matrix
+        *@param[out] matrix - animation matrix
+        */
         virtual void GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const;
 
+        /**
+        * Gets the bone animation matrix
+        *@param pBone - skeleton root bone
+        *@param pAnimSet - animation set containing the animation to get
+        *@param frameIndex - animation frame index
+        *@param initialMatrix - the initial matrix
+        *@param[out] matrix - animation matrix
+        */
         virtual void GetBoneAnimMatrix(const IBone*         pBone,
                                        const IAnimationSet* pAnimSet,
                                              std::size_t    frameIndex,
                                        const Matrix4x4F&    initialMatrix,
                                              Matrix4x4F&    matrix) const;
 
+        /**
+        * Changes the vertex format template
+        *@param vertFormatTemplate - new vertex format template
+        */
+        virtual void SetVertFormatTemplate(const VertexFormat& vertFormatTemplate);
+
+        /**
+        * Changes the vertex culling template
+        *@param vertCullingTemplate - new vertex culling template
+        */
+        virtual void SetVertCullingTemplate(const VertexCulling& vertCullingTemplate);
+
+        /**
+        * Changes the material template
+        *@param materialTemplate - new material template
+        */
+        virtual void SetMaterial(const Material& materialTemplate);
+
+        /**
+        * Sets the OnGetVertexColor callback
+        *@param fOnGetVertexColor - callback function handle
+        */
         void Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor);
 
+        /**
+        * Sets the OnLoadTexture callback
+        *@param fOnLoadTexture - callback function handle
+        */
         void Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture);
 
     private:
@@ -574,25 +600,84 @@ class XModel
         */
         bool ParseWord(const std::string& data, std::size_t startOffset, std::size_t endOffset, IFileItem*& pItem) const;
 
+        /**
+        * Skips the separators
+        *@param data - the file data
+        *@param offset - the offset from which the separators should be skipped
+        */
         void SkipSeparators(const std::string& data, std::size_t& offset) const;
 
+        /**
+        * Skips a line
+        *@param data - the file data
+        *@param offset - the offset from which the line should be skipped
+        */
         void SkipLine(const std::string& data, std::size_t& offset) const;
 
+        /**
+        * Skips the carriage return and line feed chars
+        *@param data - the file data
+        *@param offset - the offset from which the chars should be skipped
+        */
         void SkipCRLF(const std::string& data, std::size_t& offset) const;
 
+        /**
+        * Translates a word
+        *@param data - the file data
+        *@param startOffset - word start offset
+        *@param endOffset - word end offset
+        *@return true on success, otherwise false
+        */
         int TranslateWord(const std::string& data, std::size_t startOffset, std::size_t endOffset) const;
 
+        /**
+        * Reads the dataset name
+        *@param data - the file data
+        *@param startOffset - name start offset
+        *@param endOffset - name end offset
+        *@return true on success, otherwise false
+        */
         bool ReadDatasetName(const std::string& data,
                                    std::size_t  startOffset,
                                    std::size_t  endOffset,
                                    IFileItem*   pItem) const;
 
+        /**
+        * Gets the data structure identifier
+        *@param word - word to convert to data structure identifier
+        *@return the data structure identifier
+        */
         IEDataStructID GetDataStructureID(const std::string& word) const;
 
+        /**
+        * Gets a text from a data
+        *@param startOffset - text start offset
+        *@param endOffset - text end offset
+        *@return the text, empty string if not found or on error
+        */
         std::string GetText(const std::string& data, std::size_t startOffset, std::size_t endOffset) const;
 
+        /**
+        * Adds a child to a dataset
+        *@param pItem - file item in which the child will be added
+        *@param id - dataset identifier
+        *@param pDataset - dataset to add to
+        *@return the child dataset
+        */
         IFileItem* AddChild(IFileItem* pItem, IEDataStructID id, IGenericDataset* pDataset) const;
 
+        /**
+        * Converts the opened file item to a ready-to-use x model
+        *@param pItem - file item containing the data
+        *@param pModel - target x model
+        *@param pBone - skeleton root bone
+        *@param pVertFormat - template vertex format
+        *@param pVertCulling - template vertex culling
+        *@param pMaterial - material
+        *@param fOnGetVertexColor - get vertex color callback function to use, nullptr if not used
+        *@param fOnLoadTexture - load texture callback function to use, nullptr if not used
+        *@return true on success, otherwise false
+        */
         bool ItemToModel(const IFileItem*          pItem,
                                IModel*             pModel,
                                IBone*              pBone,
@@ -602,6 +687,18 @@ class XModel
                          const ITfOnGetVertexColor fOnGetVertexColor,
                          const ITfOnLoadTexture    fOnLoadTexture) const;
 
+        /**
+        * Builds a mesh
+        *@param pItem - file item containing the data
+        *@param pModel - target x model
+        *@param pBone - skeleton root bone
+        *@param pVertFormat - template vertex format
+        *@param pVertCulling - template vertex culling
+        *@param pMaterial - material
+        *@param fOnGetVertexColor - get vertex color callback function to use, nullptr if not used
+        *@param fOnLoadTexture - load texture callback function to use, nullptr if not used
+        *@return true on success, otherwise false
+        */
         bool BuildMesh(const IFileItem*          pItem,
                              IModel*             pModel,
                              IBone*              pBone,
@@ -611,6 +708,23 @@ class XModel
                        const ITfOnGetVertexColor fOnGetVertexColor,
                        const ITfOnLoadTexture    fOnLoadTexture) const;
 
+        /**
+        * Builds a vertex
+        *@param pItem - file item containing the data
+        *@param pModel - target x model
+        *@param pMesh - template mesh
+        *@param meshIndex - mesh index
+        *@param vertexIndex - vertex index
+        *@param matListIndex - material list index
+        *@param prevColor - previous color
+        *@param pMeshDataset - the mesh dataset
+        *@param pNormalsDataset- the normal dataset
+        *@param pUVDataset - then texture coordinates dataset
+        *@param pMatList - material list
+        *@param pMatListDataset - the material list dataset
+        *@param fOnGetVertexColor - get vertex color callback function to use, nullptr if not used
+        *@return true on success, otherwise false
+        */
         bool BuildVertex(const IFileItem*            pItem,
                                IModel*               pModel,
                                Mesh*                 pMesh,
@@ -625,8 +739,20 @@ class XModel
                          const IMaterialListDataset* pMatListDataset,
                          const ITfOnGetVertexColor   fOnGetVertexColor) const;
 
+        /**
+        * Builds the animation set
+        *@param pItem - file item containing the animations
+        *@param pModel - x model
+        *@return true on success, otherwise false
+        */
         bool BuildAnimationSet(const IFileItem* pItem, IModel* pModel) const;
 
+        /**
+        * Gets the material
+        *@param pItem - file item containing the material
+        *@param index - material index
+        *@return the material, nullptr if not found or on error
+        */
         IFileItem* GetMaterial(const IFileItem* pItem, std::size_t index) const;
 
         /**
@@ -635,8 +761,8 @@ class XModel
         *@param pNormal - normal
         *@param pUV - texture coordinate
         *@param groupIndex - the vertex group index (e.g. the inner and outer vertices of a ring)
-        *@param fOnGetVertexColor - get vertex color callback function to use, 0 if not used
-        *@param[in, out] pVB - vertex buffer to add to
+        *@param fOnGetVertexColor - get vertex color callback function to use, nullptr if not used
+        *@param pVB - vertex buffer to add to
         *@return true on success, otherwise false
         */
         bool VertexBufferAdd(const Vector3F*           pVertex,
@@ -646,8 +772,22 @@ class XModel
                              const ITfOnGetVertexColor fOnGetVertexColor,
                                    VertexBuffer*       pVB) const;
 
+        /**
+        * Builds the parent hierarchy
+        *@param pBone - bone to link with parent
+        *@param pParent - parent bone
+        *@param pModel - x model
+        */
         void BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) const;
 
+        /**
+        * Gets the animation matrix
+        *@param pAnimSet - animation set containing the animation to search
+        *@param pBone - skeleton root bone
+        *@param frame - animation frame
+        *@param[out] matrix - animation matrix
+        *@return true on success, otherwise false
+        */
         bool GetAnimationMatrix(const IAnimationSet* pAnimSet,
                                 const IBone*         pBone,
                                       std::size_t    frame,
@@ -655,7 +795,7 @@ class XModel
 
         /**
         * Finds a bone in the skeleton
-        *@param pBone - root boneto search from
+        *@param pBone - root bone to search from
         *@param name - bone name to find
         *@return the bone, nullptr if not found or on error
         */

@@ -126,6 +126,9 @@ void DrawX(const XModel&          xModel,
         return;
     }
 
+    // calculate the next frame index
+    const int frameIndex = (::GetTickCount() * 5) % frameCount;
+
     // iterate through the meshes to draw
     for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
     {
@@ -165,9 +168,6 @@ void DrawX(const XModel&          xModel,
             for (std::size_t j = 0; j < pModel->m_MeshWeights[i]->m_SkinWeights.size(); ++j)
             {
                 Matrix4x4F boneMatrix;
-
-                // calculate the next frame index
-                const int frameIndex = (::GetTickCount() * 5) % frameCount;
 
                 // get the bone matrix
                 if (pModel->m_PoseOnly)

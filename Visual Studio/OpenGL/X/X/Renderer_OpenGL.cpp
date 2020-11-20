@@ -370,7 +370,7 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
                 stride += 4;
             }
 
-            // todo FIXME
+            // select the texture to apply
             SelectTexture(pShader, mesh.m_VB[i]->m_Material.m_pTexture);
 
             std::size_t offset = 0;

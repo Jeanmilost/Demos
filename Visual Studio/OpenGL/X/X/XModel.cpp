@@ -627,6 +627,21 @@ void XModel::GetBoneAnimMatrix(const IBone*         pBone,
     }
 }
 //---------------------------------------------------------------------------
+void XModel::SetVertFormatTemplate(const VertexFormat& vertFormatTemplate)
+{
+    m_VertFormatTemplate = vertFormatTemplate;
+}
+//---------------------------------------------------------------------------
+void XModel::SetVertCullingTemplate(const VertexCulling& vertCullingTemplate)
+{
+    m_VertCullingTemplate = vertCullingTemplate;
+}
+//---------------------------------------------------------------------------
+void XModel::SetMaterial(const Material& materialTemplate)
+{
+    m_MaterialTemplate = materialTemplate;
+}
+//---------------------------------------------------------------------------
 void XModel::Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor)
 {
     m_fOnGetVertexColor = fOnGetVertexColor;
