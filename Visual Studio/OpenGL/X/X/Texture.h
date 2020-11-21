@@ -36,49 +36,6 @@
 #include "Shader.h"
 
 /**
-* Pixel buffer
-*/
-class PixelBuffer
-{
-    public:
-        /**
-        * Image type
-        */
-        enum IEImageType
-        {
-            IE_IT_Unknown = 0,
-            IE_IT_Raw,
-            IE_IT_Bitmap
-        };
-
-        /**
-        * Pixel type
-        */
-        enum IEPixelType
-        {
-            IE_PT_Unknown = 0,
-            IE_PT_RGB,
-            IE_PT_BGR,
-            IE_PT_RGBA,
-            IE_PT_BGRA,
-            IE_PT_ARGB,
-            IE_PT_ABGR
-        };
-
-        IEImageType m_ImageType;
-        IEPixelType m_PixelType;
-        unsigned    m_Width;
-        unsigned    m_Height;
-        unsigned    m_Stride;
-        unsigned    m_BytePerPixel;
-        std::size_t m_DataLength;
-        void*       m_pData;
-
-        PixelBuffer();
-        virtual ~PixelBuffer();
-};
-
-/**
 * Texture
 *@author Jean-Milost Reymond
 */

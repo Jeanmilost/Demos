@@ -1,10 +1,10 @@
 /****************************************************************************
- * ==> Renderer_OpenGL --------------------------------------------------*
+ * ==> Renderer_OpenGL -----------------------------------------------------*
  ****************************************************************************
  * Description : Renderer using OpenGL for drawing                          *
  * Developer   : Jean-Milost Reymond                                        *
  ****************************************************************************
- * MIT License - QR Engine                                                  *
+ * MIT License - x model reader                                             *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
