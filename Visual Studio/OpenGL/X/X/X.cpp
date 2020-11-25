@@ -213,8 +213,17 @@ void DrawX(const XModel&          xModel,
         VertexBuffer* pSrcBuffer = pMesh->m_VB[0];
         pMesh->m_VB[0]           = pModel->m_Print[i];
 
-        // draw the model mesh
-        pRenderer->Draw(*pMesh, modelMatrix, pShader);
+        try
+        {
+            // draw the model mesh
+            pRenderer->Draw(*pMesh, modelMatrix, pShader);
+        }
+        catch (...)
+        {
+            // restore the correct mesh vertex buffer
+            pMesh->m_VB[0] = pSrcBuffer;
+            throw;
+        }
 
         // restore the correct mesh vertex buffer
         pMesh->m_VB[0] = pSrcBuffer;
