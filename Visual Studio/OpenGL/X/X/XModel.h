@@ -60,55 +60,48 @@ class XModel
         {
             typedef std::vector<IBone*> IBones;
 
-            std::string m_Name;      // bone name
-            Matrix4x4F  m_Matrix;    // matrix containing the bone transformation to apply
-            IBone*      m_pParent;   // bone parent, root bone if 0
-            IBones      m_Children;  // bone children
-            std::size_t m_MeshIndex; // mesh index in the mesh to bone dictionary
+            std::string m_Name;     // bone name
+            Matrix4x4F  m_Matrix;   // matrix containing the bone transformation to apply
+            IBone*      m_pParent;  // bone parent, root bone if 0
+            IBones      m_Children; // bone children
 
             IBone();
             virtual ~IBone();
         };
 
         /**
-        * DirectX (.x) model mesh to bone dictionary item
+        * Weights
         */
-        struct IMeshToBoneItem
-        {
-            IBone*      m_pBone;
-            std::size_t m_MeshIndex;
+        typedef std::vector<float> IWeights;
 
-            IMeshToBoneItem();
-            virtual ~IMeshToBoneItem();
+        /**
+        * Vertex weight influence table, it's a table containing the indices of each vertex influenced by a weight
+        */
+        struct IWeightInfluence
+        {
+            typedef std::vector<std::size_t> IVertexIndex;
+
+            IVertexIndex m_VertexIndex;
+
+            IWeightInfluence();
+            virtual ~IWeightInfluence();
         };
 
         /**
-        * Skin weights index table
+        * Vertex weight influences
         */
-        struct ISkinWeightIndexTable
-        {
-            typedef std::vector<std::size_t> IData;
-
-            IData m_Data;
-
-            ISkinWeightIndexTable();
-            virtual ~ISkinWeightIndexTable();
-        };
+        typedef std::vector<IWeightInfluence*> IWeightInfluences;
 
         /**
         * Skin weights, it's a group of vertices influenced by a bone
         */
         struct ISkinWeights
         {
-            typedef std::vector<ISkinWeightIndexTable*> IIndexTable;
-            typedef std::vector<float>                  IWeightsData;
-
-            std::string  m_BoneName;   // linked bone name
-            IBone*       m_pBone;      // linked bone
-            Matrix4x4F   m_Matrix;     // matrix to transform the mesh vertices to the bone space
-            std::size_t  m_MeshIndex;  // source mesh index
-            IIndexTable  m_IndexTable; // table containing the indices of the vertices to modify in the source mesh
-            IWeightsData m_Weights;    // weights indicating the bone influence on vertices, between 0.0f and 1.0f
+            std::string       m_BoneName;         // linked bone name (required to find the bone in skeleton)
+            IBone*            m_pBone;            // linked bone
+            Matrix4x4F        m_Matrix;           // matrix to transform the mesh vertices to the bone space
+            IWeightInfluences m_WeightInfluences; // table allowing to retrieve the vertices influenced by a weight
+            IWeights          m_Weights;          // weights indicating the bone influence on vertices, between 0.0f and 1.0f
 
             ISkinWeights();
             virtual ~ISkinWeights();
@@ -191,8 +184,7 @@ class XModel
         {
             std::vector<Mesh*>             m_Mesh;           // meshes composing the model
             std::vector<VertexBuffer*>     m_Print;          // printed meshes (i.e ready to be painted)
-            std::vector<IMeshSkinWeights*> m_MeshWeights;    // skin weights belonging to a mesh
-            std::vector<IMeshToBoneItem*>  m_MeshToBoneDict; // mesh to bone dictionary
+            std::vector<IMeshSkinWeights*> m_MeshWeights;    // mesh skin weights, sorted in the same order as the meshes
             std::vector<IAnimationSet*>    m_AnimationSet;   // set of animations to apply to bones
             IBone*                         m_pSkeleton;      // model skeleton
             bool                           m_MeshOnly;       // if activated, only the mesh will be drawn. All other data will be ignored
@@ -491,6 +483,12 @@ class XModel
         };
 
         /**
+        * Index dictionary, allows an index to match with a sorted number.
+        * Used to retrieve the weight index matching with a vertex index
+        */
+        typedef std::map<std::size_t, std::size_t> IIndexDictionary;
+
+        /**
         * Dataset containing the skin weights
         */
         struct ISkinWeightsDataset : public IGenericDataset
@@ -498,17 +496,21 @@ class XModel
             typedef std::vector<std::size_t> IIndices;
             typedef std::vector<float>       IWeights;
 
-            std::string m_BoneName;
-            std::size_t m_ItemCount;
-            IIndices    m_Indices;
-            IWeights    m_Weights;
-            Matrix4x4F  m_Matrix;
-            std::size_t m_ReadValCount;
-            std::size_t m_BoneIndex;
-            std::size_t m_MeshIndex;
+            std::string      m_BoneName;
+            std::size_t      m_ItemCount;
+            IIndices         m_Indices;
+            IWeights         m_Weights;
+            IIndexDictionary m_IndexDictionary;
+            Matrix4x4F       m_Matrix;
+            std::size_t      m_ReadValCount;
 
             ISkinWeightsDataset();
             virtual ~ISkinWeightsDataset();
+
+            /**
+            * Builds the index dictionary
+            */
+            virtual void BuildDictionary();
         };
 
         /**

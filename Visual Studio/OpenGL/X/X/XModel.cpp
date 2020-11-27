@@ -54,8 +54,7 @@
 //---------------------------------------------------------------------------
 XModel::IBone::IBone() :
     m_Matrix(Matrix4x4F::Identity()),
-    m_pParent(nullptr),
-    m_MeshIndex(0)
+    m_pParent(nullptr)
 {}
 //---------------------------------------------------------------------------
 XModel::IBone::~IBone()
@@ -66,38 +65,27 @@ XModel::IBone::~IBone()
         delete m_Children[i];
 }
 //---------------------------------------------------------------------------
-// XModel::IMeshToBoneItem
+// XModel::IWeightInfluence
 //---------------------------------------------------------------------------
-XModel::IMeshToBoneItem::IMeshToBoneItem() :
-    m_pBone(nullptr),
-    m_MeshIndex(0)
+XModel::IWeightInfluence::IWeightInfluence()
 {}
 //---------------------------------------------------------------------------
-XModel::IMeshToBoneItem::~IMeshToBoneItem()
-{}
-//---------------------------------------------------------------------------
-// XModel::ISkinWeightIndexTable
-//---------------------------------------------------------------------------
-XModel::ISkinWeightIndexTable::ISkinWeightIndexTable()
-{}
-//---------------------------------------------------------------------------
-XModel::ISkinWeightIndexTable::~ISkinWeightIndexTable()
+XModel::IWeightInfluence::~IWeightInfluence()
 {}
 //---------------------------------------------------------------------------
 // XModel::ISkinWeights
 //---------------------------------------------------------------------------
 XModel::ISkinWeights::ISkinWeights() :
     m_pBone(nullptr),
-    m_Matrix(Matrix4x4F::Identity()),
-    m_MeshIndex(0)
+    m_Matrix(Matrix4x4F::Identity())
 {}
 //---------------------------------------------------------------------------
 XModel::ISkinWeights::~ISkinWeights()
 {
-    const std::size_t count = m_IndexTable.size();
+    const std::size_t count = m_WeightInfluences.size();
 
     for (std::size_t i = 0; i < count; ++i)
-        delete m_IndexTable[i];
+        delete m_WeightInfluences[i];
 }
 //---------------------------------------------------------------------------
 // XModel::IMeshSkinWeights
@@ -278,13 +266,24 @@ XModel::ISkinWeightsDataset::ISkinWeightsDataset() :
     IGenericDataset(),
     m_ItemCount(0),
     m_Matrix(Matrix4x4F::Identity()),
-    m_ReadValCount(0),
-    m_BoneIndex(0),
-    m_MeshIndex(0)
+    m_ReadValCount(0)
 {}
 //---------------------------------------------------------------------------
 XModel::ISkinWeightsDataset::~ISkinWeightsDataset()
 {}
+//---------------------------------------------------------------------------
+void XModel::ISkinWeightsDataset::BuildDictionary()
+{
+    // already built?
+    if (m_IndexDictionary.size())
+        return;
+
+    const std::size_t count = m_Indices.size();
+
+    // build the dictionary
+    for (std::size_t i = 0; i < count; ++i)
+        m_IndexDictionary[m_Indices[i]] = i;
+}
 //---------------------------------------------------------------------------
 // XModel::ITextureDataset
 //---------------------------------------------------------------------------
@@ -2411,16 +2410,17 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
                 // reserve the memory for the keys and initialize them
                 pSkinWeights->m_Weights.resize(weightsCount);
 
+                // copy the weights from the file dataset to the model
                 for (std::size_t j = 0; j < weightsCount; ++j)
                     pSkinWeights->m_Weights[j] = pSkinWeightsDataset->m_Weights[j];
 
                 const std::size_t indiceCount = pSkinWeightsDataset->m_Indices.size();
 
                 // reserve the memory for the index table and initialize them
-                pSkinWeights->m_IndexTable.resize(indiceCount);
+                pSkinWeights->m_WeightInfluences.resize(indiceCount);
 
                 for (std::size_t j = 0; j < indiceCount; ++j)
-                    pSkinWeights->m_IndexTable[j] = new ISkinWeightIndexTable();
+                    pSkinWeights->m_WeightInfluences[j] = new IWeightInfluence();
 
                 // update the model mesh skin weights list
                 pModel->m_MeshWeights[meshWeightsIndex]->m_SkinWeights.push_back(pSkinWeights.get());
@@ -2435,21 +2435,6 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
 
     // keep the current mesh index
     const std::size_t index = pModel->m_Mesh.size();
-
-    // model contains bones?
-    if (pBone)
-    {
-        // allocate memory for the new mesh-to-bone dictionary item
-        std::unique_ptr<IMeshToBoneItem> pMeshBoneItem(new IMeshToBoneItem());
-
-        // update the model mesh data
-        pModel->m_MeshToBoneDict.push_back(pMeshBoneItem.get());
-        pMeshBoneItem.release();
-
-        // link the mesh to the bone owning it
-        pModel->m_MeshToBoneDict[index]->m_MeshIndex = index;
-        pBone->m_MeshIndex                           = index;
-    }
 
     // allocate memory for the new vertex buffer
     std::unique_ptr<VertexBuffer> pVB(new VertexBuffer());
@@ -2738,12 +2723,17 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
                 if (!pSkinWeightsDataset)
                     return false;
 
-                // iterate through the indices to link to mesh vertices
-                for (std::size_t j = 0; j < pSkinWeightsDataset->m_Indices.size(); ++j)
-                    // is current vertex index matching with one in the current skin weights?
-                    if (pSkinWeightsDataset->m_Indices[j] == pMeshDataset->m_Indices[vertexIndex])
-                        // add the new indice
-                        pModel->m_MeshWeights[meshIndex]->m_SkinWeights[weightIndex]->m_IndexTable[j]->m_Data.push_back(vbIndex);
+                // build the index dictionary
+                pSkinWeightsDataset->BuildDictionary();
+
+                // search for a weight index matching with the vertex index
+                IIndexDictionary::iterator it = pSkinWeightsDataset->m_IndexDictionary.find(pMeshDataset->m_Indices[vertexIndex]);
+
+                // found one?
+                if (it != pSkinWeightsDataset->m_IndexDictionary.end())
+                    // add the vertex index (the one in the vertex buffer) in the weight influence table
+                    pModel->m_MeshWeights[meshIndex]->m_SkinWeights[weightIndex]->
+                            m_WeightInfluences[it->second]->m_VertexIndex.push_back(vbIndex);
 
                 ++weightIndex;
                 continue;
@@ -2963,11 +2953,6 @@ void XModel::BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) 
 
     // set bone parent
     pBone->m_pParent = pParent;
-
-    // link the bone to the mesh
-    for (std::size_t i = 0; i < pModel->m_MeshToBoneDict.size(); ++i)
-        if (pModel->m_MeshToBoneDict[i]->m_MeshIndex == pBone->m_MeshIndex)
-            pModel->m_MeshToBoneDict[i]->m_pBone = pBone;
 
     // build children hierarchy
     for (std::size_t i = 0; i < pBone->m_Children.size(); ++i)

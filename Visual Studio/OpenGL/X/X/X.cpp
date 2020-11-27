@@ -183,13 +183,13 @@ void DrawX(const XModel&          xModel,
                 const Matrix4x4F finalMatrix = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
 
                 // apply the bone and its skin weights to each vertices
-                for (std::size_t k = 0; k < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable.size(); ++k)
-                    for (std::size_t l = 0; l < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable[k]->m_Data.size(); ++l)
+                for (std::size_t k = 0; k < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences.size(); ++k)
+                    for (std::size_t l = 0; l < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size(); ++l)
                     {
                         // get the next vertex to which the next skin weight should be applied
-                        const std::size_t iX = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable[k]->m_Data[l];
-                        const std::size_t iY = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable[k]->m_Data[l] + 1;
-                        const std::size_t iZ = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_IndexTable[k]->m_Data[l] + 2;
+                        const std::size_t iX = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
+                        const std::size_t iY = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
+                        const std::size_t iZ = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
 
                         Vector3F inputVertex;
 
@@ -209,6 +209,7 @@ void DrawX(const XModel&          xModel,
             }
         }
 
+        // todo FIXME -cImprovement -oJean: weak solution to draw the mesh, find a better concept
         // use the model print as final vertex buffer
         VertexBuffer* pSrcBuffer = pMesh->m_VB[0];
         pMesh->m_VB[0]           = pModel->m_Print[i];
@@ -299,12 +300,20 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     ::ShowWindow(hWnd, nCmdShow);
 
+    // get the window client rect
     RECT clientRect;
     ::GetClientRect(hWnd, &clientRect);
 
-    // please wait text
+    // get the window device context
     HDC hDC = ::GetDC(hWnd);
-    ::SetBkMode(hDC, OPAQUE);
+
+    // please wait text background
+    HBRUSH hBrush = ::CreateSolidBrush(RGB(20, 30, 43));
+    ::FillRect(hDC, &clientRect, hBrush);
+    ::DeleteObject(hBrush);
+
+    // please wait text
+    ::SetBkMode(hDC, TRANSPARENT);
     ::SetBkColor(hDC, 0x000000);
     ::SetTextColor(hDC, 0xffffff);
     ::DrawText(hDC, L"Please wait...", 14, &clientRect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
@@ -332,7 +341,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     Shader_OpenGL shader;
     shader.CreateProgram();
-    shader.Attach(vertexShader, Shader::IE_ST_Vertex);
+    shader.Attach(vertexShader,   Shader::IE_ST_Vertex);
     shader.Attach(fragmentShader, Shader::IE_ST_Fragment);
     shader.Link(true);
 
@@ -343,7 +352,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     Matrix4x4F projMatrix;
 
     // create the viewport
-    renderer.CreateViewport(clientRect.right - clientRect.left,
+    renderer.CreateViewport(clientRect.right  - clientRect.left,
                             clientRect.bottom - clientRect.top,
                             0.1f,
                             1000.0f,
@@ -361,26 +370,8 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     bgColor.m_B = 0.17f;
     bgColor.m_A = 1.0f;
 
-    Matrix4x4F matrix = Matrix4x4F::Identity();
-
-    // create the rotation matrix
-    Matrix4x4F rotMat;
-    Vector3F axis;
-    axis.m_X = 1.0f;
-    axis.m_Y = 0.0f;
-    axis.m_Z = 0.0f;
-    rotMat   = matrix.Rotate(-M_PI / 2.0f, axis);
-
-    // create the scale matrix
-    Matrix4x4F scaleMat = Matrix4x4F::Identity();
-    scaleMat.m_Table[0][0] = 0.075f;
-    scaleMat.m_Table[1][1] = 0.075f;
-    scaleMat.m_Table[2][2] = 0.075f;
-
-    // place the model in the 3d world (update the matrix directly)
-    Matrix4x4F modelMatrix    =  rotMat.Multiply(scaleMat);
-    modelMatrix.m_Table[3][1] = -18.0f;
-    modelMatrix.m_Table[3][2] = -50.0f;
+    float  angle    = 0.0f;
+    double lastTime = 0.0f;
 
     // program main loop
     while (!bQuit)
@@ -399,10 +390,46 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         }
         else
         {
+            Matrix4x4F matrix = Matrix4x4F::Identity();
+            Vector3F   axis;
+
+            // create the X rotation matrix
+            Matrix4x4F rotMatX;
+            axis.m_X = 1.0f;
+            axis.m_Y = 0.0f;
+            axis.m_Z = 0.0f;
+            rotMatX  = matrix.Rotate(-M_PI / 2.0f, axis);
+
+            // create the Y rotation matrix
+            Matrix4x4F rotMatZ;
+            axis.m_X = 0.0f;
+            axis.m_Y = 0.0f;
+            axis.m_Z = 1.0f;
+            rotMatZ  = matrix.Rotate(angle, axis);
+
+            // create the scale matrix
+            Matrix4x4F scaleMat    = Matrix4x4F::Identity();
+            scaleMat.m_Table[0][0] = 0.075f;
+            scaleMat.m_Table[1][1] = 0.075f;
+            scaleMat.m_Table[2][2] = 0.075f;
+
+            // combine the rotation matrices
+            rotMatZ.Multiply(rotMatX);
+
+            // place the model in the 3d world (update the matrix directly)
+            Matrix4x4F modelMatrix    =  rotMatZ.Multiply(scaleMat);
+            modelMatrix.m_Table[3][1] = -18.0f;
+            modelMatrix.m_Table[3][2] = -50.0f;
+
             // draw the scene
             renderer.BeginScene(bgColor, (Renderer::IESceneFlags)(Renderer::IE_SF_ClearColor | Renderer::IE_SF_ClearDepth));
             DrawX(x, pModel, modelMatrix, &shader, &renderer, 1, 4800);
             renderer.EndScene();
+
+            // calculate the elapsed time
+            double elapsedTime = ::GetTickCount() - lastTime;
+            lastTime           = ::GetTickCount();
+            angle              = std::fmodf(angle + (elapsedTime * 0.001f), 2 * M_PI);
 
             Sleep(1);
         }
