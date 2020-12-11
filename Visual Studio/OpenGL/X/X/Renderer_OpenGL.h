@@ -151,6 +151,19 @@ class Renderer_OpenGL : public Renderer
                           const Shader*     pShader) const;
 
         /**
+        * Draws a mesh using OpenGL and shader
+        *@param mesh - mesh to draw
+        *@param modelMatrix - model matrix to apply to mesh
+        *@param pShader - shader that will be used to draw the model
+        *@param disableDepthTestOnTransparency - if true, depth test will be disabled on transparency
+        *@return true on success, otherwise false
+        */
+        virtual bool Draw(const Mesh&       mesh,
+                          const Matrix4x4F& modelMatrix,
+                          const Shader*     pShader,
+                                bool        disableDepthTestOnTransparency) const;
+
+        /**
         * Selects texture to draw
         *@param pShader - shader that will draw the texture
         *@param pTexture - the texture to select

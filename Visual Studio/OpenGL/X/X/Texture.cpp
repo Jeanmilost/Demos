@@ -35,11 +35,11 @@
 // Texture
 //---------------------------------------------------------------------------
 Texture::Texture() :
-    m_Format(IE_FT_24bit),
-    m_Target(IE_TT_Texture_2D),
-    m_WrapMode(IE_WM_Repeat),
-    m_MinFilter(IE_MI_Linear),
-    m_MagFilter(IE_MA_Linear),
+    m_Format(IEFormat::IE_FT_24bit),
+    m_Target(IETarget::IE_TT_Texture_2D),
+    m_WrapMode(IEWrapMode::IE_WM_Repeat),
+    m_MinFilter(IEMinFilter::IE_MI_Linear),
+    m_MagFilter(IEMagFilter::IE_MA_Linear),
     m_Width(0),
     m_Height(0)
 {}
@@ -49,11 +49,11 @@ Texture::~Texture()
 //---------------------------------------------------------------------------
 void Texture::Clear()
 {
-    m_Format    = IE_FT_24bit;
-    m_Target    = IE_TT_Texture_2D;
-    m_WrapMode  = IE_WM_Repeat;
-    m_MinFilter = IE_MI_Linear;
-    m_MagFilter = IE_MA_Linear;
+    m_Format    = IEFormat::IE_FT_24bit;
+    m_Target    = IETarget::IE_TT_Texture_2D;
+    m_WrapMode  = IEWrapMode::IE_WM_Repeat;
+    m_MinFilter = IEMinFilter::IE_MI_Linear;
+    m_MagFilter = IEMagFilter::IE_MA_Linear;
     m_Width     = 0;
     m_Height    = 0;
 }

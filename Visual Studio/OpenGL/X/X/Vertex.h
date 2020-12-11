@@ -60,7 +60,7 @@ class VertexFormat
         /**
         * Vertex buffer type enumeration
         */
-        enum IEType
+        enum class IEType
         {
             IE_VT_Unknown = 0,
             IE_VT_Triangles,
@@ -74,7 +74,7 @@ class VertexFormat
         * Vertex format enumeration
         *@note Flags can be combined
         */
-        enum IEFormat
+        enum class IEFormat
         {
             IE_VF_None      = 0x00,
             IE_VF_Normals   = 0x01, // each vertex contains a normal
@@ -111,7 +111,7 @@ class VertexCulling
         /**
         * Culling type
         */
-        enum IECullingType
+        enum class IECullingType
         {
             IE_CT_None,
             IE_CT_Front,
@@ -122,7 +122,7 @@ class VertexCulling
         /**
         * Culling face
         */
-        enum IECullingFace
+        enum class IECullingFace
         {
             IE_CF_CW,
             IE_CF_CCW

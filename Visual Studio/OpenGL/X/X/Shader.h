@@ -42,7 +42,7 @@ class Shader
         /**
         * Shader type enumeration
         */
-        enum IEType
+        enum class IEType
         {
             IE_ST_Vertex,
             IE_ST_Fragment
@@ -51,7 +51,7 @@ class Shader
         /**
         * Shader attributes
         */
-        enum IEAttribute
+        enum class IEAttribute
         {
             IE_SA_Vertices,
             IE_SA_Normal,

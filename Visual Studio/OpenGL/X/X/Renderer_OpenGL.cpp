@@ -118,7 +118,7 @@ void Renderer_OpenGL::CreateViewport(float             w,
     const float aspect = w / h;
 
     // create the OpenGL viewport
-    glViewport(0, 0, w, h);
+    glViewport(0, 0, (GLsizei)w, (GLsizei)h);
 
     // create the projection matrix
     matrix = GetPerspective(fov, aspect, zNear, zFar);
@@ -136,7 +136,7 @@ void Renderer_OpenGL::BeginScene(const ColorF& color, IESceneFlags flags) const
     GLbitfield openGLSceneFlags = 0;
 
     // clear background color, if needed
-    if (flags & IE_SF_ClearColor)
+    if ((unsigned)flags & (unsigned)IESceneFlags::IE_SF_ClearColor)
     {
         glClearColor((GLclampf)color.m_R, (GLclampf)color.m_G, (GLclampf)color.m_B, (GLclampf)color.m_A);
 
@@ -144,7 +144,7 @@ void Renderer_OpenGL::BeginScene(const ColorF& color, IESceneFlags flags) const
     }
 
     // clear Z buffer, if needed
-    if (flags & IE_SF_ClearDepth)
+    if ((unsigned)flags & (unsigned)IESceneFlags::IE_SF_ClearDepth)
     {
         glClearDepth(1.0f);
 
@@ -194,7 +194,7 @@ void Renderer_OpenGL::ConnectProjectionMatrixToShader(const Shader*     pShader,
     pShader->Use(true);
 
     // get perspective (or projection) matrix slot from shader
-    const GLint uniform = GetUniform(pShader, Shader::IE_SA_ProjectionMatrix);
+    const GLint uniform = GetUniform(pShader, Shader::IEAttribute::IE_SA_ProjectionMatrix);
 
     // found it?
     if (uniform == -1)
@@ -217,7 +217,7 @@ void Renderer_OpenGL::ConnectViewMatrixToShader(const Shader*     pShader,
     pShader->Use(true);
 
     // get view matrix slot from shader
-    const GLint uniform = GetUniform(pShader, Shader::IE_SA_ViewMatrix);
+    const GLint uniform = GetUniform(pShader, Shader::IEAttribute::IE_SA_ViewMatrix);
 
     // found it?
     if (uniform == -1)
@@ -246,6 +246,14 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
                            const Matrix4x4F& modelMatrix,
                            const Shader*     pShader) const
 {
+    return Draw(mesh, modelMatrix, pShader, false);
+}
+//---------------------------------------------------------------------------
+bool Renderer_OpenGL::Draw(const Mesh&       mesh,
+                           const Matrix4x4F& modelMatrix,
+                           const Shader*     pShader,
+                                 bool        disableDepthTestOnTransparency) const
+{
     // get mesh count
     const std::size_t count = mesh.m_VB.size();
 
@@ -266,7 +274,7 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
         pShader->Use(true);
 
         // get model matrix slot from shader
-        GLint uniform = GetUniform(pShader, Shader::IE_SA_ModelMatrix);
+        GLint uniform = GetUniform(pShader, Shader::IEAttribute::IE_SA_ModelMatrix);
 
         // found it?
         if (uniform == -1)
@@ -284,23 +292,26 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
             // configure the culling
             switch (mesh.m_VB[i]->m_Culling.m_Type)
             {
-                case VertexCulling::IE_CT_None:  glDisable(GL_CULL_FACE); glCullFace(GL_NONE);           break;
-                case VertexCulling::IE_CT_Front: glEnable (GL_CULL_FACE); glCullFace(GL_FRONT);          break;
-                case VertexCulling::IE_CT_Back:  glEnable (GL_CULL_FACE); glCullFace(GL_BACK);           break;
-                case VertexCulling::IE_CT_Both:  glEnable (GL_CULL_FACE); glCullFace(GL_FRONT_AND_BACK); break;
-                default:                         glDisable(GL_CULL_FACE); glCullFace(GL_NONE);           break;
+                case VertexCulling::IECullingType::IE_CT_None:  glDisable(GL_CULL_FACE); glCullFace(GL_NONE);           break;
+                case VertexCulling::IECullingType::IE_CT_Front: glEnable (GL_CULL_FACE); glCullFace(GL_FRONT);          break;
+                case VertexCulling::IECullingType::IE_CT_Back:  glEnable (GL_CULL_FACE); glCullFace(GL_BACK);           break;
+                case VertexCulling::IECullingType::IE_CT_Both:  glEnable (GL_CULL_FACE); glCullFace(GL_FRONT_AND_BACK); break;
+                default:                                        glDisable(GL_CULL_FACE); glCullFace(GL_NONE);           break;
             }
 
             // configure the culling face
             switch (mesh.m_VB[i]->m_Culling.m_Face)
             {
-                case VertexCulling::IE_CF_CW:  glFrontFace(GL_CW);  break;
-                case VertexCulling::IE_CF_CCW: glFrontFace(GL_CCW); break;
+                case VertexCulling::IECullingFace::IE_CF_CW:  glFrontFace(GL_CW);  break;
+                case VertexCulling::IECullingFace::IE_CF_CCW: glFrontFace(GL_CCW); break;
             }
 
             // configure the alpha blending
             if (mesh.m_VB[i]->m_Material.m_Transparent)
             {
+                if (disableDepthTestOnTransparency)
+                    glDisable(GL_DEPTH_TEST);
+
                 glEnable(GL_BLEND);
                 glBlendEquation(GL_FUNC_ADD);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -315,7 +326,7 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
             // get shader position attribute
-            GLint posAttrib = GetAttribute(pShader, Shader::IE_SA_Vertices);
+            GLint posAttrib = GetAttribute(pShader, Shader::IEAttribute::IE_SA_Vertices);
 
             // found it?
             if (posAttrib == -1)
@@ -326,10 +337,10 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
             GLint       normalAttrib = -1;
 
             // do use shader normal attribute?
-            if (mesh.m_VB[i]->m_Format.m_Format & VertexFormat::IE_VF_Normals)
+            if ((unsigned)mesh.m_VB[i]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Normals)
             {
                 // get shader normal attribute
-                normalAttrib = GetAttribute(pShader, Shader::IE_SA_Normal);
+                normalAttrib = GetAttribute(pShader, Shader::IEAttribute::IE_SA_Normal);
 
                 // found it?
                 if (normalAttrib == -1)
@@ -341,10 +352,10 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
             GLint uvAttrib = -1;
 
             // do use shader UV attribute?
-            if (mesh.m_VB[i]->m_Format.m_Format & VertexFormat::IE_VF_TexCoords)
+            if ((unsigned)mesh.m_VB[i]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords)
             {
                 // get shader UV attribute
-                uvAttrib = GetAttribute(pShader, Shader::IE_SA_Texture);
+                uvAttrib = GetAttribute(pShader, Shader::IEAttribute::IE_SA_Texture);
 
                 // found it?
                 if (uvAttrib == -1)
@@ -357,10 +368,10 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
             GLint colorAttrib = -1;
 
             // do use shader color attribute?
-            if (mesh.m_VB[i]->m_Format.m_Format & VertexFormat::IE_VF_Colors)
+            if ((unsigned)mesh.m_VB[i]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Colors)
             {
                 // get shader color attribute
-                colorAttrib = GetAttribute(pShader, Shader::IE_SA_Color);
+                colorAttrib = GetAttribute(pShader, Shader::IEAttribute::IE_SA_Color);
 
                 // found it?
                 if (colorAttrib == -1)
@@ -381,7 +392,7 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
                                   3,
                                   GL_FLOAT,
                                   GL_FALSE,
-                                  stride * sizeof(float),
+                                  (GLsizei)(stride * sizeof(float)),
                                   &mesh.m_VB[i]->m_Data[offset]);
 
             offset = 3;
@@ -395,7 +406,7 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
                                       3,
                                       GL_FLOAT,
                                       GL_FALSE,
-                                      stride * sizeof(float),
+                                      (GLsizei)(stride * sizeof(float)),
                                       &mesh.m_VB[i]->m_Data[offset]);
 
                 offset += 3;
@@ -411,7 +422,7 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
                                       2,
                                       GL_FLOAT,
                                       GL_FALSE,
-                                      stride * sizeof(float),
+                                      (GLsizei)(stride * sizeof(float)),
                                       &mesh.m_VB[i]->m_Data[offset]);
 
                 offset += 2;
@@ -427,19 +438,19 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
                                       4,
                                       GL_FLOAT,
                                       GL_FALSE,
-                                      stride * sizeof(float),
+                                      (GLsizei)(stride * sizeof(float)),
                                       &mesh.m_VB[i]->m_Data[offset]);
             }
 
             // draw mesh
             switch (mesh.m_VB[i]->m_Format.m_Type)
             {
-                case VertexFormat::IE_VT_Triangles:     glDrawArrays(GL_TRIANGLES,      0, mesh.m_VB[i]->m_Data.size() / stride); break;
-                case VertexFormat::IE_VT_TriangleStrip: glDrawArrays(GL_TRIANGLE_STRIP, 0, mesh.m_VB[i]->m_Data.size() / stride); break;
-                case VertexFormat::IE_VT_TriangleFan:   glDrawArrays(GL_TRIANGLE_FAN,   0, mesh.m_VB[i]->m_Data.size() / stride); break;
-                case VertexFormat::IE_VT_Quads:         glDrawArrays(GL_QUADS,          0, mesh.m_VB[i]->m_Data.size() / stride); break;
-                case VertexFormat::IE_VT_QuadStrip:     glDrawArrays(GL_QUAD_STRIP,     0, mesh.m_VB[i]->m_Data.size() / stride); break;
-                case VertexFormat::IE_VT_Unknown:
+                case VertexFormat::IEType::IE_VT_Triangles:     glDrawArrays(GL_TRIANGLES,      0, (GLsizei)(mesh.m_VB[i]->m_Data.size() / stride)); break;
+                case VertexFormat::IEType::IE_VT_TriangleStrip: glDrawArrays(GL_TRIANGLE_STRIP, 0, (GLsizei)(mesh.m_VB[i]->m_Data.size() / stride)); break;
+                case VertexFormat::IEType::IE_VT_TriangleFan:   glDrawArrays(GL_TRIANGLE_FAN,   0, (GLsizei)(mesh.m_VB[i]->m_Data.size() / stride)); break;
+                case VertexFormat::IEType::IE_VT_Quads:         glDrawArrays(GL_QUADS,          0, (GLsizei)(mesh.m_VB[i]->m_Data.size() / stride)); break;
+                case VertexFormat::IEType::IE_VT_QuadStrip:     glDrawArrays(GL_QUAD_STRIP,     0, (GLsizei)(mesh.m_VB[i]->m_Data.size() / stride)); break;
+                case VertexFormat::IEType::IE_VT_Unknown:
                 default:                                throw new std::exception("Unknown vertex type");
             }
         }
@@ -484,7 +495,7 @@ int Renderer_OpenGL::GetUniform(const Shader* pShader, Shader::IEAttribute attri
         return -1;
 
     // get model matrix slot from shader
-    return glGetUniformLocation(pShader->GetProgramID(), propertyName.c_str());
+    return glGetUniformLocation((GLuint)pShader->GetProgramID(), propertyName.c_str());
 }
 //---------------------------------------------------------------------------
 int Renderer_OpenGL::GetAttribute(const Shader* pShader, Shader::IEAttribute attribute)
@@ -501,6 +512,6 @@ int Renderer_OpenGL::GetAttribute(const Shader* pShader, Shader::IEAttribute att
         return -1;
 
     // get shader interpolation position attribute
-    return glGetAttribLocation(pShader->GetProgramID(), propertyName.c_str());
+    return glGetAttribLocation((GLuint)pShader->GetProgramID(), propertyName.c_str());
 }
 //---------------------------------------------------------------------------

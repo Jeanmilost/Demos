@@ -393,7 +393,7 @@ bool Vector3<T>::operator !=(const Vector3& value) const
 template <class T>
 T Vector3<T>::Length() const
 {
-    return T(sqrt((m_X * m_X) + (m_Y * m_Y) + (m_Z * m_Z)));
+    return T(sqrt((double(m_X) * double(m_X)) + (double(m_Y) * double(m_Y)) + (double(m_Z) * double(m_Z))));
 }
 //---------------------------------------------------------------------------
 template <class T>

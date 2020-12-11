@@ -261,8 +261,8 @@ bool TextureHelper::LoadBitmapData(const unsigned char* pBuffer,
 
     try
     {
-        const unsigned bytesPerRow = ((width * 3 + 3) / 4) * 4 - (width * 3 % 4);
-        const unsigned bitmapSize  = bytesPerRow * height;
+        const unsigned bytesPerRow = (unsigned)((width * 3 + 3) / 4) * 4 - (width * 3 % 4);
+        const unsigned bitmapSize  = bytesPerRow * (unsigned)height;
 
         pBitmapData = new unsigned char[bitmapSize];
 
@@ -284,7 +284,7 @@ bool TextureHelper::LoadBitmapData(const unsigned char* pBuffer,
                     for (unsigned x = 0; x < width; ++x)
                         for (unsigned char c = 0; c < 3; ++c)
                             pPixelArray[3 * (width * y + x) + c] =
-                                    pBitmapData[(bytesPerRow * ((height - 1) - y)) + (3 * x) + (2 - c)];
+                                    pBitmapData[(bytesPerRow * ((height - 1) - y)) + (3 * (std::size_t)x) + (2 - c)];
 
                 pPixels = pPixelArray;
                 break;

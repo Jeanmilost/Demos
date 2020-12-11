@@ -103,9 +103,9 @@ std::uintptr_t Shader_OpenGL::AttachFile(const std::string& fileName, IEType typ
     // search for shader type
     switch (type)
     {
-        case IE_ST_Vertex:   m_VertexID   = shaderID; break;
-        case IE_ST_Fragment: m_FragmentID = shaderID; break;
-        default:             throw new std::exception("Unknown shader type");
+        case IEType::IE_ST_Vertex:   m_VertexID   = shaderID; break;
+        case IEType::IE_ST_Fragment: m_FragmentID = shaderID; break;
+        default:                     throw new std::exception("Unknown shader type");
     }
 
     return shaderID;
@@ -130,9 +130,9 @@ std::uintptr_t Shader_OpenGL::Attach(const std::string& source, IEType type)
     // search for shader type
     switch (type)
     {
-        case IE_ST_Vertex:   m_VertexID   = shaderID; break;
-        case IE_ST_Fragment: m_FragmentID = shaderID; break;
-        default:             throw new std::exception("Unknown shader type");
+        case IEType::IE_ST_Vertex:   m_VertexID   = shaderID; break;
+        case IEType::IE_ST_Fragment: m_FragmentID = shaderID; break;
+        default:                     throw new std::exception("Unknown shader type");
     }
 
     return shaderID;
@@ -174,9 +174,9 @@ GLenum Shader_OpenGL::ShaderTypeToOpenGLShaderType(IEType type)
 {
     switch (type)
     {
-        case IE_ST_Vertex:   return GL_VERTEX_SHADER;
-        case IE_ST_Fragment: return GL_FRAGMENT_SHADER;
-        default:             throw new std::exception("Unknown shader type");
+        case IEType::IE_ST_Vertex:   return GL_VERTEX_SHADER;
+        case IEType::IE_ST_Fragment: return GL_FRAGMENT_SHADER;
+        default:                     throw new std::exception("Unknown shader type");
     }
 }
 //---------------------------------------------------------------------------
@@ -184,8 +184,8 @@ Shader::IEType Shader_OpenGL::OpenGLTypeToShaderType(GLenum type)
 {
     switch (type)
     {
-        case GL_VERTEX_SHADER:   return IE_ST_Vertex;
-        case GL_FRAGMENT_SHADER: return IE_ST_Fragment;
+        case GL_VERTEX_SHADER:   return IEType::IE_ST_Vertex;
+        case GL_FRAGMENT_SHADER: return IEType::IE_ST_Fragment;
         default:                 throw new std::exception("Unknown shader type");
     }
 }

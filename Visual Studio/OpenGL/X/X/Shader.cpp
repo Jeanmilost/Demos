@@ -63,13 +63,13 @@ void Shader::SetAttributeName(IEAttribute  attribute, const std::string& name)
 //---------------------------------------------------------------------------
 void Shader::PopulateAttributeDict()
 {
-    m_AttributeDictionary[IE_SA_Vertices]          = "aVertices";
-    m_AttributeDictionary[IE_SA_Normal]            = "aNormal";
-    m_AttributeDictionary[IE_SA_Texture]           = "aTexCoord";
-    m_AttributeDictionary[IE_SA_Color]             = "aColor";
-    m_AttributeDictionary[IE_SA_ProjectionMatrix]  = "uProjection";
-    m_AttributeDictionary[IE_SA_ViewMatrix]        = "uView";
-    m_AttributeDictionary[IE_SA_ModelMatrix]       = "uModel";
-    m_AttributeDictionary[IE_SA_TextureSampler]    = "sTexture";
+    m_AttributeDictionary[IEAttribute::IE_SA_Vertices]         = "aVertices";
+    m_AttributeDictionary[IEAttribute::IE_SA_Normal]           = "aNormal";
+    m_AttributeDictionary[IEAttribute::IE_SA_Texture]          = "aTexCoord";
+    m_AttributeDictionary[IEAttribute::IE_SA_Color]            = "aColor";
+    m_AttributeDictionary[IEAttribute::IE_SA_ProjectionMatrix] = "uProjection";
+    m_AttributeDictionary[IEAttribute::IE_SA_ViewMatrix]       = "uView";
+    m_AttributeDictionary[IEAttribute::IE_SA_ModelMatrix]      = "uModel";
+    m_AttributeDictionary[IEAttribute::IE_SA_TextureSampler]   = "sTexture";
 }
 //---------------------------------------------------------------------------

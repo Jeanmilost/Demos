@@ -55,7 +55,7 @@ class Renderer
         /**
         * Scene flags
         */
-        enum IESceneFlags
+        enum class IESceneFlags
         {
             IE_SF_None       = 0x00,
             IE_SF_ClearColor = 0x01,
@@ -319,7 +319,7 @@ Matrix4x4<T> Renderer::GetPerspective(T    fov,
                                       T    zFar,
                                       bool ortho)
 {
-    const T maxY = zNear * tanf(fov * M_PI / T(360.0));
+    const T maxY = zNear * tanf(fov * T(M_PI) / T(360.0));
     const T maxX = maxY  * aspectRatio;
 
     // do use orthogonal perspective?

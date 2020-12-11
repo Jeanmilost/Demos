@@ -112,8 +112,8 @@ GLuint Texture_OpenGL::GetTarget() const
     // search for texture target
     switch (m_Target)
     {
-        case Texture::IE_TT_Texture_2D: return GL_TEXTURE_2D;
-        default:                        throw new std::exception("Unknown target");
+        case Texture::IETarget::IE_TT_Texture_2D: return GL_TEXTURE_2D;
+        default:                                  throw new std::exception("Unknown target");
     }
 }
 //---------------------------------------------------------------------------
@@ -122,9 +122,9 @@ GLuint Texture_OpenGL::GetFormat() const
     // search for texture format to apply
     switch (m_Format)
     {
-        case Texture::IE_FT_24bit: return GL_RGB;
-        case Texture::IE_FT_32bit: return GL_RGBA;
-        default:                   throw new std::exception("Unknown format");
+        case Texture::IEFormat::IE_FT_24bit: return GL_RGB;
+        case Texture::IEFormat::IE_FT_32bit: return GL_RGBA;
+        default:                             throw new std::exception("Unknown format");
     }
 }
 //---------------------------------------------------------------------------
@@ -133,12 +133,12 @@ GLuint Texture_OpenGL::GetWrapMode() const
     // search for wrap mode to apply
     switch (m_WrapMode)
     {
-        case Texture::IE_WM_Clamp:           return GL_CLAMP;
-        case Texture::IE_WM_Clamp_To_Edge:   return GL_CLAMP_TO_EDGE;
-        case Texture::IE_WM_Clamp_To_Border: return GL_CLAMP_TO_BORDER;
-        case Texture::IE_WM_Mirrored_Repeat: return GL_MIRRORED_REPEAT;
-        case Texture::IE_WM_Repeat:          return GL_REPEAT;
-        default:                             throw new std::exception("Unknown wrap mode");
+        case Texture::IEWrapMode::IE_WM_Clamp:           return GL_CLAMP;
+        case Texture::IEWrapMode::IE_WM_Clamp_To_Edge:   return GL_CLAMP_TO_EDGE;
+        case Texture::IEWrapMode::IE_WM_Clamp_To_Border: return GL_CLAMP_TO_BORDER;
+        case Texture::IEWrapMode::IE_WM_Mirrored_Repeat: return GL_MIRRORED_REPEAT;
+        case Texture::IEWrapMode::IE_WM_Repeat:          return GL_REPEAT;
+        default:                                         throw new std::exception("Unknown wrap mode");
     }
 }
 //---------------------------------------------------------------------------
@@ -147,13 +147,13 @@ GLuint Texture_OpenGL::GetMinFilter() const
     // search for mignifier filter to apply
     switch (m_MinFilter)
     {
-        case Texture::IE_MI_Nearest:                return GL_NEAREST;
-        case Texture::IE_MI_Linear:                 return GL_LINEAR;
-        case Texture::IE_MI_Nearest_Mipmap_Nearest: return GL_NEAREST_MIPMAP_NEAREST;
-        case Texture::IE_MI_Linear_Mipmap_Nearest:  return GL_LINEAR_MIPMAP_NEAREST;
-        case Texture::IE_MI_Nearest_Mipmap_Linear:  return GL_NEAREST_MIPMAP_LINEAR;
-        case Texture::IE_MI_Linear_Mipmap_Linear:   return GL_LINEAR_MIPMAP_LINEAR;
-        default:                                    throw new std::exception("Unknown magnification filter");
+        case Texture::IEMinFilter::IE_MI_Nearest:                return GL_NEAREST;
+        case Texture::IEMinFilter::IE_MI_Linear:                 return GL_LINEAR;
+        case Texture::IEMinFilter::IE_MI_Nearest_Mipmap_Nearest: return GL_NEAREST_MIPMAP_NEAREST;
+        case Texture::IEMinFilter::IE_MI_Linear_Mipmap_Nearest:  return GL_LINEAR_MIPMAP_NEAREST;
+        case Texture::IEMinFilter::IE_MI_Nearest_Mipmap_Linear:  return GL_NEAREST_MIPMAP_LINEAR;
+        case Texture::IEMinFilter::IE_MI_Linear_Mipmap_Linear:   return GL_LINEAR_MIPMAP_LINEAR;
+        default:                                                 throw new std::exception("Unknown magnification filter");
     }
 }
 //---------------------------------------------------------------------------
@@ -162,9 +162,9 @@ GLuint Texture_OpenGL::GetMagFilter() const
     // search for magnification filter to apply
     switch (m_MagFilter)
     {
-        case Texture::IE_MA_Nearest: return GL_NEAREST;
-        case Texture::IE_MA_Linear:  return GL_LINEAR;
-        default:                     throw new std::exception("Unknown magnification filter");
+        case Texture::IEMagFilter::IE_MA_Nearest: return GL_NEAREST;
+        case Texture::IEMagFilter::IE_MA_Linear:  return GL_LINEAR;
+        default:                                  throw new std::exception("Unknown magnification filter");
     }
 }
 //---------------------------------------------------------------------------

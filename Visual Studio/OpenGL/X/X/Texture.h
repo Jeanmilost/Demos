@@ -45,7 +45,7 @@ class Texture
         /**
         * Texture format
         */
-        enum IEFormat
+        enum class IEFormat
         {
             IE_FT_24bit,
             IE_FT_32bit,
@@ -54,7 +54,7 @@ class Texture
         /**
         * Texture target
         */
-        enum IETarget
+        enum class IETarget
         {
             IE_TT_Texture_2D,
         };
@@ -62,7 +62,7 @@ class Texture
         /**
         * Texture minifying filters
         */
-        enum IEMinFilter
+        enum class IEMinFilter
         {
             IE_MI_Nearest,
             IE_MI_Linear,
@@ -75,7 +75,7 @@ class Texture
         /**
         * Texture magnification filters
         */
-        enum IEMagFilter
+        enum class IEMagFilter
         {
             IE_MA_Nearest,
             IE_MA_Linear,
@@ -84,7 +84,7 @@ class Texture
         /**
         * Texture wrap modes
         */
-        enum IEWrapMode
+        enum class IEWrapMode
         {
             IE_WM_Clamp,
             IE_WM_Clamp_To_Edge,

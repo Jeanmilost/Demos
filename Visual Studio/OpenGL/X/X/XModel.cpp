@@ -352,12 +352,13 @@ XModel::XModel() :
     m_fOnLoadTexture(nullptr)
 {
     // configure the default vertex format
-    m_VertFormatTemplate.m_Format = (VertexFormat::IEFormat)(VertexFormat::IE_VF_Colors | VertexFormat::IE_VF_TexCoords);
-    m_VertFormatTemplate.m_Type   =  VertexFormat::IE_VT_Triangles;
+    m_VertFormatTemplate.m_Format = (VertexFormat::IEFormat)((unsigned)VertexFormat::IEFormat::IE_VF_Colors |
+                                                             (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords);
+    m_VertFormatTemplate.m_Type   =  VertexFormat::IEType::IE_VT_Triangles;
 
     // configure the default vertex culling
-    m_VertCullingTemplate.m_Type = VertexCulling::IE_CT_Back;
-    m_VertCullingTemplate.m_Face = VertexCulling::IE_CF_CCW;
+    m_VertCullingTemplate.m_Type = VertexCulling::IECullingType::IE_CT_Back;
+    m_VertCullingTemplate.m_Face = VertexCulling::IECullingFace::IE_CF_CCW;
 
     // configure the default material
     m_MaterialTemplate.m_Color = ColorF(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1290,7 +1291,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                                 return false;
 
                             // convert value
-                            pDataset->m_Matrix.m_Table[pDataset->m_ReadValCount / 4][pDataset->m_ReadValCount % 4] = std::atof(value.c_str());
+                            pDataset->m_Matrix.m_Table[pDataset->m_ReadValCount / 4][pDataset->m_ReadValCount % 4] = (float)std::atof(value.c_str());
 
                             ++pDataset->m_ReadValCount;
                         }
@@ -1318,7 +1319,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                                 return false;
 
                             // convert value
-                            pDataset->m_Vertices.push_back(std::atof(value.c_str()));
+                            pDataset->m_Vertices.push_back((float)std::atof(value.c_str()));
                         }
 
                         return true;
@@ -1343,7 +1344,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                                 return false;
 
                             // convert value
-                            pDataset->m_UV.push_back(std::atof(value.c_str()));
+                            pDataset->m_UV.push_back((float)std::atof(value.c_str()));
                         }
 
                         return true;
@@ -1351,8 +1352,6 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
 
                     case IE_DS_Material_ID:
                     {
-                        char* pValue;
-
                         // get item data
                         IMaterialDataset* pDataset = static_cast<IMaterialDataset*>(pItem->m_pDataset);
 
@@ -1369,17 +1368,17 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         // convert the next value
                         switch (pDataset->m_ReadValCount)
                         {
-                            case 0:  pDataset->m_Color.m_R         = std::atof(value.c_str()); break;
-                            case 1:  pDataset->m_Color.m_G         = std::atof(value.c_str()); break;
-                            case 2:  pDataset->m_Color.m_B         = std::atof(value.c_str()); break;
-                            case 3:  pDataset->m_Color.m_A         = std::atof(value.c_str()); break;
-                            case 4:  pDataset->m_SpecularExp       = std::atof(value.c_str()); break;
-                            case 5:  pDataset->m_SpecularColor.m_R = std::atof(value.c_str()); break;
-                            case 6:  pDataset->m_SpecularColor.m_G = std::atof(value.c_str()); break;
-                            case 7:  pDataset->m_SpecularColor.m_B = std::atof(value.c_str()); break;
-                            case 8:  pDataset->m_EmisiveColor.m_R  = std::atof(value.c_str()); break;
-                            case 9:  pDataset->m_EmisiveColor.m_G  = std::atof(value.c_str()); break;
-                            case 10: pDataset->m_EmisiveColor.m_B  = std::atof(value.c_str()); break;
+                            case 0:  pDataset->m_Color.m_R         = (float)std::atof(value.c_str()); break;
+                            case 1:  pDataset->m_Color.m_G         = (float)std::atof(value.c_str()); break;
+                            case 2:  pDataset->m_Color.m_B         = (float)std::atof(value.c_str()); break;
+                            case 3:  pDataset->m_Color.m_A         = (float)std::atof(value.c_str()); break;
+                            case 4:  pDataset->m_SpecularExp       = (float)std::atof(value.c_str()); break;
+                            case 5:  pDataset->m_SpecularColor.m_R = (float)std::atof(value.c_str()); break;
+                            case 6:  pDataset->m_SpecularColor.m_G = (float)std::atof(value.c_str()); break;
+                            case 7:  pDataset->m_SpecularColor.m_B = (float)std::atof(value.c_str()); break;
+                            case 8:  pDataset->m_EmisiveColor.m_R  = (float)std::atof(value.c_str()); break;
+                            case 9:  pDataset->m_EmisiveColor.m_G  = (float)std::atof(value.c_str()); break;
+                            case 10: pDataset->m_EmisiveColor.m_B  = (float)std::atof(value.c_str()); break;
                         }
 
                         ++pDataset->m_ReadValCount;
@@ -1389,8 +1388,6 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
 
                     case IE_DS_Skin_Weights_ID:
                     {
-                        char* pValue;
-
                         // get item data
                         ISkinWeightsDataset* pDataset = static_cast<ISkinWeightsDataset*>(pItem->m_pDataset);
 
@@ -1408,7 +1405,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                                 return false;
 
                             // convert value
-                            pDataset->m_Weights.push_back(std::atof(value.c_str()));
+                            pDataset->m_Weights.push_back((float)std::atof(value.c_str()));
                         }
                         else
                         if (pDataset->m_ReadValCount < 16)
@@ -1420,7 +1417,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                                 return false;
 
                             // convert value
-                            pDataset->m_Matrix.m_Table[pDataset->m_ReadValCount / 4][pDataset->m_ReadValCount % 4] = std::atof(value.c_str());
+                            pDataset->m_Matrix.m_Table[pDataset->m_ReadValCount / 4][pDataset->m_ReadValCount % 4] = (float)std::atof(value.c_str());
 
                             ++pDataset->m_ReadValCount;
                         }
@@ -1443,7 +1440,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         if (value.empty())
                             return false;
 
-                        pDataset->m_Keys[pDataset->m_KeyIndex]->m_Values.push_back(std::atof(value.c_str()));
+                        pDataset->m_Keys[pDataset->m_KeyIndex]->m_Values.push_back((float)std::atof(value.c_str()));
 
                         // if all data were read, go to next item
                         if (pDataset->m_Keys[pDataset->m_KeyIndex]->m_Values.size() == pDataset->m_Keys[pDataset->m_KeyIndex]->m_Total)
@@ -1466,8 +1463,6 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                     case IE_DS_Header_ID:
                     case IE_DS_Skin_Mesh_Header_ID:
                     {
-                        char* pValue;
-
                         // get item data
                         IHeaderDataset* pDataset = static_cast<IHeaderDataset*>(pItem->m_pDataset);
 
@@ -2452,7 +2447,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
         pVB->m_Material = *pMaterial;
 
     // set the vertex format type
-    pVB->m_Format.m_Type = VertexFormat::IE_VT_Triangles;
+    pVB->m_Format.m_Type = VertexFormat::IEType::IE_VT_Triangles;
 
     // calculate the stride
     pVB->m_Format.CalculateStride();
@@ -2492,9 +2487,6 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
                 // has a texture?
                 if (pMaterialItem->m_Children[j]->m_ID == IE_DS_Texture_Filename_ID)
                 {
-                    std::size_t length;
-                    bool        canRelease;
-
                     // get the texture dataset
                     ITextureDataset* pTextureDataset = static_cast<ITextureDataset*>(pMaterialItem->m_Children[j]->m_pDataset);
 
@@ -2606,7 +2598,7 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
     Vector3F* pNormal = nullptr;
 
     // mesh contains normals?
-    if ((pMesh->m_VB[0]->m_Format.m_Format & VertexFormat::IE_VF_Normals) && pNormalsDataset)
+    if (((unsigned)pMesh->m_VB[0]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Normals) && pNormalsDataset)
     {
         // calculate the normal index from the indice table
         const std::size_t nIndiceIndex = pNormalsDataset->m_Indices[vertexIndex] * 3;
@@ -2627,7 +2619,7 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
     IVector2* pUV = nullptr;
 
     // mesh contains texture coordinates?
-    if ((pMesh->m_VB[0]->m_Format.m_Format & VertexFormat::IE_VF_TexCoords) && pUVDataset)
+    if (((unsigned)pMesh->m_VB[0]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords) && pUVDataset)
     {
         // calculate the uv index from the indice table
         const std::size_t uvIndex = pMeshDataset->m_Indices[vertexIndex] * 2;
@@ -2766,8 +2758,6 @@ bool XModel::BuildAnimationSet(const IFileItem* pItem, IModel* pModel) const
             // is a link?
             if (pItem->m_Children[i]->m_Children[j]->m_ID == IE_DS_Link_ID)
             {
-                size_t nameLength;
-
                 // get the dataset containing the animation keys
                 IGenericDataset* pDataset = static_cast<IGenericDataset*>(pItem->m_Children[i]->m_Children[j]->m_pDataset);
 
@@ -2883,7 +2873,7 @@ bool XModel::VertexBufferAdd(const Vector3F*           pVertex,
     offset += 3;
 
     // vertex has a normal?
-    if (pVB->m_Format.m_Format & VertexFormat::IE_VF_Normals)
+    if ((unsigned)pVB->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Normals)
     {
         // source normal exists?
         if (!pNormal)
@@ -2905,7 +2895,7 @@ bool XModel::VertexBufferAdd(const Vector3F*           pVertex,
     }
 
     // vertex has UV texture coordinates?
-    if (pVB->m_Format.m_Format & VertexFormat::IE_VF_TexCoords)
+    if ((unsigned)pVB->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords)
     {
         // source texture coordinates exists?
         if (!pUV)
@@ -2925,7 +2915,7 @@ bool XModel::VertexBufferAdd(const Vector3F*           pVertex,
     }
 
     // vertex has color?
-    if (pVB->m_Format.m_Format & VertexFormat::IE_VF_Colors)
+    if ((unsigned)pVB->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Colors)
     {
         ColorF color;
 
@@ -3113,8 +3103,8 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
         }
 
         // calculate the frame delta, the frame length and the interpolation for the rotation
-        float frameDelta    = frame        - rotFrame;
-        float frameLength   = nextRotFrame - rotFrame;
+        float frameDelta    = (float)(frame        - rotFrame);
+        float frameLength   = (float)(nextRotFrame - rotFrame);
         float interpolation = frameDelta / frameLength;
 
         bool error = false;
@@ -3123,8 +3113,8 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
         finalRotation = rotation.Slerp(nextRotation, interpolation, error);
 
         // calculate the frame delta, the frame length and the interpolation for the scaling
-        frameDelta    = frame          - scaleFrame;
-        frameLength   = nextScaleFrame - scaleFrame;
+        frameDelta    = (float)(frame          - scaleFrame);
+        frameLength   = (float)(nextScaleFrame - scaleFrame);
         interpolation = frameDelta / frameLength;
 
         // interpolate the scaling
@@ -3133,8 +3123,8 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
         finalScaling.m_Z = scaling.m_Z + ((nextScaling.m_Z - scaling.m_Z) * interpolation);
 
         // calculate the frame delta, the frame length and the interpolation for the rotation
-        frameDelta    = frame        - posFrame;
-        frameLength   = nextPosFrame - posFrame;
+        frameDelta    = (float)(frame        - posFrame);
+        frameLength   = (float)(nextPosFrame - posFrame);
         interpolation = frameDelta / frameLength;
 
         // interpolate the position

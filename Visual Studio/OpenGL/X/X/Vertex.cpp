@@ -52,8 +52,8 @@ Material::~Material()
 //---------------------------------------------------------------------------
 VertexFormat::VertexFormat() :
     m_Stride(0),
-    m_Type(IE_VT_Unknown),
-    m_Format(IE_VF_None)
+    m_Type(IEType::IE_VT_Unknown),
+    m_Format(IEFormat::IE_VF_None)
 {}
 //---------------------------------------------------------------------------
 VertexFormat::~VertexFormat()
@@ -65,15 +65,15 @@ void VertexFormat::CalculateStride()
     m_Stride = 3;
 
     // do include normals?
-    if (m_Format & IE_VF_Normals)
+    if ((unsigned)m_Format & (unsigned)IEFormat::IE_VF_Normals)
         m_Stride += 3;
 
     // do include texture coordinates?
-    if (m_Format & IE_VF_TexCoords)
+    if ((unsigned)m_Format & (unsigned)IEFormat::IE_VF_TexCoords)
         m_Stride += 2;
 
     // do include vertex color?
-    if (m_Format & IE_VF_Colors)
+    if ((unsigned)m_Format & (unsigned)IEFormat::IE_VF_Colors)
         m_Stride += 4;
 }
 //---------------------------------------------------------------------------
@@ -87,8 +87,8 @@ bool VertexFormat::CompareFormat(const VertexFormat& other) const
 // VertexBuffer
 //---------------------------------------------------------------------------
 VertexCulling::VertexCulling() :
-    m_Type(IE_CT_None),
-    m_Face(IE_CF_CW)
+    m_Type(IECullingType::IE_CT_None),
+    m_Face(IECullingFace::IE_CF_CW)
 {}
 //---------------------------------------------------------------------------
 VertexCulling::~VertexCulling()
