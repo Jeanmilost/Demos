@@ -217,15 +217,15 @@ class XModel
         virtual ~XModel();
 
         /**
-        * Opens a .mhx2 file
-        *@param fileName - mhx2 file to open
+        * Opens a .x file
+        *@param fileName - x file to open
         *@return true on success, otherwise false
         */
         virtual bool Open(const std::string& fileName);
 
         /**
-        * Reads a mhx2 data
-        *@param data - mhx2 data to open
+        * Reads a x data
+        *@param data - x data to open
         *@return true on success, otherwise false
         */
         virtual bool Read(const std::string& data);

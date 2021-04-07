@@ -51,14 +51,14 @@ class Renderer_OpenGL : public Renderer
 
         /**
         * Enables OpenGL
-        *@param hWnd - control or form hanle on which OpenGL scene will be drawn
+        *@param hWnd - control or form handle on which OpenGL scene will be drawn
         *@return true on success, otherwise false
         */
         virtual bool EnableOpenGL(HWND hWnd);
 
         /**
         * Disables OpenGL and clears memory
-        *@param hWnd - control or form hanle on which OpenGL scene was drawn
+        *@param hWnd - control or form handle on which OpenGL scene was drawn
         */
         virtual void DisableOpenGL(HWND hWnd);
 
@@ -171,7 +171,7 @@ class Renderer_OpenGL : public Renderer
         virtual void SelectTexture(const Shader* pShader, const Texture* pTexture) const;
 
         /**
-        * Gets shader uniform hnadle
+        * Gets shader uniform handle
         *@param pShader - shader containing uniform to get
         *@param attribute - uniform attribute to get from shader
         *@return uniform handle, -1 if not found or on error
