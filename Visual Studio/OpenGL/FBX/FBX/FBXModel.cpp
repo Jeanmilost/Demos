@@ -1226,16 +1226,19 @@ bool FBXModel::IFBXHelper::StrToBool(const std::string& str)
     return (loweredStr == "0" || loweredStr == "true");
 }
 //---------------------------------------------------------------------------
-// FBXModel::IGeometryCacheItem
+// FBXModel::IFBXLink
 //---------------------------------------------------------------------------
-FBXModel::IGeometryCacheItem::IGeometryCacheItem() :
-    m_pVertices(nullptr),
-    m_pIndices(nullptr),
-    m_GeometryID(0),
-    m_ModelID(0),
-    m_MaterialID(0),
-    m_DeformerID(0)
+FBXModel::IFBXLink::IFBXLink() :
+    m_NodeType(IENodeType::IE_NT_Model),
+    m_pNode(nullptr),
+    m_pParent(nullptr)
 {}
+//---------------------------------------------------------------------------
+FBXModel::IFBXLink::~IFBXLink()
+{
+    for (IFBXLinks::iterator it = m_Children.begin(); it != m_Children.end(); ++it)
+        delete (*it);
+}
 //---------------------------------------------------------------------------
 // FBXModel
 //---------------------------------------------------------------------------
@@ -1244,23 +1247,23 @@ FBXModel::FBXModel()
 //---------------------------------------------------------------------------
 FBXModel::~FBXModel()
 {
-    for (IGeometryCache::iterator it = m_GeometryCache.begin(); it != m_GeometryCache.end(); ++it)
-        delete it->second;
-
     for (IFBXNodes::iterator it = m_Nodes.begin(); it != m_Nodes.end(); ++it)
+        delete (*it);
+
+    for (IFBXLinks::iterator it = m_Links.begin(); it != m_Links.end(); ++it)
         delete (*it);
 }
 //---------------------------------------------------------------------------
 void FBXModel::Clear()
 {
-    for (IGeometryCache::iterator it = m_GeometryCache.begin(); it != m_GeometryCache.end(); ++it)
-        delete it->second;
-
     for (IFBXNodes::iterator it = m_Nodes.begin(); it != m_Nodes.end(); ++it)
         delete (*it);
 
+    for (IFBXLinks::iterator it = m_Links.begin(); it != m_Links.end(); ++it)
+        delete (*it);
+
     m_Nodes.clear();
-    m_GeometryCache.clear();
+    m_Links.clear();
     m_ItemDict.clear();
     m_Data.clear();
 }
@@ -1494,170 +1497,136 @@ bool FBXModel::Read(const std::string& data)
         throw;
     }
 
-    return true;
+    return BuildModel();
 }
-//---------------------------------------------------------------------------
-/*REM
-FBXModel::IFBXItems FBXModel::Find(const std::string& key) const
-{
-    std::vector<std::string> keys;
-
-    IFBXHelper::Split(key, ".", keys);
-
-          IFBXItems   items;
-    const std::size_t keyCount = keys.size();
-
-    IFBXItem* pNode = nullptr;
-
-    for (std::size_t i = 0; i < keyCount; ++i)
-    {
-
-    }
-
-    return items;
-}
-*/
 //---------------------------------------------------------------------------
 Model* FBXModel::GetModel() const
 {
-    if (m_GeometryCache.empty())
-    {
-        const std::size_t rootCount = m_Nodes.size();
-
-        for (std::size_t i = 0; i < rootCount; ++i)
-            if (m_Nodes[i]->GetName() == "Objects")
-            {
-                const std::size_t childCount = m_Nodes[i]->GetChildCount();
-
-                for (std::size_t j = 0; j < childCount; ++j)
-                    if (m_Nodes[i]->GetChild(j)->GetName() == "Geometry")
-                    {
-                        if (!m_Nodes[i]->GetChild(j)->GetValueCount())
-                            return nullptr;
-
-                        std::unique_ptr<IGeometryCacheItem> pCacheItem(new IGeometryCacheItem());
-                        pCacheItem->m_GeometryID = m_Nodes[i]->GetChild(j)->GetValue(0)->GetInt();
-
-                        const std::size_t grandChildCount = m_Nodes[i]->GetChild(j)->GetChildCount();
-
-                        for (std::size_t k = 0; k < grandChildCount; ++k)
-                            if (m_Nodes[i]->GetChild(j)->GetChild(k)->GetName() == "Vertices")
-                                pCacheItem->m_pVertices = m_Nodes[i]->GetChild(j)->GetChild(k);
-                            else
-                            if (m_Nodes[i]->GetChild(j)->GetChild(k)->GetName() == "PolygonVertexIndex")
-                                pCacheItem->m_pIndices = m_Nodes[i]->GetChild(j)->GetChild(k);
-
-                        const_cast<IGeometryCache&>(m_GeometryCache).push_back(IGeometryCachePair(m_Nodes[i]->GetChild(j), pCacheItem.get()));
-                        pCacheItem.release();
-                    }
-            }
-    }
-
     std::unique_ptr<Model> pModel(new Model());
 
     Vector3F vertex;
     Vector3F normal;
     Vector2F uv;
 
-    const std::size_t cacheCount = m_GeometryCache.size();
+    const std::size_t linkCount = m_Links.size();
 
-    for (std::size_t i = 0; i < cacheCount; ++i)
+    for (std::size_t i = 0; i < linkCount; ++i)
     {
-        IFBXArrayProperty* pVertices = static_cast<IFBXArrayProperty*>(m_GeometryCache[i].second->m_pVertices->GetProp(0));
-        IFBXArrayProperty* pIndices  = static_cast<IFBXArrayProperty*>(m_GeometryCache[i].second->m_pIndices->GetProp(0));
+        const std::size_t childCount = m_Links[i]->m_Children.size();
 
-        std::unique_ptr<VertexBuffer> pVB(new VertexBuffer());
-        pVB->m_Format.m_Format      = (VertexFormat::IEFormat)((unsigned)VertexFormat::IEFormat::IE_VF_Colors |
-                                                               (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords);
-        pVB->m_Format.m_Type        = VertexFormat::IEType::IE_VT_Triangles;
-        pVB->m_Culling.m_Type       = VertexCulling::IECullingType::IE_CT_Back;
-        pVB->m_Culling.m_Face       = VertexCulling::IECullingFace::IE_CF_CCW;
-        pVB->m_Material.m_Color.m_R = 1.0f;
-        pVB->m_Material.m_Color.m_G = 1.0f;
-        pVB->m_Material.m_Color.m_B = 1.0f;
-        pVB->m_Material.m_Color.m_A = 1.0f;
-
-        const std::size_t verticesCount = pVertices->GetCount();
-        const std::size_t indicesCount  = pIndices->GetCount();
-
-        std::vector<int> indices;
-        pVB->m_Data.reserve(indicesCount * 9 * (pIndices->GetI(4) < 0 ? 6 : 3));
-
-        for (std::size_t j = 0; j < indicesCount; ++j)
+        for (std::size_t j = 0; j < childCount; ++j)
         {
-            const int indice = pIndices->GetI(j);
-
-            if (indice >= 0)
-                indices.push_back(indice);
-            else
+            if (m_Links[i]->m_Children[j]->m_NodeType == IENodeType::IE_NT_Geometry)
             {
-                indices.push_back(std::abs(indice) - 1);
+                IFBXArrayProperty* pVertices = nullptr;
+                IFBXArrayProperty* pIndices  = nullptr;
 
-                switch (indices.size())
+                const std::size_t grandChildCount = m_Links[i]->m_Children[j]->m_pNode->GetChildCount();
+
+                for (std::size_t k = 0; k < grandChildCount; ++k)
+                    if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "Vertices")
+                        pVertices = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0));
+                    else
+                    if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "PolygonVertexIndex")
+                        pIndices = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0));
+
+                if (!pVertices || !pIndices)
+                    return nullptr;
+
+                std::unique_ptr<VertexBuffer> pVB(new VertexBuffer());
+                pVB->m_Format.m_Format      = (VertexFormat::IEFormat)((unsigned)VertexFormat::IEFormat::IE_VF_Colors |
+                                                                       (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords);
+                pVB->m_Format.m_Type        = VertexFormat::IEType::IE_VT_Triangles;
+                pVB->m_Culling.m_Type       = VertexCulling::IECullingType::IE_CT_Back;
+                pVB->m_Culling.m_Face       = VertexCulling::IECullingFace::IE_CF_CCW;
+                pVB->m_Material.m_Color.m_R = 1.0f;
+                pVB->m_Material.m_Color.m_G = 1.0f;
+                pVB->m_Material.m_Color.m_B = 1.0f;
+                pVB->m_Material.m_Color.m_A = 1.0f;
+
+                const std::size_t verticesCount = pVertices->GetCount();
+                const std::size_t indicesCount  = pIndices->GetCount();
+
+                std::vector<int> indices;
+                pVB->m_Data.reserve(indicesCount * 9 * (pIndices->GetI(4) < 0 ? 6 : 3));
+
+                for (std::size_t k = 0; k < indicesCount; ++k)
                 {
-                    case 3:
-                        // todo FIXME
-                        vertex.m_X = pVertices->GetF( indices[0] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    const int indice = pIndices->GetI(k);
 
-                        vertex.m_X = pVertices->GetF( indices[1] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[1] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[1] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    if (indice >= 0)
+                        indices.push_back(indice);
+                    else
+                    {
+                        indices.push_back(std::abs(indice) - 1);
 
-                        vertex.m_X = pVertices->GetF( indices[2] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-                        break;
+                        switch (indices.size())
+                        {
+                            case 3:
+                                // todo FIXME
+                                vertex.m_X = pVertices->GetF( indices[0] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
 
-                    case 4:
-                        // todo FIXME
-                        vertex.m_X = pVertices->GetF( indices[0] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                vertex.m_X = pVertices->GetF( indices[1] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[1] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[1] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
 
-                        vertex.m_X = pVertices->GetF( indices[1] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[1] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[1] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                vertex.m_X = pVertices->GetF( indices[2] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                break;
 
-                        vertex.m_X = pVertices->GetF( indices[2] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                            case 4:
+                                // todo FIXME
+                                vertex.m_X = pVertices->GetF( indices[0] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
 
-                        vertex.m_X = pVertices->GetF( indices[0] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                vertex.m_X = pVertices->GetF( indices[1] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[1] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[1] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
 
-                        vertex.m_X = pVertices->GetF( indices[2] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                vertex.m_X = pVertices->GetF( indices[2] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
 
-                        vertex.m_X = pVertices->GetF( indices[3] * 3);
-                        vertex.m_Y = pVertices->GetF((indices[3] * 3) + 1);
-                        vertex.m_Z = pVertices->GetF((indices[3] * 3) + 2);
-                        pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                vertex.m_X = pVertices->GetF( indices[0] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
 
-                        break;
+                                vertex.m_X = pVertices->GetF( indices[2] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                vertex.m_X = pVertices->GetF( indices[3] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[3] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[3] * 3) + 2);
+                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                break;
+                        }
+
+                        indices.clear();
+                    }
                 }
 
-                indices.clear();
+                std::unique_ptr<Mesh> pMesh(new Mesh());
+                pMesh->m_VB.push_back(pVB.get());
+                pVB.release();
+
+                pModel->m_Mesh.push_back(pMesh.get());
+                pMesh.release();
             }
         }
-
-        std::unique_ptr<Mesh> pMesh(new Mesh());
-        pMesh->m_VB.push_back(pVB.get());
-        pVB.release();
-
-        pModel->m_Mesh.push_back(pMesh.get());
-        pMesh.release();
     }
 
     return pModel.release();
@@ -2074,4 +2043,247 @@ bool FBXModel::SetProperty(const std::string& name,
 
     return true;
 }
+//---------------------------------------------------------------------------
+bool FBXModel::BuildModel()
+{
+    const std::size_t rootCount = m_Nodes.size();
+
+    // iterate through FBX nodes
+    for (std::size_t i = 0; i < rootCount; ++i)
+        // is the connection node?
+        if (m_Nodes[i]->GetName() == "Connections")
+        {
+            // get connection count
+            const std::size_t connectionCount = m_Nodes[i]->GetPropCount();
+
+            // iterate through connections
+            for (std::size_t j = 0; j < connectionCount; ++j)
+            {
+                // get the next link to perform
+                IFBXProperty* pLink = m_Nodes[i]->GetProp(j);
+
+                // found it?
+                if (!pLink)
+                    return false;
+
+                // already performed?
+                if (m_UsedProps.find(pLink) != m_UsedProps.end())
+                    continue;
+
+                IEConnectionType type;
+                std::size_t      srcID;
+                std::size_t      dstID;
+                std::string      propDesc;
+
+                // extract the link data
+                if (!GetLinkData(pLink, type, srcID, dstID, propDesc))
+                    return false;
+
+                // is a root?
+                if (type == IEConnectionType::IE_CT_ObjObj && !dstID)
+                {
+                    // get root item to link
+                    IFBXItem* pItem = m_ItemDict[pLink->GetValue(1)->GetRaw()];
+
+                    // found it?
+                    if (!pItem)
+                        return false;
+
+                    // root item should be a model
+                    if (pItem->GetName() == "Model")
+                    {
+                        // mark link as processed
+                        m_UsedProps.insert(pLink);
+
+                        // create a new mesh
+                        std::unique_ptr<IFBXLink> pMesh(new IFBXLink());
+                        pMesh->m_NodeType = IENodeType::IE_NT_Model;
+                        pMesh->m_pNode    = static_cast<IFBXNode*>(pItem);
+
+                        // perform children links onto this mesh object
+                        if (!PerformLink(pMesh.get(), srcID, m_Nodes[i]))
+                            return false;
+
+                        // add it in links list
+                        m_Links.push_back(pMesh.get());
+                        pMesh.release();
+                    }
+                }
+            }
+
+            // clear the used prop cache (no longer requires since now)
+            m_UsedProps.clear();
+        }
+
+    #ifdef _DEBUG
+        //std::string log;
+        //LogLinks(log);
+        //::OutputDebugStringA(log.c_str());
+    #endif
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool FBXModel::PerformLink(IFBXLink* pParentLink, std::size_t id, IFBXNode* pConnections)
+{
+    const std::size_t connectionCount = pConnections->GetPropCount();
+
+    // iterate through connections
+    for (std::size_t i = 0; i < connectionCount; ++i)
+    {
+        // get the next link to perform
+        IFBXProperty* pLink = pConnections->GetProp(i);
+
+        // found it?
+        if (!pLink)
+            return false;
+
+        // already performed?
+        if (m_UsedProps.find(pLink) != m_UsedProps.end())
+            continue;
+
+        IEConnectionType type;
+        std::size_t      srcID;
+        std::size_t      dstID;
+        std::string      propDesc;
+
+        // extract link data
+        if (!GetLinkData(pLink, type, srcID, dstID, propDesc))
+            return false;
+
+        // found a connection to link with this parent?
+        if (dstID == id)
+        {
+            // mark link as performed
+            m_UsedProps.insert(pLink);
+
+            // get source node
+            IFBXItem* pItem = m_ItemDict[pLink->GetValue(1)->GetRaw()];
+
+            // found it?
+            if (!pItem)
+                return false;
+
+            // create the child link (the source) and add it to its parent (the destination)
+            std::unique_ptr<IFBXLink> pChild(new IFBXLink());
+            pChild->m_pParent  = pParentLink;
+            pChild->m_pNode    = static_cast<IFBXNode*>(pItem);
+            pChild->m_PropDesc = propDesc;
+
+            // get node name
+            const std::string name = pItem->GetName();
+
+            // search for node type
+            if (name == "Model")
+                pChild->m_NodeType = IENodeType::IE_NT_Model;
+            else
+            if (name == "Geometry")
+                pChild->m_NodeType = IENodeType::IE_NT_Geometry;
+            else
+            if (name == "Material")
+                pChild->m_NodeType = IENodeType::IE_NT_Material;
+            else
+            if (name == "Texture")
+                pChild->m_NodeType = IENodeType::IE_NT_Texture;
+            else
+            if (name == "Video")
+                pChild->m_NodeType = IENodeType::IE_NT_Video;
+            else
+            if (name == "Deformer")
+                pChild->m_NodeType = IENodeType::IE_NT_Deformer;
+            else
+            if (name == "NodeAttribute")
+                pChild->m_NodeType = IENodeType::IE_NT_NodeAttribute;
+            else
+            if (name == "AnimationCurve")
+                pChild->m_NodeType = IENodeType::IE_NT_AnimationCurve;
+            else
+            if (name == "AnimationCurveNode")
+                pChild->m_NodeType = IENodeType::IE_NT_AnimationCurveNode;
+            else
+                return false;
+
+            // perform the link
+            if (!PerformLink(pChild.get(), srcID, pConnections))
+                return false;
+
+            // add it to its parent
+            pParentLink->m_Children.push_back(pChild.get());
+            pChild.release();
+        }
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool FBXModel::GetLinkData(IFBXProperty*     pProp,
+                           IEConnectionType& type,
+                           std::size_t&      srcID,
+                           std::size_t&      dstID,
+                           std::string&      propDesc) const
+{
+    // no property?
+    if (!pProp)
+        return false;
+
+    // check if node may contain a connection link
+    if (pProp->GetValueCount() < 3                          ||
+        pProp->GetValue(1)->m_Type != IEDataType::IE_DT_Int ||
+        pProp->GetValue(2)->m_Type != IEDataType::IE_DT_Int)
+        return false;
+
+    const std::string connectionType = pProp->GetValue(0)->GetRaw();
+
+    // search for link connection type
+    if (connectionType == "OO")
+        type = IEConnectionType::IE_CT_ObjObj;
+    else
+    if (connectionType == "OP")
+        type = IEConnectionType::IE_CT_ObjProp;
+    else
+    if (connectionType == "PO")
+        type = IEConnectionType::IE_CT_PropObj;
+    else
+    if (connectionType == "PP")
+        type = IEConnectionType::IE_CT_PropProp;
+    else
+        return false;
+
+    // get the source and destination identifiers
+    srcID = pProp->GetValue(1)->GetInt();
+    dstID = pProp->GetValue(2)->GetInt();
+
+    // sometimes the link may contain an extra value, which is a property description
+    if (pProp->GetValueCount() >= 4)
+        propDesc = pProp->GetValue(3)->GetStr();
+
+    return true;
+}
+//---------------------------------------------------------------------------
+#ifdef _DEBUG
+    void FBXModel::LogLinks(std::string& log) const
+    {
+        for (IFBXLinks::const_iterator it = m_Links.begin(); it != m_Links.end(); ++it)
+            LogLink(*it, 0, log);
+    }
+#endif
+//---------------------------------------------------------------------------
+#ifdef _DEBUG
+    void FBXModel::LogLink(IFBXLink* pLink, unsigned tab, std::string& log) const
+    {
+        if (!pLink)
+            return;
+
+        for (unsigned i = 0; i < tab; ++i)
+            log += " ";
+
+        if (pLink->m_pNode->GetValueCount() >= 2)
+            log += pLink->m_pNode->GetName() + ": " + pLink->m_pNode->GetValue(1)->GetRaw() + "\n";
+        else
+            log += pLink->m_pNode->GetName() + "\n";
+
+        for (IFBXLinks::const_iterator it = pLink->m_Children.begin(); it != pLink->m_Children.end(); ++it)
+            LogLink(*it, tab + 4, log);
+    }
+#endif
 //---------------------------------------------------------------------------
