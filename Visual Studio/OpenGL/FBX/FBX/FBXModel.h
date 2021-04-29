@@ -781,6 +781,15 @@ class FBXModel
         */
         typedef std::vector<IFBXNode*> IFBXNodes;
 
+        /**
+        * Called when a texture should be loaded
+        *@param textureName - texture name to load
+        *@param is32bit - if true, the image should be opened in 32 bit BGRA format
+        *@return the loaded texture
+        *@note The loaded texture will be deleted internally, and should no longer be deleted from outside
+        */
+        typedef Texture* (*ITfOnLoadTexture)(const std::string& textureName, bool is32bit);
+
         FBXModel();
         virtual ~FBXModel();
 
@@ -805,7 +814,16 @@ class FBXModel
 
         virtual Model* GetModel() const;
 
+        /**
+        * Sets the OnLoadTexture callback
+        *@param fOnLoadTexture - callback function handle
+        */
+        void Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture);
+
     private:
+        /**
+        * Unique IDs to items dictionary
+        */
         typedef std::map<std::string, IFBXItem*> IItemDictionary;
 
         /**
@@ -895,16 +913,22 @@ class FBXModel
             ~IFBXLink();
         };
 
+        typedef std::map<IFBXNode*, IFBXLink*> IBoneDictionary;
+
         /**
         * Used properties set
         */
         typedef std::set<IFBXProperty*> IUsedProps;
 
-        IFBXNodes       m_Nodes;
-        IFBXLinks       m_Links;
-        IUsedProps      m_UsedProps;
-        IItemDictionary m_ItemDict;
-        std::string     m_Data;
+        IFBXNodes        m_Nodes;
+        IFBXLinks        m_Links;
+        IUsedProps       m_UsedProps;
+        IItemDictionary  m_ItemDict;
+        IBoneDictionary  m_BoneDict;
+        Model*           m_pTemplate;
+        Model*           m_pModel;
+        std::string      m_Data;
+        ITfOnLoadTexture m_fOnLoadTexture;
 
         /**
         * Clears a dataset
@@ -958,10 +982,10 @@ class FBXModel
                                std::size_t  end) const;
 
         /**
-        * Builds the model
+        * Performs the model links
         *@return true on success, otherwise false
         */
-        bool BuildModel();
+        bool PerformLinks();
 
         /**
         * Performs the link between 2 FBX objects
@@ -1003,4 +1027,12 @@ class FBXModel
         #ifdef _DEBUG
             void LogLink(IFBXLink* pLink, unsigned tab, std::string& log) const;
         #endif
+
+        /**
+        * Builds the model
+        */
+        // NOTE weights point the vertices
+        bool BuildModel();
+
+        void __TEMP(std::string& log) const; //REM
 };

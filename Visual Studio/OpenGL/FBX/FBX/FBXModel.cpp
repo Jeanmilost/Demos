@@ -52,7 +52,8 @@ FBXModel::IFBXData::IFBXData(IEDataType type, const std::string* pData, std::siz
     m_Type(type),
     m_pData(pData),
     m_Start(start),
-    m_End(end)
+    m_End(end),
+    m_IsCounter(false)
 {}
 //---------------------------------------------------------------------------
 std::string FBXModel::IFBXData::GetRaw() const
@@ -1242,11 +1243,19 @@ FBXModel::IFBXLink::~IFBXLink()
 //---------------------------------------------------------------------------
 // FBXModel
 //---------------------------------------------------------------------------
-FBXModel::FBXModel()
+FBXModel::FBXModel() :
+    m_pModel(nullptr),
+    m_fOnLoadTexture(nullptr)
 {}
 //---------------------------------------------------------------------------
 FBXModel::~FBXModel()
 {
+    if (m_pModel)
+        delete m_pModel;
+
+    if (m_pTemplate)
+        delete m_pTemplate;
+
     for (IFBXNodes::iterator it = m_Nodes.begin(); it != m_Nodes.end(); ++it)
         delete (*it);
 
@@ -1256,6 +1265,16 @@ FBXModel::~FBXModel()
 //---------------------------------------------------------------------------
 void FBXModel::Clear()
 {
+    if (m_pModel)
+        delete m_pModel;
+
+    m_pModel = nullptr;
+
+    if (m_pTemplate)
+        delete m_pTemplate;
+
+    m_pTemplate = nullptr;
+
     for (IFBXNodes::iterator it = m_Nodes.begin(); it != m_Nodes.end(); ++it)
         delete (*it);
 
@@ -1497,139 +1516,17 @@ bool FBXModel::Read(const std::string& data)
         throw;
     }
 
-    return BuildModel();
+    return PerformLinks() && BuildModel();
 }
 //---------------------------------------------------------------------------
 Model* FBXModel::GetModel() const
 {
-    std::unique_ptr<Model> pModel(new Model());
-
-    Vector3F vertex;
-    Vector3F normal;
-    Vector2F uv;
-
-    const std::size_t linkCount = m_Links.size();
-
-    for (std::size_t i = 0; i < linkCount; ++i)
-    {
-        const std::size_t childCount = m_Links[i]->m_Children.size();
-
-        for (std::size_t j = 0; j < childCount; ++j)
-        {
-            if (m_Links[i]->m_Children[j]->m_NodeType == IENodeType::IE_NT_Geometry)
-            {
-                IFBXArrayProperty* pVertices = nullptr;
-                IFBXArrayProperty* pIndices  = nullptr;
-
-                const std::size_t grandChildCount = m_Links[i]->m_Children[j]->m_pNode->GetChildCount();
-
-                for (std::size_t k = 0; k < grandChildCount; ++k)
-                    if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "Vertices")
-                        pVertices = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0));
-                    else
-                    if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "PolygonVertexIndex")
-                        pIndices = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0));
-
-                if (!pVertices || !pIndices)
-                    return nullptr;
-
-                std::unique_ptr<VertexBuffer> pVB(new VertexBuffer());
-                pVB->m_Format.m_Format      = (VertexFormat::IEFormat)((unsigned)VertexFormat::IEFormat::IE_VF_Colors |
-                                                                       (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords);
-                pVB->m_Format.m_Type        = VertexFormat::IEType::IE_VT_Triangles;
-                pVB->m_Culling.m_Type       = VertexCulling::IECullingType::IE_CT_Back;
-                pVB->m_Culling.m_Face       = VertexCulling::IECullingFace::IE_CF_CCW;
-                pVB->m_Material.m_Color.m_R = 1.0f;
-                pVB->m_Material.m_Color.m_G = 1.0f;
-                pVB->m_Material.m_Color.m_B = 1.0f;
-                pVB->m_Material.m_Color.m_A = 1.0f;
-
-                const std::size_t verticesCount = pVertices->GetCount();
-                const std::size_t indicesCount  = pIndices->GetCount();
-
-                std::vector<int> indices;
-                pVB->m_Data.reserve(indicesCount * 9 * (pIndices->GetI(4) < 0 ? 6 : 3));
-
-                for (std::size_t k = 0; k < indicesCount; ++k)
-                {
-                    const int indice = pIndices->GetI(k);
-
-                    if (indice >= 0)
-                        indices.push_back(indice);
-                    else
-                    {
-                        indices.push_back(std::abs(indice) - 1);
-
-                        switch (indices.size())
-                        {
-                            case 3:
-                                // todo FIXME
-                                vertex.m_X = pVertices->GetF( indices[0] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = pVertices->GetF( indices[1] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[1] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[1] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = pVertices->GetF( indices[2] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-                                break;
-
-                            case 4:
-                                // todo FIXME
-                                vertex.m_X = pVertices->GetF( indices[0] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = pVertices->GetF( indices[1] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[1] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[1] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = pVertices->GetF( indices[2] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = pVertices->GetF( indices[0] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = pVertices->GetF( indices[2] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = pVertices->GetF( indices[3] * 3);
-                                vertex.m_Y = pVertices->GetF((indices[3] * 3) + 1);
-                                vertex.m_Z = pVertices->GetF((indices[3] * 3) + 2);
-                                pVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                break;
-                        }
-
-                        indices.clear();
-                    }
-                }
-
-                std::unique_ptr<Mesh> pMesh(new Mesh());
-                pMesh->m_VB.push_back(pVB.get());
-                pVB.release();
-
-                pModel->m_Mesh.push_back(pMesh.get());
-                pMesh.release();
-            }
-        }
-    }
-
-    return pModel.release();
+    return m_pModel;
+}
+//---------------------------------------------------------------------------
+void FBXModel::Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture)
+{
+    m_fOnLoadTexture = fOnLoadTexture;
 }
 //---------------------------------------------------------------------------
 void FBXModel::ClearDataset(IFBXDataset& dataset) const
@@ -2044,7 +1941,7 @@ bool FBXModel::SetProperty(const std::string& name,
     return true;
 }
 //---------------------------------------------------------------------------
-bool FBXModel::BuildModel()
+bool FBXModel::PerformLinks()
 {
     const std::size_t rootCount = m_Nodes.size();
 
@@ -2116,9 +2013,9 @@ bool FBXModel::BuildModel()
         }
 
     #ifdef _DEBUG
-        //std::string log;
-        //LogLinks(log);
-        //::OutputDebugStringA(log.c_str());
+        std::string log;
+        LogLinks(log);
+        __TEMP(log);
     #endif
 
     return true;
@@ -2286,4 +2183,329 @@ bool FBXModel::GetLinkData(IFBXProperty*     pProp,
             LogLink(*it, tab + 4, log);
     }
 #endif
+//---------------------------------------------------------------------------
+bool FBXModel::BuildModel()
+{
+    std::unique_ptr<Model> pModel(new Model());
+    std::unique_ptr<Model> pTemplate(new Model());
+
+    Vector3F vertex;
+    Vector3F normal;
+    Vector2F uv;
+
+    const std::size_t linkCount = m_Links.size();
+
+    for (std::size_t i = 0; i < linkCount; ++i)
+    {
+        std::unique_ptr<VertexBuffer> pTemplateVB(new VertexBuffer());
+        pTemplateVB->m_Format.m_Format = (VertexFormat::IEFormat)((unsigned)VertexFormat::IEFormat::IE_VF_Colors |
+                                                                  (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords);
+
+        std::unique_ptr<VertexBuffer> pModelVB(new VertexBuffer());
+        pModelVB->m_Format.m_Format = (VertexFormat::IEFormat)((unsigned)VertexFormat::IEFormat::IE_VF_Colors |
+                                                               (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords);
+
+        const std::size_t childCount = m_Links[i]->m_Children.size();
+
+        for (std::size_t j = 0; j < childCount; ++j)
+        {
+            if (m_Links[i]->m_Children[j]->m_NodeType == IENodeType::IE_NT_Geometry)
+            {
+                IFBXArrayProperty* pVertices      = nullptr;
+                IFBXArrayProperty* pIndices       = nullptr;
+                IFBXArrayProperty* pNormals       = nullptr;
+                IFBXArrayProperty* pNormalIndices = nullptr;
+                IFBXArrayProperty* pUVs           = nullptr;
+                IFBXArrayProperty* pUVIndices     = nullptr;
+
+                const std::size_t grandChildCount = m_Links[i]->m_Children[j]->m_pNode->GetChildCount();
+
+                for (std::size_t k = 0; k < grandChildCount; ++k)
+                    if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "Vertices" &&
+                        m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetPropCount())
+                        pVertices = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0));
+                    else
+                    if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "PolygonVertexIndex" &&
+                        m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetPropCount())
+                        pIndices = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0));
+                    else
+                    if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "LayerElementNormal")
+                    {
+                        const std::size_t normalPropCount = m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChildCount();
+
+                        for (std::size_t l = 0; l < normalPropCount; ++l)
+                            if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetName() == "Normals" &&
+                                m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetPropCount())
+                                pNormals = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0));
+                            else
+                            if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetName() == "NormalsIndex" &&
+                                m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetPropCount())
+                                pNormalIndices = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0));
+                    }
+                    else
+                    if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "LayerElementUV")
+                    {
+                        const std::size_t normalPropCount = m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChildCount();
+
+                        for (std::size_t l = 0; l < normalPropCount; ++l)
+                            if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetName() == "UV" &&
+                                m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetPropCount())
+                                pUVs = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0));
+                            else
+                            if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetName() == "UVIndex" &&
+                                m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetPropCount())
+                                pUVIndices = static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0));
+                    }
+
+                if (!pVertices || !pIndices || !pNormalIndices || !pUVIndices)
+                    return false;
+
+                pTemplateVB->m_Format.m_Type        = VertexFormat::IEType::IE_VT_Triangles;
+                pTemplateVB->m_Culling.m_Type       = VertexCulling::IECullingType::IE_CT_Back;
+                pTemplateVB->m_Culling.m_Face       = VertexCulling::IECullingFace::IE_CF_CCW;
+                pTemplateVB->m_Material.m_Color.m_R = 1.0f;
+                pTemplateVB->m_Material.m_Color.m_G = 1.0f;
+                pTemplateVB->m_Material.m_Color.m_B = 1.0f;
+                pTemplateVB->m_Material.m_Color.m_A = 1.0f;
+
+                pModelVB->m_Format.m_Type        = VertexFormat::IEType::IE_VT_Triangles;
+                pModelVB->m_Culling.m_Type       = VertexCulling::IECullingType::IE_CT_Back;
+                pModelVB->m_Culling.m_Face       = VertexCulling::IECullingFace::IE_CF_CCW;
+                pModelVB->m_Material.m_Color.m_R = 1.0f;
+                pModelVB->m_Material.m_Color.m_G = 1.0f;
+                pModelVB->m_Material.m_Color.m_B = 1.0f;
+                pModelVB->m_Material.m_Color.m_A = 1.0f;
+
+                const std::size_t verticesCount = pVertices->GetCount();
+                const std::size_t indicesCount  = pIndices->GetCount();
+
+                std::vector<int> indices;
+                indices.reserve(4);
+
+                std::vector<int> normalIndices;
+                normalIndices.reserve(4);
+
+                std::vector<int> uvIndices;
+                uvIndices.reserve(4);
+
+                pTemplateVB->m_Data.reserve(indicesCount * 9 * (pIndices->GetI(4) < 0 ? 6 : 3));
+                pModelVB->   m_Data.reserve(indicesCount * 9 * (pIndices->GetI(4) < 0 ? 6 : 3));
+
+                for (std::size_t k = 0; k < indicesCount; ++k)
+                {
+                    const int indice = pIndices->GetI(k);
+
+                    if (indice >= 0)
+                    {
+                        indices.push_back(indice);
+                        normalIndices.push_back(pNormalIndices->GetI(k));
+                        uvIndices.push_back(pUVIndices->GetI(k));
+                    }
+                    else
+                    {
+                        indices.push_back(std::abs(indice) - 1);
+                        normalIndices.push_back(std::abs(pNormalIndices->GetI(k)));
+                        uvIndices.push_back(std::abs(pUVIndices->GetI(k)));
+
+                        switch (indices.size())
+                        {
+                            case 3:
+                                // todo FIXME
+                                vertex.m_X = pVertices->GetF(indices[0] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[0] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[0] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[0] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[0] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[0] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                vertex.m_X = pVertices->GetF(indices[1] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[1] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[1] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[1] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[1] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[1] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[1] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[1] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                vertex.m_X = pVertices->GetF(indices[2] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[2] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[2] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[2] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[2] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[2] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                break;
+
+                            case 4:
+                                // todo FIXME
+                                vertex.m_X = pVertices->GetF(indices[0] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[0] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[0] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[0] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[0] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[0] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                vertex.m_X = pVertices->GetF(indices[1] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[1] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[1] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[1] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[1] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[1] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[1] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[1] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                vertex.m_X = pVertices->GetF(indices[2] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[2] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[2] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[2] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[2] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[2] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                vertex.m_X = pVertices->GetF(indices[0] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[0] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[0] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[0] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[0] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[0] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[0] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[0] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                vertex.m_X = pVertices->GetF(indices[2] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[2] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[2] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[2] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[2] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[2] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[2] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[2] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                vertex.m_X = pVertices->GetF(indices[3] * 3);
+                                vertex.m_Y = pVertices->GetF((indices[3] * 3) + 1);
+                                vertex.m_Z = pVertices->GetF((indices[3] * 3) + 2);
+
+                                normal.m_X = pNormals->GetF(normalIndices[3] * 3);
+                                normal.m_Y = pNormals->GetF((normalIndices[3] * 3) + 1);
+                                normal.m_Z = pNormals->GetF((normalIndices[3] * 3) + 2);
+
+                                uv.m_X = pUVs->GetF(uvIndices[3] * 2);
+                                uv.m_Y = pUVs->GetF((uvIndices[3] * 2) + 1);
+
+                                pTemplateVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                                pModelVB->   Add(&vertex, &normal, &uv, 0, nullptr);
+
+                                break;
+                        }
+
+                        indices.clear();
+                        normalIndices.clear();
+                        uvIndices.clear();
+                    }
+                }
+            }
+            else
+            if (m_Links[i]->m_Children[j]->m_NodeType == IENodeType::IE_NT_Material)
+            {
+                const std::size_t grandChildCount = m_Links[i]->m_Children[j]->m_Children.size();
+
+                for (std::size_t k = 0; k < grandChildCount; ++k)
+                    if (m_Links[i]->m_Children[j]->m_Children[k]->m_NodeType == IENodeType::IE_NT_Texture)
+                    {
+                        IFBXNode* pTextureNode = m_Links[i]->m_Children[j]->m_Children[k]->m_pNode;
+
+                        const std::size_t texPropCount = pTextureNode->GetPropCount();
+
+                        for (std::size_t l = 0; l < texPropCount; ++l)
+                            if (pTextureNode->GetProp(l)->GetName() == "FileName" && pTextureNode->GetProp(l)->GetValueCount())
+                                if (m_fOnLoadTexture)
+                                {
+                                    std::unique_ptr<Texture> pTexture(m_fOnLoadTexture(pTextureNode->GetProp(l)->GetValue(0)->GetStr(), true));
+
+                                    if (pTexture)
+                                        pModelVB->m_Material.m_pTexture = pTexture.release();
+                                }
+                    }
+            }
+        }
+
+        if (pTemplateVB->m_Data.size())
+        {
+            std::unique_ptr<Mesh> pMesh(new Mesh());
+            pMesh->m_VB.push_back(pTemplateVB.get());
+            pTemplateVB.release();
+
+            pTemplate->m_Mesh.push_back(pMesh.get());
+            pMesh.release();
+        }
+
+        if (pModelVB->m_Data.size())
+        {
+            std::unique_ptr<Mesh> pMesh(new Mesh());
+            pMesh->m_VB.push_back(pModelVB.get());
+            pModelVB.release();
+
+            pModel->m_Mesh.push_back(pMesh.get());
+            pMesh.release();
+        }
+    }
+
+    m_pTemplate = pTemplate.release();
+    m_pModel    = pModel.release();
+
+    return true;
+}
+//---------------------------------------------------------------------------
+//REM
+#include <Windows.h>
+void FBXModel::__TEMP(std::string& log) const
+{
+    ::OutputDebugStringA(log.c_str());
+}
 //---------------------------------------------------------------------------

@@ -28,7 +28,7 @@
 
  // classes
 #include "FBXModel.h"
-#include "TextureHelper.h"
+#include "PngTextureHelper.h"
 #include "Texture_OpenGL.h"
 #include "Shader_OpenGL.h"
 #include "Renderer_OpenGL.h"
@@ -65,6 +65,9 @@ const char fragmentShader[] = "precision mediump float;"
                               "void main(void)"
                               "{"
                               "    gl_FragColor = vColor * texture2D(sTexture, vTexCoord);"
+                              ""
+                              "    if (gl_FragColor.a < 0.5)"
+                              "        discard;"
                               "}";
 //------------------------------------------------------------------------------
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -102,7 +105,7 @@ void DrawFBX(const FBXModel&        fbxModel,
                    int              animSetIndex,
                    int              frameCount)
 {
-    std::unique_ptr<Model> pModel(fbxModel.GetModel());
+    Model* pModel = fbxModel.GetModel();
 
     // iterate through the meshes to draw
     for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
@@ -239,7 +242,7 @@ void DrawFBX(const FBXModel&        fbxModel,
     */
 }
 //------------------------------------------------------------------------------
-Texture* OnLoadTexture(const std::string& textureName)
+Texture* OnLoadTexture(const std::string& textureName, bool is32bit)
 {
     std::size_t width   = 0;
     std::size_t height  = 0;
@@ -247,7 +250,16 @@ Texture* OnLoadTexture(const std::string& textureName)
     std::size_t length  = 0;
     void*       pPixels = nullptr;
 
-    if (!TextureHelper::OpenBitmapData("Resources\\Models\\Sandra\\" + textureName, width, height, format, length, pPixels))
+    const std::size_t separator = textureName.rfind('/');
+    const std::string fileName  = textureName.substr(separator + 1, textureName.length() - (separator + 1));
+
+    if (!PngTextureHelper::OpenImage("Resources\\Models\\Laure\\Textures\\" + fileName,
+                                     is32bit,
+                                     width,
+                                     height,
+                                     format,
+                                     length,
+                                     pPixels))
         return nullptr;
 
     if (!pPixels)
@@ -354,10 +366,9 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     shader.Link(true);
 
     FBXModel fbx;
+    fbx.Set_OnLoadTexture(OnLoadTexture);
     //fbx.Set_OnLoadTexture(OnLoadTexture);
-    fbx.Open("Resources\\Models\\Sandra\\sandra_walking.fbx");
-    //REM fbx.Find("Objects.Geometry.Vertices");
-    fbx.GetModel();
+    fbx.Open("Resources\\Models\\Laure\\Angry.fbx");
 
     Matrix4x4F projMatrix;
 

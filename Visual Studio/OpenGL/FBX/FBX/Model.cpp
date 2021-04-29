@@ -33,7 +33,8 @@
 //---------------------------------------------------------------------------
 Model::IBone::IBone() :
     m_Matrix(Matrix4x4F::Identity()),
-    m_pParent(nullptr)
+    m_pParent(nullptr),
+    m_pCustom(nullptr)
 {}
 //---------------------------------------------------------------------------
 Model::IBone::~IBone()
@@ -67,12 +68,12 @@ Model::ISkinWeights::~ISkinWeights()
         delete m_WeightInfluences[i];
 }
 //---------------------------------------------------------------------------
-// Model::IMeshSkinWeights
+// Model::IDeformers
 //---------------------------------------------------------------------------
-Model::IMeshSkinWeights::IMeshSkinWeights()
+Model::IDeformers::IDeformers()
 {}
 //---------------------------------------------------------------------------
-Model::IMeshSkinWeights::~IMeshSkinWeights()
+Model::IDeformers::~IDeformers()
 {
     const std::size_t count = m_SkinWeights.size();
 

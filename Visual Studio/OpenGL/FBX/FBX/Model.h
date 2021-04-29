@@ -64,6 +64,7 @@ class Model
             Matrix4x4F  m_Matrix;   // matrix containing the bone transformation to apply
             IBone*      m_pParent;  // bone parent, root bone if 0
             IBones      m_Children; // bone children
+            void*       m_pCustom;  // custom value, may be e.g. a reference to a format dependent object
 
             IBone();
             virtual ~IBone();
@@ -75,7 +76,7 @@ class Model
         typedef std::vector<float> IWeights;
 
         /**
-        * Vertex weight influence table, it's a table containing the indices of each vertex influenced by a weight
+        * Vertex weight influence, it's a table containing the indices of each vertex influenced by a weight
         */
         struct IWeightInfluence
         {
@@ -102,22 +103,24 @@ class Model
             Matrix4x4F        m_Matrix;           // matrix to transform the mesh vertices to the bone space
             IWeightInfluences m_WeightInfluences; // table allowing to retrieve the vertices influenced by a weight
             IWeights          m_Weights;          // weights indicating the bone influence on vertices, between 0.0f and 1.0f
+            void*             m_pCustom;          // custom value, may be e.g. a reference to a format dependent object
 
             ISkinWeights();
             virtual ~ISkinWeights();
         };
 
         /**
-        * Skin weights belonging to a mesh
+        * Mesh deformers, it's a list of skin weights belonging to a mesh
         */
-        struct IMeshSkinWeights
+        // todo FIXME -cFeature -oJean: previously named IMeshSkinWeights
+        struct IDeformers
         {
             typedef std::vector<ISkinWeights*> ISkinWeightsData;
 
             ISkinWeightsData m_SkinWeights;
 
-            IMeshSkinWeights();
-            virtual ~IMeshSkinWeights();
+            IDeformers();
+            virtual ~IDeformers();
         };
 
         /**
@@ -176,12 +179,12 @@ class Model
             virtual ~IAnimationSet();
         };
 
-        std::vector<Mesh*>             m_Mesh;         // meshes composing the model
-        std::vector<IMeshSkinWeights*> m_MeshWeights;  // mesh skin weights, sorted in the same order as the meshes
-        std::vector<IAnimationSet*>    m_AnimationSet; // set of animations to apply to bones
-        IBone*                         m_pSkeleton;    // model skeleton
-        bool                           m_MeshOnly;     // if activated, only the mesh will be drawn. All other data will be ignored
-        bool                           m_PoseOnly;     // if activated, the model will take the default pose but will not be animated
+        std::vector<Mesh*>          m_Mesh;         // meshes composing the model
+        std::vector<IDeformers*>    m_Deformers;    // mesh deformers, sorted in the same order as the meshes
+        std::vector<IAnimationSet*> m_AnimationSet; // set of animations to apply to bones
+        IBone*                      m_pSkeleton;    // model skeleton
+        bool                        m_MeshOnly;     // if activated, only the mesh will be drawn. All other data will be ignored
+        bool                        m_PoseOnly;     // if activated, the model will take the default pose but will not be animated
 
         Model();
         virtual ~Model();
