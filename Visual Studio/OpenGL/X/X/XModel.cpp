@@ -50,118 +50,6 @@
 #define M_X_FORMAT_FLOAT_BITS_32 (('2' << 24) + ('3' << 16) + ('0' << 8) + '0')
 #define M_X_FORMAT_FLOAT_BITS_64 (('4' << 24) + ('6' << 16) + ('0' << 8) + '0')
 //---------------------------------------------------------------------------
-// XModel::IBone
-//---------------------------------------------------------------------------
-XModel::IBone::IBone() :
-    m_Matrix(Matrix4x4F::Identity()),
-    m_pParent(nullptr)
-{}
-//---------------------------------------------------------------------------
-XModel::IBone::~IBone()
-{
-    const std::size_t count = m_Children.size();
-
-    for (std::size_t i = 0; i < count; ++i)
-        delete m_Children[i];
-}
-//---------------------------------------------------------------------------
-// XModel::IWeightInfluence
-//---------------------------------------------------------------------------
-XModel::IWeightInfluence::IWeightInfluence()
-{}
-//---------------------------------------------------------------------------
-XModel::IWeightInfluence::~IWeightInfluence()
-{}
-//---------------------------------------------------------------------------
-// XModel::ISkinWeights
-//---------------------------------------------------------------------------
-XModel::ISkinWeights::ISkinWeights() :
-    m_pBone(nullptr),
-    m_Matrix(Matrix4x4F::Identity())
-{}
-//---------------------------------------------------------------------------
-XModel::ISkinWeights::~ISkinWeights()
-{
-    const std::size_t count = m_WeightInfluences.size();
-
-    for (std::size_t i = 0; i < count; ++i)
-        delete m_WeightInfluences[i];
-}
-//---------------------------------------------------------------------------
-// XModel::IMeshSkinWeights
-//---------------------------------------------------------------------------
-XModel::IMeshSkinWeights::IMeshSkinWeights()
-{}
-//---------------------------------------------------------------------------
-XModel::IMeshSkinWeights::~IMeshSkinWeights()
-{
-    const std::size_t count = m_SkinWeights.size();
-
-    for (std::size_t i = 0; i < count; ++i)
-        delete m_SkinWeights[i];
-}
-//---------------------------------------------------------------------------
-// XModel::IAnimationKey
-//---------------------------------------------------------------------------
-XModel::IAnimationKey::IAnimationKey() :
-    m_Frame(0)
-{}
-//---------------------------------------------------------------------------
-XModel::IAnimationKey::~IAnimationKey()
-{}
-//---------------------------------------------------------------------------
-// XModel::IAnimationKeys
-//---------------------------------------------------------------------------
-XModel::IAnimationKeys::IAnimationKeys() :
-    m_Type(IE_KT_Unknown)
-{}
-//---------------------------------------------------------------------------
-XModel::IAnimationKeys::~IAnimationKeys()
-{
-    const std::size_t count = m_Keys.size();
-
-    for (std::size_t i = 0; i < count; ++i)
-        delete m_Keys[i];
-}
-//---------------------------------------------------------------------------
-// XModel::IAnimation
-//---------------------------------------------------------------------------
-XModel::IAnimation::IAnimation() :
-    m_pBone(nullptr)
-{}
-//---------------------------------------------------------------------------
-XModel::IAnimation::~IAnimation()
-{
-    const std::size_t count = m_Keys.size();
-
-    for (std::size_t i = 0; i < count; ++i)
-        delete m_Keys[i];
-}
-//---------------------------------------------------------------------------
-// XModel::IAnimationSet
-//---------------------------------------------------------------------------
-XModel::IAnimationSet::IAnimationSet()
-{}
-//---------------------------------------------------------------------------
-XModel::IAnimationSet::~IAnimationSet()
-{
-    const std::size_t count = m_Animations.size();
-
-    for (std::size_t i = 0; i < count; ++i)
-        delete m_Animations[i];
-}
-//---------------------------------------------------------------------------
-// XModel::IModel
-//---------------------------------------------------------------------------
-XModel::IModel::IModel() :
-    m_pSkeleton(nullptr),
-    m_MeshOnly(false),
-    m_PoseOnly(false)
-{}
-//---------------------------------------------------------------------------
-XModel::IModel::~IModel()
-{}
-//---------------------------------------------------------------------------
 // XModel::IVector2
 //---------------------------------------------------------------------------
 XModel::IVector2::IVector2() :
@@ -309,7 +197,7 @@ XModel::IAnimationKeyDataset::~IAnimationKeyDataset()
 //---------------------------------------------------------------------------
 XModel::IAnimationKeysDataset::IAnimationKeysDataset() :
     IGenericDataset(),
-    m_Type(IE_KT_Unknown),
+    m_Type(Model::IEAnimKeyType::IE_KT_Unknown),
     m_KeyTotal(0),
     m_KeyIndex(0),
     m_ReadValCount(0)
@@ -492,7 +380,7 @@ bool XModel::Read(const std::string& data)
         return false;
 
     // create the model
-    m_pModel = new IModel();
+    m_pModel = new Model();
 
     // succeeded?
     if (!m_pModel)
@@ -525,13 +413,13 @@ bool XModel::Read(const std::string& data)
         BuildParentHierarchy(m_pModel->m_pSkeleton, 0, m_pModel);
 
         // skin weights?
-        if (m_pModel->m_MeshWeights.size())
+        if (m_pModel->m_Deformers.size())
             // retrieve the bone linked with each skin weights
-            for (std::size_t i = 0; i < m_pModel->m_MeshWeights.size(); ++i)
-                for (std::size_t j = 0; j < m_pModel->m_MeshWeights[i]->m_SkinWeights.size(); ++j)
-                    m_pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone =
-                            FindBone(m_pModel->m_pSkeleton,
-                                     m_pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_BoneName);
+            for (std::size_t i = 0; i < m_pModel->m_Deformers.size(); ++i)
+                for (std::size_t j = 0; j < m_pModel->m_Deformers[i]->m_SkinWeights.size(); ++j)
+                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone =
+                            m_pModel->FindBone(m_pModel->m_pSkeleton,
+                                               m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_BoneName);
 
         // animation set?
         if (!m_pModel->m_PoseOnly && m_pModel->m_AnimationSet.size())
@@ -539,92 +427,16 @@ bool XModel::Read(const std::string& data)
             for (std::size_t i = 0; i < m_pModel->m_AnimationSet.size(); ++i)
                 for (std::size_t j = 0; j < m_pModel->m_AnimationSet[i]->m_Animations.size(); ++j)
                     m_pModel->m_AnimationSet[i]->m_Animations[j]->m_pBone =
-                            FindBone(m_pModel->m_pSkeleton,
-                                     m_pModel->m_AnimationSet[i]->m_Animations[j]->m_BoneName);
+                            m_pModel->FindBone(m_pModel->m_pSkeleton,
+                                               m_pModel->m_AnimationSet[i]->m_Animations[j]->m_BoneName);
     }
 
     return true;
 }
 //---------------------------------------------------------------------------
-XModel::IModel* XModel::GetModel() const
+Model* XModel::GetModel() const
 {
     return m_pModel;
-}
-//---------------------------------------------------------------------------
-void XModel::GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const
-{
-    // no bone?
-    if (!pBone)
-        return;
-
-    // set the output matrix as identity
-    matrix = Matrix4x4F::Identity();
-
-    // iterate through bones
-    while (pBone)
-    {
-        // get the previously stacked matrix as base to calculate the new one
-        const Matrix4x4F localMatrix = matrix;
-
-        // stack the previously calculated matrix with the current bone one
-        matrix = localMatrix.Multiply(pBone->m_Matrix);
-
-        // go to parent bone
-        pBone = pBone->m_pParent;
-    }
-
-    // initial matrix provided?
-    if (!initialMatrix.IsIdentity())
-    {
-        // get the previously stacked matrix as base to calculate the new one
-        const Matrix4x4F localMatrix = matrix;
-
-        // stack the previously calculated matrix with the initial one
-        matrix = localMatrix.Multiply(initialMatrix);
-    }
-}
-//---------------------------------------------------------------------------
-void XModel::GetBoneAnimMatrix(const IBone*         pBone,
-                               const IAnimationSet* pAnimSet,
-                                     std::size_t    frameIndex,
-                               const Matrix4x4F&    initialMatrix,
-                                     Matrix4x4F&    matrix) const
-{
-    // no bone?
-    if (!pBone)
-        return;
-
-    // set the output matrix as identity
-    matrix = Matrix4x4F::Identity();
-
-    Matrix4x4F animMatrix;
-
-    // iterate through bones
-    while (pBone)
-    {
-        // get the previously stacked matrix as base to calculate the new one
-        const Matrix4x4F localMatrix = matrix;
-
-        // get the animated bone matrix matching with frame. If not found use the identity one
-        if (!GetAnimationMatrix(pAnimSet, pBone, frameIndex, animMatrix))
-            animMatrix = Matrix4x4F::Identity();
-
-        // stack the previously calculated matrix with the current bone one
-        matrix = localMatrix.Multiply(animMatrix);
-
-        // go to parent bone
-        pBone = pBone->m_pParent;
-    }
-
-    // initial matrix provided?
-    if (!initialMatrix.IsIdentity())
-    {
-        // get the previously stacked matrix as base to calculate the new one
-        const Matrix4x4F localMatrix = matrix;
-
-        // stack the previously calculated matrix with the initial one
-        matrix = localMatrix.Multiply(initialMatrix);
-    }
 }
 //---------------------------------------------------------------------------
 void XModel::SetVertFormatTemplate(const VertexFormat& vertFormatTemplate)
@@ -1630,13 +1442,13 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                             return false;
 
                         // do read the key total, the key frame or the key value count?
-                        if (pDataset->m_Type == IE_KT_Unknown)
+                        if (pDataset->m_Type == Model::IEAnimKeyType::IE_KT_Unknown)
                         {
                             // get the value to convert
                             const std::string value = GetText(data, startOffset, endOffset);
 
                             // convert value
-                            pDataset->m_Type = (IEAnimKeyType)std::atoi(value.c_str());
+                            pDataset->m_Type = (Model::IEAnimKeyType)std::atoi(value.c_str());
                         }
                         else
                         if (!pDataset->m_KeyTotal)
@@ -2171,8 +1983,8 @@ XModel::IFileItem* XModel::AddChild(IFileItem* pItem, IEDataStructID id, IGeneri
 }
 //---------------------------------------------------------------------------
 bool XModel::ItemToModel(const IFileItem*          pItem,
-                               IModel*             pModel,
-                               IBone*              pBone,
+                               Model*              pModel,
+                               Model::IBone*       pBone,
                          const VertexFormat*       pVertFormat,
                          const VertexCulling*      pVertCulling,
                          const Material*           pMaterial,
@@ -2187,7 +1999,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
     if (!pModel)
         return false;
 
-    IBone* pCurrent = pBone;
+    Model::IBone* pCurrent = pBone;
 
     switch (pItem->m_ID)
     {
@@ -2208,7 +2020,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
                     return false;
 
                 // create the root bone
-                pModel->m_pSkeleton = new IBone();
+                pModel->m_pSkeleton = new Model::IBone();
 
                 // succeeded?
                 if (!pModel->m_pSkeleton)
@@ -2220,7 +2032,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
             else
             {
                 // create a new bone
-                std::unique_ptr<IBone> pChild(new IBone());
+                std::unique_ptr<Model::IBone> pChild(new Model::IBone());
 
                 // set bone parent
                 pChild->m_pParent = pBone;
@@ -2297,8 +2109,8 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
 }
 //---------------------------------------------------------------------------
 bool XModel::BuildMesh(const IFileItem*          pItem,
-                             IModel*             pModel,
-                             IBone*              pBone,
+                             Model*              pModel,
+                             Model::IBone*       pBone,
                        const VertexFormat*       pVertFormat,
                        const VertexCulling*      pVertCulling,
                        const Material*           pMaterial,
@@ -2312,20 +2124,20 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
     if (!pMeshDataset)
         return false;
 
-    std::size_t meshWeightsIndex = 0;
+    std::size_t deformersIndex = 0;
 
     // is model supporting animations?
     if (!pModel->m_MeshOnly)
     {
-        // add a new mesh skin weights to the model
-        std::unique_ptr<IMeshSkinWeights> pMeshWeights(new IMeshSkinWeights());
+        // add a new mesh deformers to the model
+        std::unique_ptr<Model::IDeformers> pDeformers(new Model::IDeformers());
 
-        // keep the mesh weights index
-        meshWeightsIndex = pModel->m_MeshWeights.size();
+        // keep the deformers index
+        deformersIndex = pModel->m_Deformers.size();
 
         // update the model
-        pModel->m_MeshWeights.push_back(pMeshWeights.get());
-        pMeshWeights.release();
+        pModel->m_Deformers.push_back(pDeformers.get());
+        pDeformers.release();
     }
 
     IVertexBufferDataset* pNormalsDataset = nullptr;
@@ -2388,7 +2200,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
                     return false;
 
                 // add a new skin weights to the mesh skin weights
-                std::unique_ptr<ISkinWeights> pSkinWeights(new ISkinWeights());
+                std::unique_ptr<Model::ISkinWeights> pSkinWeights(new Model::ISkinWeights());
 
                 // get the bone link name
                 if (!pSkinWeightsDataset->m_BoneName.empty())
@@ -2415,10 +2227,10 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
                 pSkinWeights->m_WeightInfluences.resize(indiceCount);
 
                 for (std::size_t j = 0; j < indiceCount; ++j)
-                    pSkinWeights->m_WeightInfluences[j] = new IWeightInfluence();
+                    pSkinWeights->m_WeightInfluences[j] = new Model::IWeightInfluence();
 
-                // update the model mesh skin weights list
-                pModel->m_MeshWeights[meshWeightsIndex]->m_SkinWeights.push_back(pSkinWeights.get());
+                // update the model mesh deformers list
+                pModel->m_Deformers[deformersIndex]->m_SkinWeights.push_back(pSkinWeights.get());
                 pSkinWeights.release();
 
                 continue;
@@ -2567,7 +2379,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
 }
 //---------------------------------------------------------------------------
 bool XModel::BuildVertex(const IFileItem*            pItem,
-                               IModel*               pModel,
+                               Model*                pModel,
                                Mesh*                 pMesh,
                                std::size_t           meshIndex,
                                std::size_t           vertexIndex,
@@ -2580,7 +2392,7 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
                          const IMaterialListDataset* pMatListDataset,
                          const ITfOnGetVertexColor   fOnGetVertexColor) const
 {
-    // calculate the vertex index from the indice table
+    // calculate the vertex index from the indices table
     const std::size_t indiceIndex = pMeshDataset->m_Indices[vertexIndex] * 3;
 
     // is index out of bounds?
@@ -2702,7 +2514,7 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
 
     std::size_t weightIndex = 0;
 
-    // link the newly added vertice to the mesh skin weights
+    // link the newly added vertices to the mesh skin weights
     for (std::size_t i = 0; i < pItem->m_Children.size(); ++i)
         switch (pItem->m_Children[i]->m_ID)
         {
@@ -2724,7 +2536,7 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
                 // found one?
                 if (it != pSkinWeightsDataset->m_IndexDictionary.end())
                     // add the vertex index (the one in the vertex buffer) in the weight influence table
-                    pModel->m_MeshWeights[meshIndex]->m_SkinWeights[weightIndex]->
+                    pModel->m_Deformers[meshIndex]->m_SkinWeights[weightIndex]->
                             m_WeightInfluences[it->second]->m_VertexIndex.push_back(vbIndex);
 
                 ++weightIndex;
@@ -2738,10 +2550,10 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
     return true;
 }
 //---------------------------------------------------------------------------
-bool XModel::BuildAnimationSet(const IFileItem* pItem, IModel* pModel) const
+bool XModel::BuildAnimationSet(const IFileItem* pItem, Model* pModel) const
 {
     // allocate memory for a new animation set
-    std::unique_ptr<IAnimationSet> pAnimationSet(new IAnimationSet());
+    std::unique_ptr<Model::IAnimationSet> pAnimationSet(new Model::IAnimationSet());
 
     // keep the animation set index
     const std::size_t index = pModel->m_AnimationSet.size();
@@ -2750,7 +2562,7 @@ bool XModel::BuildAnimationSet(const IFileItem* pItem, IModel* pModel) const
     for (std::size_t i = 0; i < pItem->m_Children.size(); ++i)
     {
         // allocate memory for a new animation
-        std::unique_ptr<IAnimation> pAnimation(new IAnimation());
+        std::unique_ptr<Model::IAnimation> pAnimation(new Model::IAnimation());
 
         // iterate through source animation keys
         for (std::size_t j = 0; j < pItem->m_Children[i]->m_Children.size(); ++j)
@@ -2771,7 +2583,7 @@ bool XModel::BuildAnimationSet(const IFileItem* pItem, IModel* pModel) const
             }
 
             // allocate memory for a new animation keys
-            std::unique_ptr<IAnimationKeys> pAnimationKeys(new IAnimationKeys());
+            std::unique_ptr<Model::IAnimationKeys> pAnimationKeys(new Model::IAnimationKeys());
 
             // get the dataset containing the animation keys
             IAnimationKeysDataset* pDataset = static_cast<IAnimationKeysDataset*>(pItem->m_Children[i]->m_Children[j]->m_pDataset);
@@ -2787,7 +2599,7 @@ bool XModel::BuildAnimationSet(const IFileItem* pItem, IModel* pModel) const
             for (std::size_t k = 0; k < pDataset->m_Keys.size(); ++k)
             {
                 // allocate memory for a new animation key
-                std::unique_ptr<IAnimationKey> pAnimationKey(new IAnimationKey());
+                std::unique_ptr<Model::IAnimationKey> pAnimationKey(new Model::IAnimationKey());
 
                 // get the key frame
                 pAnimationKey->m_Frame = pDataset->m_Keys[k]->m_Frame;
@@ -2828,7 +2640,7 @@ XModel::IFileItem* XModel::GetMaterial(const IFileItem* pItem, std::size_t index
     if (index >= pItem->m_Children.size())
         return nullptr;
 
-    // return the material matching with the indice. NOTE assume that the material list object only
+    // return the material matching with the index. NOTE assume that the material list object only
     // contains materials as children and that the read order was the correct one
     return pItem->m_Children[index];
 }
@@ -2935,7 +2747,7 @@ bool XModel::VertexBufferAdd(const Vector3F*           pVertex,
     return true;
 }
 //---------------------------------------------------------------------------
-void XModel::BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) const
+void XModel::BuildParentHierarchy(Model::IBone* pBone, Model::IBone* pParent, Model* pModel) const
 {
     // no model?
     if (!pModel)
@@ -2949,10 +2761,10 @@ void XModel::BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) 
         BuildParentHierarchy(pBone->m_Children[i], pBone, pModel);
 }
 //---------------------------------------------------------------------------
-bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
-                                const IBone*         pBone,
-                                      std::size_t    frame,
-                                      Matrix4x4F&    matrix) const
+bool XModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
+                                const Model::IBone*         pBone,
+                                      std::size_t           frame,
+                                      Matrix4x4F&           matrix) const
 {
     // no animation set?
     if (!pAnimSet)
@@ -3000,7 +2812,7 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
             // search for keys type
             switch (pAnimSet->m_Animations[i]->m_Keys[j]->m_Type)
             {
-                case IE_KT_Rotation:
+                case Model::IEAnimKeyType::IE_KT_Rotation:
                     if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 4)
                         return false;
 
@@ -3031,7 +2843,7 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
 
                     continue;
 
-                case IE_KT_Scale:
+                case Model::IEAnimKeyType::IE_KT_Scale:
                     if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
                         return false;
 
@@ -3059,7 +2871,7 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
 
                     continue;
 
-                case IE_KT_Position:
+                case Model::IEAnimKeyType::IE_KT_Position:
                     if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
                         return false;
 
@@ -3087,7 +2899,7 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
 
                     continue;
 
-                case IE_KT_MatrixKeys:
+                case Model::IEAnimKeyType::IE_KT_MatrixKeys:
                     if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 16)
                         return false;
 
@@ -3132,7 +2944,7 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
         finalPosition.m_Y = position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation);
         finalPosition.m_Z = position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation);
 
-        Matrix4x4F  scaleMatrix = Matrix4x4F::Identity();
+        Matrix4x4F  scaleMatrix     = Matrix4x4F::Identity();
         Matrix4x4F  rotateMatrix;
         Matrix4x4F  translateMatrix = Matrix4x4F::Identity();
 
@@ -3151,29 +2963,5 @@ bool XModel::GetAnimationMatrix(const IAnimationSet* pAnimSet,
     }
 
     return false;
-}
-//---------------------------------------------------------------------------
-XModel::IBone* XModel::FindBone(IBone* pBone, const std::string& name) const
-{
-    // no bone?
-    if (!pBone)
-        return nullptr;
-
-    // found the bone?
-    if (!pBone->m_Name.empty() && pBone->m_Name == name)
-        return pBone;
-
-    // iterate through the bone children
-    for (std::size_t i = 0; i < pBone->m_Children.size(); ++i)
-    {
-        // search in next children bone
-        IBone* pChildBone = FindBone(pBone->m_Children[i], name);
-
-        // found the bone?
-        if (pChildBone)
-            return pChildBone;
-    }
-
-    return nullptr;
 }
 //---------------------------------------------------------------------------

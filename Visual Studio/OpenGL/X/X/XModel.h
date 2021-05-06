@@ -33,6 +33,7 @@
 #include "Vector3.h"
 #include "Matrix4x4.h"
 #include "Vertex.h"
+#include "Model.h"
 
 /**
 * DirectX .x model
@@ -41,159 +42,6 @@
 class XModel
 {
     public:
-        /**
-        * Animation key type
-        */
-        enum IEAnimKeyType
-        {
-            IE_KT_Unknown    = -1,
-            IE_KT_Rotation   =  0,
-            IE_KT_Scale      =  1,
-            IE_KT_Position   =  2,
-            IE_KT_MatrixKeys =  4
-        };
-
-        /**
-        * Bone, it's a hierarchical local transformation to apply to a mesh
-        */
-        struct IBone
-        {
-            typedef std::vector<IBone*> IBones;
-
-            std::string m_Name;     // bone name
-            Matrix4x4F  m_Matrix;   // matrix containing the bone transformation to apply
-            IBone*      m_pParent;  // bone parent, root bone if 0
-            IBones      m_Children; // bone children
-
-            IBone();
-            virtual ~IBone();
-        };
-
-        /**
-        * Weights
-        */
-        typedef std::vector<float> IWeights;
-
-        /**
-        * Vertex weight influence table, it's a table containing the indices of each vertex influenced by a weight
-        */
-        struct IWeightInfluence
-        {
-            typedef std::vector<std::size_t> IVertexIndex;
-
-            IVertexIndex m_VertexIndex;
-
-            IWeightInfluence();
-            virtual ~IWeightInfluence();
-        };
-
-        /**
-        * Vertex weight influences
-        */
-        typedef std::vector<IWeightInfluence*> IWeightInfluences;
-
-        /**
-        * Skin weights, it's a group of vertices influenced by a bone
-        */
-        struct ISkinWeights
-        {
-            std::string       m_BoneName;         // linked bone name (required to find the bone in skeleton)
-            IBone*            m_pBone;            // linked bone
-            Matrix4x4F        m_Matrix;           // matrix to transform the mesh vertices to the bone space
-            IWeightInfluences m_WeightInfluences; // table allowing to retrieve the vertices influenced by a weight
-            IWeights          m_Weights;          // weights indicating the bone influence on vertices, between 0.0f and 1.0f
-
-            ISkinWeights();
-            virtual ~ISkinWeights();
-        };
-
-        /**
-        * Skin weights belonging to a mesh
-        */
-        struct IMeshSkinWeights
-        {
-            typedef std::vector<ISkinWeights*> ISkinWeightsData;
-
-            ISkinWeightsData m_SkinWeights;
-
-            IMeshSkinWeights();
-            virtual ~IMeshSkinWeights();
-        };
-
-        /**
-        * Animation key, may be a rotation, a translation, a scale, a matrix, ...
-        */
-        struct IAnimationKey
-        {
-            typedef std::vector<float> IValues;
-
-            std::size_t m_Frame;
-            IValues     m_Values;
-
-            IAnimationKey();
-            virtual ~IAnimationKey();
-        };
-
-        /**
-        * Animation key list
-        */
-        struct IAnimationKeys
-        {
-            typedef std::vector<IAnimationKey*> IKeys;
-
-            IEAnimKeyType m_Type;
-            IKeys         m_Keys;
-
-            IAnimationKeys();
-            virtual ~IAnimationKeys();
-        };
-
-        /**
-        * Animation
-        */
-        struct IAnimation
-        {
-            typedef std::vector<IAnimationKeys*> IKeys;
-
-            std::string m_BoneName;
-            IBone*      m_pBone;
-            IKeys       m_Keys;
-
-            IAnimation();
-            virtual ~IAnimation();
-        };
-
-        /**
-        * Set of animations
-        */
-        struct IAnimationSet
-        {
-            typedef std::vector<IAnimation*> IAnimations;
-
-            IAnimations m_Animations;
-
-            IAnimationSet();
-            virtual ~IAnimationSet();
-        };
-
-        /**
-        * DirectX (.x) model
-        *@note Each mesh is connected to its own weights count and skeleton, sorted in the same order in each list
-        */
-        struct IModel
-        {
-            std::vector<Mesh*>             m_Mesh;           // meshes composing the model
-            std::vector<VertexBuffer*>     m_Print;          // printed meshes (i.e ready to be painted)
-            std::vector<IMeshSkinWeights*> m_MeshWeights;    // mesh skin weights, sorted in the same order as the meshes
-            std::vector<IAnimationSet*>    m_AnimationSet;   // set of animations to apply to bones
-            IBone*                         m_pSkeleton;      // model skeleton
-            bool                           m_MeshOnly;       // if activated, only the mesh will be drawn. All other data will be ignored
-            bool                           m_PoseOnly;       // if activated, the model will take the default pose but will not be animated
-
-            IModel();
-            virtual ~IModel();
-        };
-
         /**
         * Called when a vertex color should be get
         *@param pVB - vertex buffer that will contain the vertex for which the color should be get
@@ -234,29 +82,7 @@ class XModel
         * Gets the model
         *@return the model, nullptr if no model or on error
         */
-        virtual IModel* GetModel() const;
-
-        /**
-        * Gets the bone animation matrix
-        *@param pBone - skeleton root bone
-        *@param initialMatrix - the initial matrix
-        *@param[out] matrix - animation matrix
-        */
-        virtual void GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const;
-
-        /**
-        * Gets the bone animation matrix
-        *@param pBone - skeleton root bone
-        *@param pAnimSet - animation set containing the animation to get
-        *@param frameIndex - animation frame index
-        *@param initialMatrix - the initial matrix
-        *@param[out] matrix - animation matrix
-        */
-        virtual void GetBoneAnimMatrix(const IBone*         pBone,
-                                       const IAnimationSet* pAnimSet,
-                                             std::size_t    frameIndex,
-                                       const Matrix4x4F&    initialMatrix,
-                                             Matrix4x4F&    matrix) const;
+        virtual Model* GetModel() const;
 
         /**
         * Changes the vertex format template
@@ -546,11 +372,11 @@ class XModel
         {
             typedef std::vector<IAnimationKeyDataset*> IKeys;
 
-            IEAnimKeyType m_Type;
-            IKeys         m_Keys;
-            std::size_t   m_KeyTotal;
-            std::size_t   m_KeyIndex;
-            std::size_t   m_ReadValCount;
+            Model::IEAnimKeyType m_Type;
+            IKeys                m_Keys;
+            std::size_t          m_KeyTotal;
+            std::size_t          m_KeyIndex;
+            std::size_t          m_ReadValCount;
 
             IAnimationKeysDataset();
             virtual ~IAnimationKeysDataset();
@@ -574,7 +400,7 @@ class XModel
             ~IFileItem();
         };
 
-        IModel*             m_pModel;
+        Model*              m_pModel;
         VertexFormat        m_VertFormatTemplate;
         VertexCulling       m_VertCullingTemplate;
         Material            m_MaterialTemplate;
@@ -681,8 +507,8 @@ class XModel
         *@return true on success, otherwise false
         */
         bool ItemToModel(const IFileItem*          pItem,
-                               IModel*             pModel,
-                               IBone*              pBone,
+                               Model*              pModel,
+                               Model::IBone*       pBone,
                          const VertexFormat*       pVertFormat,
                          const VertexCulling*      pVertCulling,
                          const Material*           pMaterial,
@@ -702,8 +528,8 @@ class XModel
         *@return true on success, otherwise false
         */
         bool BuildMesh(const IFileItem*          pItem,
-                             IModel*             pModel,
-                             IBone*              pBone,
+                             Model*              pModel,
+                             Model::IBone*       pBone,
                        const VertexFormat*       pVertFormat,
                        const VertexCulling*      pVertCulling,
                        const Material*           pMaterial,
@@ -728,7 +554,7 @@ class XModel
         *@return true on success, otherwise false
         */
         bool BuildVertex(const IFileItem*            pItem,
-                               IModel*               pModel,
+                               Model*                pModel,
                                Mesh*                 pMesh,
                                std::size_t           meshIndex,
                                std::size_t           vertexIndex,
@@ -747,7 +573,7 @@ class XModel
         *@param pModel - x model
         *@return true on success, otherwise false
         */
-        bool BuildAnimationSet(const IFileItem* pItem, IModel* pModel) const;
+        bool BuildAnimationSet(const IFileItem* pItem, Model* pModel) const;
 
         /**
         * Gets the material
@@ -780,7 +606,7 @@ class XModel
         *@param pParent - parent bone
         *@param pModel - x model
         */
-        void BuildParentHierarchy(IBone* pBone, IBone* pParent, IModel* pModel) const;
+        void BuildParentHierarchy(Model::IBone* pBone, Model::IBone* pParent, Model* pModel) const;
 
         /**
         * Gets the animation matrix
@@ -790,16 +616,8 @@ class XModel
         *@param[out] matrix - animation matrix
         *@return true on success, otherwise false
         */
-        bool GetAnimationMatrix(const IAnimationSet* pAnimSet,
-                                const IBone*         pBone,
-                                      std::size_t    frame,
-                                      Matrix4x4F&    matrix) const;
-
-        /**
-        * Finds a bone in the skeleton
-        *@param pBone - root bone to search from
-        *@param name - bone name to find
-        *@return the bone, nullptr if not found or on error
-        */
-        IBone* FindBone(IBone* pBone, const std::string& name) const;
+        bool GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
+                                const Model::IBone*         pBone,
+                                      std::size_t           frame,
+                                      Matrix4x4F&           matrix) const;
 };

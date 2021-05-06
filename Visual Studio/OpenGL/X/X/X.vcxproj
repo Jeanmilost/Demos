@@ -161,6 +161,7 @@
   <ItemGroup>
     <ClInclude Include="Color.h" />
     <ClInclude Include="Matrix4x4.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Renderer_OpenGL.h" />
@@ -177,6 +178,7 @@
   <ItemGroup>
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="Matrix4x4.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Quaternion.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Renderer_OpenGL.cpp" />

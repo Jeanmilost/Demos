@@ -32,6 +32,7 @@
 #include "Texture_OpenGL.h"
 #include "Shader_OpenGL.h"
 #include "Renderer_OpenGL.h"
+#include "Model.h"
 
 // libraries
 #include <windows.h>
@@ -96,7 +97,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 //---------------------------------------------------------------------------
 void DrawX(const XModel&          xModel,
-           const XModel::IModel*  pModel,
+           const Model*           pModel,
            const Matrix4x4F&      modelMatrix,
            const Shader_OpenGL*   pShader,
            const Renderer_OpenGL* pRenderer,
@@ -132,7 +133,7 @@ void DrawX(const XModel&          xModel,
     // iterate through the meshes to draw
     for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
     {
-        // if mesh has no skeletton, perform a simple draw
+        // if mesh has no skeleton, perform a simple draw
         if (!pModel->m_pSkeleton)
         {
             // draw the model mesh
@@ -153,8 +154,8 @@ void DrawX(const XModel&          xModel,
             // exists, a custom version of this function should also be written for it)
             continue;
 
-        // mesh contains skin weights?
-        if (pModel->m_MeshWeights[i]->m_SkinWeights.size())
+        // mesh contains deformers?
+        if (pModel->m_Deformers[i]->m_SkinWeights.size())
         {
             // clear the previous print vertices (needs to be cleared to properly apply the weights)
             for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
@@ -165,31 +166,31 @@ void DrawX(const XModel&          xModel,
             }
 
             // iterate through mesh skin weights
-            for (std::size_t j = 0; j < pModel->m_MeshWeights[i]->m_SkinWeights.size(); ++j)
+            for (std::size_t j = 0; j < pModel->m_Deformers[i]->m_SkinWeights.size(); ++j)
             {
                 Matrix4x4F boneMatrix;
 
                 // get the bone matrix
                 if (pModel->m_PoseOnly)
-                    xModel.GetBoneMatrix(pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
+                    pModel->GetBoneMatrix(pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
                 else
-                    xModel.GetBoneAnimMatrix(pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone,
-                                             pModel->m_AnimationSet[animSetIndex],
-                                             frameIndex,
-                                             Matrix4x4F::Identity(),
-                                             boneMatrix);
+                    pModel->GetBoneAnimMatrix(pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
+                                              pModel->m_AnimationSet[animSetIndex],
+                                              frameIndex,
+                                              Matrix4x4F::Identity(),
+                                              boneMatrix);
 
                 // get the final matrix after bones transform
-                const Matrix4x4F finalMatrix = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
+                const Matrix4x4F finalMatrix = pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
 
                 // apply the bone and its skin weights to each vertices
-                for (std::size_t k = 0; k < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences.size(); ++k)
-                    for (std::size_t l = 0; l < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size(); ++l)
+                for (std::size_t k = 0; k < pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size(); ++k)
+                    for (std::size_t l = 0; l < pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size(); ++l)
                     {
                         // get the next vertex to which the next skin weight should be applied
-                        const std::size_t iX = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
-                        const std::size_t iY = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
-                        const std::size_t iZ = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
+                        const std::size_t iX = pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
+                        const std::size_t iY = pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
+                        const std::size_t iZ = pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
 
                         Vector3F inputVertex;
 
@@ -202,9 +203,9 @@ void DrawX(const XModel&          xModel,
                         const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
 
                         // apply the skin weights and calculate the final output vertex
-                        pModel->m_Print[i]->m_Data[iX] += (outputVertex.m_X * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
-                        pModel->m_Print[i]->m_Data[iY] += (outputVertex.m_Y * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
-                        pModel->m_Print[i]->m_Data[iZ] += (outputVertex.m_Z * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
+                        pModel->m_Print[i]->m_Data[iX] += (outputVertex.m_X * pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                        pModel->m_Print[i]->m_Data[iY] += (outputVertex.m_Y * pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                        pModel->m_Print[i]->m_Data[iZ] += (outputVertex.m_Z * pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
                     }
             }
         }
@@ -362,7 +363,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     Matrix4x4F viewMatrix = Matrix4x4F::Identity();
     renderer.ConnectViewMatrixToShader(&shader, viewMatrix);
 
-    XModel::IModel* pModel = x.GetModel();
+    Model* pModel = x.GetModel();
 
     ColorF bgColor;
     bgColor.m_R = 0.08f;
