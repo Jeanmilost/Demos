@@ -50,16 +50,6 @@
 #define M_X_FORMAT_FLOAT_BITS_32 (('2' << 24) + ('3' << 16) + ('0' << 8) + '0')
 #define M_X_FORMAT_FLOAT_BITS_64 (('4' << 24) + ('6' << 16) + ('0' << 8) + '0')
 //---------------------------------------------------------------------------
-// XModel::IVector2
-//---------------------------------------------------------------------------
-XModel::IVector2::IVector2() :
-    m_X(0.0f),
-    m_Y(0.0f)
-{}
-//---------------------------------------------------------------------------
-XModel::IVector2::~IVector2()
-{}
-//---------------------------------------------------------------------------
 // XModel::IFileHeader
 //---------------------------------------------------------------------------
 XModel::IFileHeader::IFileHeader() :
@@ -214,7 +204,7 @@ XModel::IAnimationKeysDataset::~IAnimationKeysDataset()
 // XModel::IFileItem
 //---------------------------------------------------------------------------
 XModel::IFileItem::IFileItem() :
-    m_ID(IE_DS_Unknown),
+    m_ID(XModel::IEDataStructID::IE_DS_Unknown),
     m_pParent(nullptr),
     m_pDataset(nullptr),
     m_Opened(false),
@@ -325,7 +315,7 @@ bool XModel::Open(const std::string& fileName)
     {
         // file read succeeded?
         if (success)
-            // add readed data to output
+            // add read data to output
             data += std::string((const char*)pBuffer, bufferSize);
     }
     catch (...)
@@ -454,12 +444,12 @@ void XModel::SetMaterial(const Material& materialTemplate)
     m_MaterialTemplate = materialTemplate;
 }
 //---------------------------------------------------------------------------
-void XModel::Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor)
+void XModel::Set_OnGetVertexColor(VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor)
 {
     m_fOnGetVertexColor = fOnGetVertexColor;
 }
 //---------------------------------------------------------------------------
-void XModel::Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture)
+void XModel::Set_OnLoadTexture(Texture::ITfOnLoadTexture fOnLoadTexture)
 {
     m_fOnLoadTexture = fOnLoadTexture;
 }
@@ -665,21 +655,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
     // translate the word
     switch (TranslateWord(data, startOffset, endOffset))
     {
-        case IE_DS_Template_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Template_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IGenericDataset> pDataset(new IGenericDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Template_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Template_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -688,21 +678,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Header_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Header_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IHeaderDataset> pDataset(new IHeaderDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Header_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Header_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -711,21 +701,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Frame_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Frame_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IGenericDataset> pDataset(new IGenericDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Frame_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Frame_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -734,21 +724,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Frame_Transform_Matrix_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Frame_Transform_Matrix_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IMatrixDataset> pDataset(new IMatrixDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Frame_Transform_Matrix_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Frame_Transform_Matrix_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -757,21 +747,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Mesh_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Mesh_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IVertexBufferDataset> pDataset(new IVertexBufferDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Mesh_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Mesh_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -780,21 +770,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Mesh_Texture_Coords_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Mesh_Texture_Coords_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<ITexCoordsDataset> pDataset(new ITexCoordsDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Mesh_Texture_Coords_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Mesh_Texture_Coords_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -803,21 +793,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Mesh_Material_List_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Mesh_Material_List_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IMaterialListDataset> pDataset(new IMaterialListDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Mesh_Material_List_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Mesh_Material_List_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -826,21 +816,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Material_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Material_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IMaterialDataset> pDataset(new IMaterialDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Material_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Material_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -849,21 +839,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Skin_Mesh_Header_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Skin_Mesh_Header_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IHeaderDataset> pDataset(new IHeaderDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Skin_Mesh_Header_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Skin_Mesh_Header_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -872,21 +862,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Skin_Weights_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Skin_Weights_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<ISkinWeightsDataset> pDataset(new ISkinWeightsDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Skin_Weights_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Skin_Weights_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -895,21 +885,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Texture_Filename_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Texture_Filename_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<ITextureDataset> pDataset(new ITextureDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Texture_Filename_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Texture_Filename_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -918,21 +908,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Mesh_Normals_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Mesh_Normals_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IVertexBufferDataset> pDataset(new IVertexBufferDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Mesh_Normals_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Mesh_Normals_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -941,21 +931,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Animation_Set_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Animation_Set_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IGenericDataset> pDataset(new IGenericDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Animation_Set_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Animation_Set_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -964,21 +954,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Animation_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Animation_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IGenericDataset> pDataset(new IGenericDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Animation_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Animation_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -987,21 +977,21 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_DS_Animation_Key_ID:
+        case (int)XModel::IEDataStructID::IE_DS_Animation_Key_ID:
         {
             // sometimes dataset name may be the same as another known dataset. Check if it's the
             // case here and read the template name if yes
-            if (pItem                            &&
-               !pItem->m_Opened                  &&
-                pItem->m_ID >= IE_DS_Template_ID &&
-                pItem->m_ID <= IE_DS_Animation_Key_ID)
+            if (pItem                                                    &&
+               !pItem->m_Opened                                          &&
+                pItem->m_ID >= XModel::IEDataStructID::IE_DS_Template_ID &&
+                pItem->m_ID <= XModel::IEDataStructID::IE_DS_Animation_Key_ID)
                 return ReadDatasetName(data, startOffset, endOffset, pItem);
 
             // create the dataset
             std::unique_ptr<IAnimationKeysDataset> pDataset(new IAnimationKeysDataset());
 
             // add a new template child item
-            std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Animation_Key_ID, pDataset.get()));
+            std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Animation_Key_ID, pDataset.get()));
 
             // set the newly added child item as the current one
             pDataset.release();
@@ -1010,7 +1000,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             return true;
         }
 
-        case IE_T_Open_Brace:
+        case (int)XModel::IEToken::IE_T_Open_Brace:
             // found another open brace in an open dataset?
             if (pItem->m_Opened)
             {
@@ -1018,7 +1008,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                 std::unique_ptr<IGenericDataset> pDataset(new IGenericDataset());
 
                 // add a new child item
-                std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Unknown, pDataset.get()));
+                std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Unknown, pDataset.get()));
 
                 // set the newly added child item as the current one
                 pDataset.release();
@@ -1028,7 +1018,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
             pItem->m_Opened = true;
             return true;
 
-        case IE_T_Close_Brace:
+        case (int)XModel::IEToken::IE_T_Close_Brace:
             // close the dataset
             pItem->m_Opened      = false;
             pItem->m_ContentRead = true;
@@ -1038,12 +1028,12 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
 
             return true;
 
-        case IE_T_String:
+        case (int)XModel::IEToken::IE_T_String:
             // was the item opened?
             if (pItem->m_Opened)
                 switch (pItem->m_ID)
                 {
-                    case IE_DS_Texture_Filename_ID:
+                    case XModel::IEDataStructID::IE_DS_Texture_Filename_ID:
                     {
                         // get item data
                         ITextureDataset* pDataset = static_cast<ITextureDataset*>(pItem->m_pDataset);
@@ -1058,7 +1048,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Skin_Weights_ID:
+                    case XModel::IEDataStructID::IE_DS_Skin_Weights_ID:
                     {
                         // get item data
                         ISkinWeightsDataset* pDataset = static_cast<ISkinWeightsDataset*>(pItem->m_pDataset);
@@ -1079,12 +1069,12 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
 
             return true;
 
-        case IE_T_Float:
+        case (int)XModel::IEToken::IE_T_Float:
             // was the item opened?
             if (pItem->m_Opened)
                 switch (pItem->m_ID)
                 {
-                    case IE_DS_Frame_Transform_Matrix_ID:
+                    case XModel::IEDataStructID::IE_DS_Frame_Transform_Matrix_ID:
                     {
                         // get item data
                         IMatrixDataset* pDataset = static_cast<IMatrixDataset*>(pItem->m_pDataset);
@@ -1111,8 +1101,8 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Mesh_ID:
-                    case IE_DS_Mesh_Normals_ID:
+                    case XModel::IEDataStructID::IE_DS_Mesh_ID:
+                    case XModel::IEDataStructID::IE_DS_Mesh_Normals_ID:
                     {
                         // get item data
                         IVertexBufferDataset* pDataset = static_cast<IVertexBufferDataset*>(pItem->m_pDataset);
@@ -1137,7 +1127,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Mesh_Texture_Coords_ID:
+                    case XModel::IEDataStructID::IE_DS_Mesh_Texture_Coords_ID:
                     {
                         // get item data
                         ITexCoordsDataset* pDataset = static_cast<ITexCoordsDataset*>(pItem->m_pDataset);
@@ -1162,7 +1152,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Material_ID:
+                    case XModel::IEDataStructID::IE_DS_Material_ID:
                     {
                         // get item data
                         IMaterialDataset* pDataset = static_cast<IMaterialDataset*>(pItem->m_pDataset);
@@ -1198,7 +1188,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Skin_Weights_ID:
+                    case XModel::IEDataStructID::IE_DS_Skin_Weights_ID:
                     {
                         // get item data
                         ISkinWeightsDataset* pDataset = static_cast<ISkinWeightsDataset*>(pItem->m_pDataset);
@@ -1237,7 +1227,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Animation_Key_ID:
+                    case XModel::IEDataStructID::IE_DS_Animation_Key_ID:
                     {
                         // get item data
                         IAnimationKeysDataset* pDataset = static_cast<IAnimationKeysDataset*>(pItem->m_pDataset);
@@ -1267,13 +1257,13 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
 
             return true;
 
-        case IE_T_Integer:
+        case (int)XModel::IEToken::IE_T_Integer:
             // was the item opened?
             if (pItem->m_Opened)
                 switch (pItem->m_ID)
                 {
-                    case IE_DS_Header_ID:
-                    case IE_DS_Skin_Mesh_Header_ID:
+                    case XModel::IEDataStructID::IE_DS_Header_ID:
+                    case XModel::IEDataStructID::IE_DS_Skin_Mesh_Header_ID:
                     {
                         // get item data
                         IHeaderDataset* pDataset = static_cast<IHeaderDataset*>(pItem->m_pDataset);
@@ -1298,8 +1288,8 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Mesh_ID:
-                    case IE_DS_Mesh_Normals_ID:
+                    case XModel::IEDataStructID::IE_DS_Mesh_ID:
+                    case XModel::IEDataStructID::IE_DS_Mesh_Normals_ID:
                     {
                         // get item data
                         IVertexBufferDataset* pDataset = static_cast<IVertexBufferDataset*>(pItem->m_pDataset);
@@ -1308,7 +1298,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         if (!pDataset)
                             return false;
 
-                        // do read the vertices or indice count, or a new indice?
+                        // do read the vertices or indices count, or a new index?
                         if (!pDataset->m_VerticeTotal)
                         {
                             // get the value to convert
@@ -1338,7 +1328,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Mesh_Texture_Coords_ID:
+                    case XModel::IEDataStructID::IE_DS_Mesh_Texture_Coords_ID:
                     {
                         // get item data
                         ITexCoordsDataset* pDataset = static_cast<ITexCoordsDataset*>(pItem->m_pDataset);
@@ -1360,7 +1350,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Mesh_Material_List_ID:
+                    case XModel::IEDataStructID::IE_DS_Mesh_Material_List_ID:
                     {
                         // get item data
                         IMaterialListDataset* pDataset = static_cast<IMaterialListDataset*>(pItem->m_pDataset);
@@ -1369,7 +1359,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         if (!pDataset)
                             return false;
 
-                        // do read the material count, the material indices count, or a new indice?
+                        // do read the material count, the material indices count, or a new index?
                         if (!pDataset->m_MaterialCount)
                         {
                             // get the value to convert
@@ -1400,7 +1390,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Skin_Weights_ID:
+                    case XModel::IEDataStructID::IE_DS_Skin_Weights_ID:
                     {
                         // get item data
                         ISkinWeightsDataset* pDataset = static_cast<ISkinWeightsDataset*>(pItem->m_pDataset);
@@ -1409,7 +1399,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         if (!pDataset)
                             return false;
 
-                        // do read the skin weights item count, or a new indice?
+                        // do read the skin weights item count, or a new index?
                         if (!pDataset->m_ItemCount)
                         {
                             // get the value to convert
@@ -1432,7 +1422,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         return true;
                     }
 
-                    case IE_DS_Animation_Key_ID:
+                    case XModel::IEDataStructID::IE_DS_Animation_Key_ID:
                     {
                         // get item data
                         IAnimationKeysDataset* pDataset = static_cast<IAnimationKeysDataset*>(pItem->m_pDataset);
@@ -1511,7 +1501,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
 
             return true;
 
-        case IE_T_Name:
+        case (int)XModel::IEToken::IE_T_Name:
         {
             // get item data
             IGenericDataset* pDataset = static_cast<IGenericDataset*>(pItem->m_pDataset);
@@ -1522,7 +1512,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
 
             // the name is a special dataset which contains the linked name to something else
             pDataset->m_Name = GetText(data, startOffset, endOffset);
-            pItem->m_ID      = IE_DS_Link_ID;
+            pItem->m_ID      = XModel::IEDataStructID::IE_DS_Link_ID;
 
             return true;
         }
@@ -1537,7 +1527,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                     std::unique_ptr<IGenericDataset> pDataset(new IGenericDataset());
 
                     // add a new child item
-                    std::unique_ptr<IFileItem> pChild(AddChild(pItem, IE_DS_Unknown, pDataset.get()));
+                    std::unique_ptr<IFileItem> pChild(AddChild(pItem, XModel::IEDataStructID::IE_DS_Unknown, pDataset.get()));
 
                     // keep the current word as name for the unknown dataset
                     pDataset->m_Name = GetText(data, startOffset, endOffset);
@@ -1591,20 +1581,20 @@ void XModel::SkipCRLF(const std::string& data, std::size_t& offset) const
 //---------------------------------------------------------------------------
 int XModel::TranslateWord(const std::string& data, std::size_t startOffset, std::size_t endOffset) const
 {
-    // is word empty or comtains just 1 char?
+    // is word empty or contains just 1 char?
     if (endOffset <= startOffset)
         return 0;
     else
     if ((endOffset - startOffset) == 1)
         if (data[startOffset] == '{')
-            return IE_T_Open_Brace;
+            return (int)XModel::IEToken::IE_T_Open_Brace;
         else
         if (data[startOffset] == '}')
-            return IE_T_Close_Brace;
+            return (int)XModel::IEToken::IE_T_Close_Brace;
 
     // is a string?
     if (data[startOffset] == '\"' && data[endOffset - 1] == '\"')
-        return IE_T_String;
+        return (int)XModel::IEToken::IE_T_String;
 
     int         itemType = 0;
     std::size_t offset   = startOffset;
@@ -1620,9 +1610,9 @@ int XModel::TranslateWord(const std::string& data, std::size_t startOffset, std:
         if ((data[offset] >= '0' && data[offset] <= '9') || data[offset] == '-')
         {
             // already detected as a float?
-            if (itemType != IE_T_Float)
+            if (itemType != (int)XModel::IEToken::IE_T_Float)
                 // set it as an integer
-                itemType = IE_T_Integer;
+                itemType = (int)XModel::IEToken::IE_T_Integer;
 
             ++offset;
             continue;
@@ -1632,17 +1622,17 @@ int XModel::TranslateWord(const std::string& data, std::size_t startOffset, std:
         if (data[offset] == '.')
         {
             // set it as a float
-            itemType = IE_T_Float;
+            itemType = (int)XModel::IEToken::IE_T_Float;
             ++offset;
             continue;
         }
 
-        itemType = IE_T_Unknown;
+        itemType = (int)XModel::IEToken::IE_T_Unknown;
         break;
     }
 
     // is a number?
-    if (itemType == IE_T_Float || itemType == IE_T_Integer)
+    if (itemType == (int)XModel::IEToken::IE_T_Float || itemType == (int)XModel::IEToken::IE_T_Integer)
         return itemType;
 
     bool foundOpeningBrace = false;
@@ -1682,20 +1672,20 @@ int XModel::TranslateWord(const std::string& data, std::size_t startOffset, std:
 
     // is a reference name?
     if (foundOpeningBrace && foundClosingBrace)
-        return IE_T_Name;
+        return (int)XModel::IEToken::IE_T_Name;
 
     // extract word from data
     const std::string word = GetText(data, startOffset, endOffset);
 
     // get template identifier
-    itemType = GetDataStructureID(word);
+    itemType = (int)GetDataStructureID(word);
 
     // is a known template identifier?
-    if (itemType != IE_DS_Unknown)
+    if (itemType != (int)XModel::IEDataStructID::IE_DS_Unknown)
         return itemType;
 
     // unknown name or identifier
-    return IE_T_Unknown;
+    return (int)XModel::IEToken::IE_T_Unknown;
 }
 //---------------------------------------------------------------------------
 bool XModel::ReadDatasetName(const std::string& data,
@@ -1705,10 +1695,10 @@ bool XModel::ReadDatasetName(const std::string& data,
 {
     switch (pItem->m_ID)
     {
-        case IE_DS_Template_ID:
-        case IE_DS_Frame_ID:
-        case IE_DS_Animation_Set_ID:
-        case IE_DS_Animation_ID:
+        case XModel::IEDataStructID::IE_DS_Template_ID:
+        case XModel::IEDataStructID::IE_DS_Frame_ID:
+        case XModel::IEDataStructID::IE_DS_Animation_Set_ID:
+        case XModel::IEDataStructID::IE_DS_Animation_ID:
         {
             // get item data
             IGenericDataset* pDataset = pItem->m_pDataset;
@@ -1728,8 +1718,8 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Header_ID:
-        case IE_DS_Skin_Mesh_Header_ID:
+        case XModel::IEDataStructID::IE_DS_Header_ID:
+        case XModel::IEDataStructID::IE_DS_Skin_Mesh_Header_ID:
         {
             // get item data
             IHeaderDataset* pDataset = static_cast<IHeaderDataset*>(pItem->m_pDataset);
@@ -1749,7 +1739,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Frame_Transform_Matrix_ID:
+        case XModel::IEDataStructID::IE_DS_Frame_Transform_Matrix_ID:
         {
             // get item data
             IMatrixDataset* pDataset = static_cast<IMatrixDataset*>(pItem->m_pDataset);
@@ -1769,8 +1759,8 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Mesh_ID:
-        case IE_DS_Mesh_Normals_ID:
+        case XModel::IEDataStructID::IE_DS_Mesh_ID:
+        case XModel::IEDataStructID::IE_DS_Mesh_Normals_ID:
         {
             // get item data data
             IVertexBufferDataset* pDataset = static_cast<IVertexBufferDataset*>(pItem->m_pDataset);
@@ -1790,7 +1780,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Mesh_Texture_Coords_ID:
+        case XModel::IEDataStructID::IE_DS_Mesh_Texture_Coords_ID:
         {
             // get item data
             ITexCoordsDataset* pDataset = static_cast<ITexCoordsDataset*>(pItem->m_pDataset);
@@ -1810,7 +1800,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Mesh_Material_List_ID:
+        case XModel::IEDataStructID::IE_DS_Mesh_Material_List_ID:
         {
             // get item data data
             IMaterialListDataset* pDataset = static_cast<IMaterialListDataset*>(pItem->m_pDataset);
@@ -1830,7 +1820,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Material_ID:
+        case XModel::IEDataStructID::IE_DS_Material_ID:
         {
             // get item data
             IMaterialDataset* pDataset = static_cast<IMaterialDataset*>(pItem->m_pDataset);
@@ -1850,7 +1840,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Skin_Weights_ID:
+        case XModel::IEDataStructID::IE_DS_Skin_Weights_ID:
         {
             // get item data
             ISkinWeightsDataset* pDataset = static_cast<ISkinWeightsDataset*>(pItem->m_pDataset);
@@ -1870,7 +1860,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Texture_Filename_ID:
+        case XModel::IEDataStructID::IE_DS_Texture_Filename_ID:
         {
             // get item data
             ITextureDataset* pDataset = static_cast<ITextureDataset*>(pItem->m_pDataset);
@@ -1890,7 +1880,7 @@ bool XModel::ReadDatasetName(const std::string& data,
             return !pDataset->m_Name.empty();
         }
 
-        case IE_DS_Animation_Key_ID:
+        case XModel::IEDataStructID::IE_DS_Animation_Key_ID:
         {
             // get item data
             IAnimationKeyDataset* pDataset = static_cast<IAnimationKeyDataset*>(pItem->m_pDataset);
@@ -1919,51 +1909,51 @@ bool XModel::ReadDatasetName(const std::string& data,
 XModel::IEDataStructID XModel::GetDataStructureID(const std::string& word) const
 {
     if (word == "template")
-        return IE_DS_Template_ID;
+        return XModel::IEDataStructID::IE_DS_Template_ID;
     else
     if (word == "Header")
-        return IE_DS_Header_ID;
+        return XModel::IEDataStructID::IE_DS_Header_ID;
     else
     if (word == "Frame")
-        return IE_DS_Frame_ID;
+        return XModel::IEDataStructID::IE_DS_Frame_ID;
     else
     if (word == "FrameTransformMatrix")
-        return IE_DS_Frame_Transform_Matrix_ID;
+        return XModel::IEDataStructID::IE_DS_Frame_Transform_Matrix_ID;
     else
     if (word == "Mesh")
-        return IE_DS_Mesh_ID;
+        return XModel::IEDataStructID::IE_DS_Mesh_ID;
     else
     if (word == "MeshTextureCoords")
-        return IE_DS_Mesh_Texture_Coords_ID;
+        return XModel::IEDataStructID::IE_DS_Mesh_Texture_Coords_ID;
     else
     if (word == "MeshMaterialList")
-        return IE_DS_Mesh_Material_List_ID;
+        return XModel::IEDataStructID::IE_DS_Mesh_Material_List_ID;
     else
     if (word == "Material")
-        return IE_DS_Material_ID;
+        return XModel::IEDataStructID::IE_DS_Material_ID;
     else
     if (word == "XSkinMeshHeader")
-        return IE_DS_Skin_Mesh_Header_ID;
+        return XModel::IEDataStructID::IE_DS_Skin_Mesh_Header_ID;
     else
     if (word == "SkinWeights")
-        return IE_DS_Skin_Weights_ID;
+        return XModel::IEDataStructID::IE_DS_Skin_Weights_ID;
     else
     if (word == "TextureFilename")
-        return IE_DS_Texture_Filename_ID;
+        return XModel::IEDataStructID::IE_DS_Texture_Filename_ID;
     else
     if (word == "MeshNormals")
-        return IE_DS_Mesh_Normals_ID;
+        return XModel::IEDataStructID::IE_DS_Mesh_Normals_ID;
     else
     if (word == "AnimationSet")
-        return IE_DS_Animation_Set_ID;
+        return XModel::IEDataStructID::IE_DS_Animation_Set_ID;
     else
     if (word == "Animation")
-        return IE_DS_Animation_ID;
+        return XModel::IEDataStructID::IE_DS_Animation_ID;
     else
     if (word == "AnimationKey")
-        return IE_DS_Animation_Key_ID;
+        return XModel::IEDataStructID::IE_DS_Animation_Key_ID;
 
-    return IE_DS_Unknown;
+    return XModel::IEDataStructID::IE_DS_Unknown;
 }
 //---------------------------------------------------------------------------
 std::string XModel::GetText(const std::string& data, std::size_t startOffset, std::size_t endOffset) const
@@ -1982,14 +1972,14 @@ XModel::IFileItem* XModel::AddChild(IFileItem* pItem, IEDataStructID id, IGeneri
     return pChild.release();
 }
 //---------------------------------------------------------------------------
-bool XModel::ItemToModel(const IFileItem*          pItem,
-                               Model*              pModel,
-                               Model::IBone*       pBone,
-                         const VertexFormat*       pVertFormat,
-                         const VertexCulling*      pVertCulling,
-                         const Material*           pMaterial,
-                         const ITfOnGetVertexColor fOnGetVertexColor,
-                         const ITfOnLoadTexture    fOnLoadTexture) const
+bool XModel::ItemToModel(const IFileItem*                        pItem,
+                               Model*                            pModel,
+                               Model::IBone*                     pBone,
+                         const VertexFormat*                     pVertFormat,
+                         const VertexCulling*                    pVertCulling,
+                         const Material*                         pMaterial,
+                         const VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor,
+                         const Texture::ITfOnLoadTexture         fOnLoadTexture) const
 {
     // must have a root item...
     if (!pItem)
@@ -2003,7 +1993,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
 
     switch (pItem->m_ID)
     {
-        case IE_DS_Frame_ID:
+        case XModel::IEDataStructID::IE_DS_Frame_ID:
         {
             // get item data
             IGenericDataset* pDataset = static_cast<IGenericDataset*>(pItem->m_pDataset);
@@ -2015,7 +2005,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
             // no current bone?
             if (!pBone)
             {
-                // then the skeleton should also be not initalized
+                // then the skeleton should also be not initialized
                 if (pModel->m_pSkeleton)
                     return false;
 
@@ -2052,7 +2042,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
             break;
         }
 
-        case IE_DS_Frame_Transform_Matrix_ID:
+        case XModel::IEDataStructID::IE_DS_Frame_Transform_Matrix_ID:
         {
             // get item data
             IMatrixDataset* pDataset = static_cast<IMatrixDataset*>(pItem->m_pDataset);
@@ -2070,7 +2060,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
             return true;
         }
 
-        case IE_DS_Mesh_ID:
+        case XModel::IEDataStructID::IE_DS_Mesh_ID:
             // build the mesh
             return BuildMesh(pItem,
                              pModel,
@@ -2081,7 +2071,7 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
                              fOnGetVertexColor,
                              fOnLoadTexture);
 
-        case IE_DS_Animation_Set_ID:
+        case XModel::IEDataStructID::IE_DS_Animation_Set_ID:
             // don't load the animation data if pose only is required
             if (pModel->m_PoseOnly)
                 return true;
@@ -2108,14 +2098,14 @@ bool XModel::ItemToModel(const IFileItem*          pItem,
     return true;
 }
 //---------------------------------------------------------------------------
-bool XModel::BuildMesh(const IFileItem*          pItem,
-                             Model*              pModel,
-                             Model::IBone*       pBone,
-                       const VertexFormat*       pVertFormat,
-                       const VertexCulling*      pVertCulling,
-                       const Material*           pMaterial,
-                       const ITfOnGetVertexColor fOnGetVertexColor,
-                       const ITfOnLoadTexture    fOnLoadTexture) const
+bool XModel::BuildMesh(const IFileItem*                        pItem,
+                             Model*                            pModel,
+                             Model::IBone*                     pBone,
+                       const VertexFormat*                     pVertFormat,
+                       const VertexCulling*                    pVertCulling,
+                       const Material*                         pMaterial,
+                       const VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor,
+                       const Texture::ITfOnLoadTexture         fOnLoadTexture) const
 {
     // get the dataset containing the mesh
     IVertexBufferDataset* pMeshDataset = static_cast<IVertexBufferDataset*>(pItem->m_pDataset);
@@ -2149,7 +2139,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
     for (std::size_t i = 0; i < pItem->m_Children.size(); ++i)
         switch (pItem->m_Children[i]->m_ID)
         {
-            case IE_DS_Mesh_Normals_ID:
+            case XModel::IEDataStructID::IE_DS_Mesh_Normals_ID:
                 // found the normals dataset, get it
                 pNormalsDataset = static_cast<IVertexBufferDataset*>(pItem->m_Children[i]->m_pDataset);
 
@@ -2159,7 +2149,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
 
                 continue;
 
-            case IE_DS_Mesh_Texture_Coords_ID:
+            case XModel::IEDataStructID::IE_DS_Mesh_Texture_Coords_ID:
                 // found the texture coordinates dataset, get it
                 pUVDataset = static_cast<ITexCoordsDataset*>(pItem->m_Children[i]->m_pDataset);
 
@@ -2169,7 +2159,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
 
                 continue;
 
-            case IE_DS_Mesh_Material_List_ID:
+            case XModel::IEDataStructID::IE_DS_Mesh_Material_List_ID:
                 // found the material list, get it
                 pMatListItem = pItem->m_Children[i];
 
@@ -2186,7 +2176,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
 
                 continue;
 
-            case IE_DS_Skin_Weights_ID:
+            case XModel::IEDataStructID::IE_DS_Skin_Weights_ID:
             {
                 // mesh only should be drawn, ignore the skin weights
                 if (pModel->m_MeshOnly)
@@ -2291,13 +2281,13 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
             IFileItem* pMaterialItem = GetMaterial(pMatListItem, i);
 
             // found it and is really a material?
-            if (!pMaterialItem || pMaterialItem->m_ID != IE_DS_Material_ID)
+            if (!pMaterialItem || pMaterialItem->m_ID != XModel::IEDataStructID::IE_DS_Material_ID)
                 return false;
 
             // iterate through material children
             for (std::size_t j = 0; j < pMaterialItem->m_Children.size(); ++j)
                 // has a texture?
-                if (pMaterialItem->m_Children[j]->m_ID == IE_DS_Texture_Filename_ID)
+                if (pMaterialItem->m_Children[j]->m_ID == XModel::IEDataStructID::IE_DS_Texture_Filename_ID)
                 {
                     // get the texture dataset
                     ITextureDataset* pTextureDataset = static_cast<ITextureDataset*>(pMaterialItem->m_Children[j]->m_pDataset);
@@ -2330,7 +2320,7 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
     ColorF      prevColor     = pMesh->m_VB[pMesh->m_VB.size() - 1]->m_Material.m_Color;
     std::size_t materialIndex = 0;
 
-    // iterate through indice table
+    // iterate through indices table
     for (std::size_t i = 0; i < pMeshDataset->m_Indices.size(); i += pMeshDataset->m_Indices[i] + 1)
     {
         // iterate through source vertices
@@ -2378,19 +2368,19 @@ bool XModel::BuildMesh(const IFileItem*          pItem,
     return true;
 }
 //---------------------------------------------------------------------------
-bool XModel::BuildVertex(const IFileItem*            pItem,
-                               Model*                pModel,
-                               Mesh*                 pMesh,
-                               std::size_t           meshIndex,
-                               std::size_t           vertexIndex,
-                               std::size_t           matListIndex,
-                         const ColorF&               prevColor,
-                         const IVertexBufferDataset* pMeshDataset,
-                         const IVertexBufferDataset* pNormalsDataset,
-                         const ITexCoordsDataset*    pUVDataset,
-                         const IFileItem*            pMatList,
-                         const IMaterialListDataset* pMatListDataset,
-                         const ITfOnGetVertexColor   fOnGetVertexColor) const
+bool XModel::BuildVertex(const IFileItem*                        pItem,
+                               Model*                            pModel,
+                               Mesh*                             pMesh,
+                               std::size_t                       meshIndex,
+                               std::size_t                       vertexIndex,
+                               std::size_t                       matListIndex,
+                         const ColorF&                           prevColor,
+                         const IVertexBufferDataset*             pMeshDataset,
+                         const IVertexBufferDataset*             pNormalsDataset,
+                         const ITexCoordsDataset*                pUVDataset,
+                         const IFileItem*                        pMatList,
+                         const IMaterialListDataset*             pMatListDataset,
+                         const VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor) const
 {
     // calculate the vertex index from the indices table
     const std::size_t indiceIndex = pMeshDataset->m_Indices[vertexIndex] * 3;
@@ -2412,7 +2402,7 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
     // mesh contains normals?
     if (((unsigned)pMesh->m_VB[0]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Normals) && pNormalsDataset)
     {
-        // calculate the normal index from the indice table
+        // calculate the normal index from the indices table
         const std::size_t nIndiceIndex = pNormalsDataset->m_Indices[vertexIndex] * 3;
 
         // is index out of bounds?
@@ -2427,13 +2417,13 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
         pNormal = &normal;
     }
 
-    IVector2  uv;
-    IVector2* pUV = nullptr;
+    Vector2F  uv;
+    Vector2F* pUV = nullptr;
 
     // mesh contains texture coordinates?
     if (((unsigned)pMesh->m_VB[0]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords) && pUVDataset)
     {
-        // calculate the uv index from the indice table
+        // calculate the uv index from the indices table
         const std::size_t uvIndex = pMeshDataset->m_Indices[vertexIndex] * 2;
 
         // is index out of bounds?
@@ -2463,7 +2453,7 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
         IFileItem* pMaterialItem = GetMaterial(pMatList, materialIndex);
 
         // succeeded?
-        if (pMaterialItem && pMaterialItem->m_ID == IE_DS_Material_ID)
+        if (pMaterialItem && pMaterialItem->m_ID == XModel::IEDataStructID::IE_DS_Material_ID)
         {
             // get the material dataset
             IMaterialDataset* pMaterialDataset = static_cast<IMaterialDataset*>(pMaterialItem->m_pDataset);
@@ -2485,12 +2475,11 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
     const std::size_t vbIndex = pMesh->m_VB[0]->m_Data.size();
 
     // add the next vertex to the buffer
-    if (!VertexBufferAdd(&vertex,
-                          pNormal,
-                          pUV,
-                          0,
-                          fOnGetVertexColor,
-                          pMesh->m_VB[0]))
+    if (!pMesh->m_VB[0]->Add(&vertex,
+                              pNormal,
+                              pUV,
+                              0,
+                              fOnGetVertexColor))
         return false;
 
     // reset the previous vertex color
@@ -2501,12 +2490,11 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
         return true;
 
     // also add the new vertex to the print if mesh is animated
-    if (!VertexBufferAdd(&vertex,
-                          pNormal,
-                          pUV,
-                          0,
-                          fOnGetVertexColor,
-                          pModel->m_Print[meshIndex]))
+    if (!pModel->m_Print[meshIndex]->Add(&vertex,
+                                          pNormal,
+                                          pUV,
+                                          0,
+                                          fOnGetVertexColor))
         return false;
 
     // reset the previous print vertex color
@@ -2518,7 +2506,7 @@ bool XModel::BuildVertex(const IFileItem*            pItem,
     for (std::size_t i = 0; i < pItem->m_Children.size(); ++i)
         switch (pItem->m_Children[i]->m_ID)
         {
-            case IE_DS_Skin_Weights_ID:
+            case XModel::IEDataStructID::IE_DS_Skin_Weights_ID:
             {
                 // found the skin weights dataset, get it
                 ISkinWeightsDataset* pSkinWeightsDataset = static_cast<ISkinWeightsDataset*>(pItem->m_Children[i]->m_pDataset);
@@ -2568,7 +2556,7 @@ bool XModel::BuildAnimationSet(const IFileItem* pItem, Model* pModel) const
         for (std::size_t j = 0; j < pItem->m_Children[i]->m_Children.size(); ++j)
         {
             // is a link?
-            if (pItem->m_Children[i]->m_Children[j]->m_ID == IE_DS_Link_ID)
+            if (pItem->m_Children[i]->m_Children[j]->m_ID == XModel::IEDataStructID::IE_DS_Link_ID)
             {
                 // get the dataset containing the animation keys
                 IGenericDataset* pDataset = static_cast<IGenericDataset*>(pItem->m_Children[i]->m_Children[j]->m_pDataset);
@@ -2643,108 +2631,6 @@ XModel::IFileItem* XModel::GetMaterial(const IFileItem* pItem, std::size_t index
     // return the material matching with the index. NOTE assume that the material list object only
     // contains materials as children and that the read order was the correct one
     return pItem->m_Children[index];
-}
-//---------------------------------------------------------------------------
-bool XModel::VertexBufferAdd(const Vector3F*           pVertex,
-                             const Vector3F*           pNormal,
-                             const IVector2*           pUV,
-                                   std::size_t         groupIndex,
-                             const ITfOnGetVertexColor fOnGetVertexColor,
-                                   VertexBuffer*       pVB) const
-{
-    // no vertex buffer to add to?
-    if (!pVB)
-        return false;
-
-    // the stride should be already calculated
-    if (!pVB->m_Format.m_Stride)
-        return false;
-
-    // keep the current offset
-    std::size_t offset = pVB->m_Data.size();
-
-    // allocate space for new vertex
-    pVB->m_Data.resize(pVB->m_Data.size() + pVB->m_Format.m_Stride);
-
-    // source vertex exists?
-    if (!pVertex)
-    {
-        // cannot add a nonexistent vertex, fill with empty data in this case
-        pVB->m_Data[offset]     = 0.0f;
-        pVB->m_Data[offset + 1] = 0.0f;
-        pVB->m_Data[offset + 2] = 0.0f;
-    }
-    else
-    {
-        // copy vertex from source
-        pVB->m_Data[offset]     = pVertex->m_X;
-        pVB->m_Data[offset + 1] = pVertex->m_Y;
-        pVB->m_Data[offset + 2] = pVertex->m_Z;
-    }
-
-    offset += 3;
-
-    // vertex has a normal?
-    if ((unsigned)pVB->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Normals)
-    {
-        // source normal exists?
-        if (!pNormal)
-        {
-            // cannot add a nonexistent normal, fill with empty data in this case
-            pVB->m_Data[offset]     = 0.0f;
-            pVB->m_Data[offset + 1] = 0.0f;
-            pVB->m_Data[offset + 2] = 0.0f;
-        }
-        else
-        {
-            // copy normal from source
-            pVB->m_Data[offset]     = pNormal->m_X;
-            pVB->m_Data[offset + 1] = pNormal->m_Y;
-            pVB->m_Data[offset + 2] = pNormal->m_Z;
-        }
-
-        offset += 3;
-    }
-
-    // vertex has UV texture coordinates?
-    if ((unsigned)pVB->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords)
-    {
-        // source texture coordinates exists?
-        if (!pUV)
-        {
-            // cannot add nonexistent texture coordinates, fill with empty data in this case
-            pVB->m_Data[offset]     = 0.0f;
-            pVB->m_Data[offset + 1] = 0.0f;
-        }
-        else
-        {
-            // copy texture coordinates from source
-            pVB->m_Data[offset]     = pUV->m_X;
-            pVB->m_Data[offset + 1] = pUV->m_Y;
-        }
-
-        offset += 2;
-    }
-
-    // vertex has color?
-    if ((unsigned)pVB->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Colors)
-    {
-        ColorF color;
-
-        // get the vertex color
-        if (fOnGetVertexColor)
-            color = fOnGetVertexColor(pVB, pNormal, groupIndex);
-        else
-            color = pVB->m_Material.m_Color;
-
-        // set color data
-        pVB->m_Data[offset]     = color.m_R;
-        pVB->m_Data[offset + 1] = color.m_G;
-        pVB->m_Data[offset + 2] = color.m_B;
-        pVB->m_Data[offset + 3] = color.m_A;
-    }
-
-    return true;
 }
 //---------------------------------------------------------------------------
 void XModel::BuildParentHierarchy(Model::IBone* pBone, Model::IBone* pParent, Model* pModel) const

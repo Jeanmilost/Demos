@@ -451,7 +451,7 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
                 case VertexFormat::IEType::IE_VT_Quads:         glDrawArrays(GL_QUADS,          0, (GLsizei)(mesh.m_VB[i]->m_Data.size() / stride)); break;
                 case VertexFormat::IEType::IE_VT_QuadStrip:     glDrawArrays(GL_QUAD_STRIP,     0, (GLsizei)(mesh.m_VB[i]->m_Data.size() / stride)); break;
                 case VertexFormat::IEType::IE_VT_Unknown:
-                default:                                throw new std::exception("Unknown vertex type");
+                default:                                        throw new std::exception("Unknown vertex type");
             }
         }
     }

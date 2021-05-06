@@ -43,6 +43,14 @@ class Texture
 {
     public:
         /**
+        * Called when a texture should be loaded
+        *@param textureName - texture name to load
+        *@return the loaded texture
+        *@note The loaded texture will be deleted internally, and should no longer be deleted from outside
+        */
+        typedef Texture* (*ITfOnLoadTexture)(const std::string& textureName);
+
+        /**
         * Texture format
         */
         enum class IEFormat

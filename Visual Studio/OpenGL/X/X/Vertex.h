@@ -35,6 +35,8 @@
 // classes
 #include "Color.h"
 #include "Texture.h"
+#include "Vector2.h"
+#include "Vector3.h"
 
 /**
 * Material, describes the way a mesh reacts to its environment
@@ -82,9 +84,9 @@ class VertexFormat
             IE_VF_Colors    = 0x04  // each vertex contains its own color
         };
 
-        std::size_t  m_Stride; // vertex stride (i.e. length between each vertex) in bytes
-        IEType       m_Type;   // vertex type (i.e. how vertex is organized: triangle list, triangle fan, ...)
-        IEFormat     m_Format; // vertex format (i.e. what data vertex contains: position, normal, texture, ...)
+        std::size_t m_Stride; // vertex stride (i.e. length between each vertex) in bytes
+        IEType      m_Type;   // vertex type (i.e. how vertex is organized: triangle list, triangle fan, ...)
+        IEFormat    m_Format; // vertex format (i.e. what data vertex contains: position, normal, texture, ...)
 
         VertexFormat();
         virtual ~VertexFormat();
@@ -150,6 +152,17 @@ class VertexBuffer
         Material      m_Material;
         IData         m_Data;
 
+        /**
+        * Called when a vertex color should be get
+        *@param pVB - vertex buffer that will contain the vertex for which the color should be get
+        *@param pNormal - vertex normal
+        *@param groupIndex - the vertex group index (e.g. the inner and outer vertices of a ring)
+        *@return RGBA color to apply to the vertex
+        *@note This callback will be called only if the per-vertex color option is activated in the vertex
+        *      buffer
+        */
+        typedef ColorF(*ITfOnGetVertexColor)(const VertexBuffer* pVB, const Vector3F* pNormal, std::size_t groupIndex);
+
         VertexBuffer();
         virtual ~VertexBuffer();
 
@@ -160,6 +173,21 @@ class VertexBuffer
         *@note Cloned vertex should be deleted when useless
         */
         virtual VertexBuffer* Clone(bool includeData = false) const;
+
+        /**
+        * Adds a vertex to a vertex buffer
+        *@param pVertex - vertex
+        *@param pNormal - normal
+        *@param pUV - texture coordinate
+        *@param groupIndex - the vertex group index (e.g. the inner and outer vertices of a ring)
+        *@param fOnGetVertexColor - get vertex color callback function to use, nullptr if not used
+        *@return true on success, otherwise false
+        */
+        virtual bool Add(const Vector3F*           pVertex,
+                         const Vector3F*           pNormal,
+                         const Vector2F*           pUV,
+                               std::size_t         groupIndex,
+                         const ITfOnGetVertexColor fOnGetVertexColor);
 };
 
 /**

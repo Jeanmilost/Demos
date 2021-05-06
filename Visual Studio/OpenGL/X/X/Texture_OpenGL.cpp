@@ -2,6 +2,7 @@
  * ==> Texture_OpenGL ------------------------------------------------------*
  ****************************************************************************
  * Description : Provides a texture descriptor based on OpenGL              *
+ * Developer   : Jean-Milost Reymond                                        *
  ****************************************************************************
  * MIT License - x model reader                                             *
  *                                                                          *

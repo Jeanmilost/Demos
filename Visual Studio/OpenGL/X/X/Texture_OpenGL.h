@@ -2,6 +2,7 @@
  * ==> Texture_OpenGL ------------------------------------------------------*
  ****************************************************************************
  * Description : Provides a texture class based on OpenGL                   *
+ * Developer   : Jean-Milost Reymond                                        *
  ****************************************************************************
  * MIT License - x model reader                                             *
  *                                                                          *

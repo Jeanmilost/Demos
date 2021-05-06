@@ -30,6 +30,7 @@
 
 // classes
 #include "Color.h"
+#include "Vector2.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
 #include "Vertex.h"
@@ -42,25 +43,6 @@
 class XModel
 {
     public:
-        /**
-        * Called when a vertex color should be get
-        *@param pVB - vertex buffer that will contain the vertex for which the color should be get
-        *@param pNormal - vertex normal
-        *@param groupIndex - the vertex group index (e.g. the inner and outer vertices of a ring)
-        *@return RGBA color to apply to the vertex
-        *@note This callback will be called only if the per-vertex color option is activated in the vertex
-        *      buffer
-        */
-        typedef ColorF (*ITfOnGetVertexColor)(const VertexBuffer* pVB, const Vector3F* pNormal, std::size_t groupIndex);
-
-        /**
-        * Called when a texture should be loaded
-        *@param textureName - texture name to load
-        *@return the loaded texture
-        *@note The loaded texture will be deleted internally, and should no longer be deleted from outside
-        */
-        typedef Texture* (*ITfOnLoadTexture)(const std::string& textureName);
-
         XModel();
         virtual ~XModel();
 
@@ -106,13 +88,13 @@ class XModel
         * Sets the OnGetVertexColor callback
         *@param fOnGetVertexColor - callback function handle
         */
-        void Set_OnGetVertexColor(ITfOnGetVertexColor fOnGetVertexColor);
+        void Set_OnGetVertexColor(VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor);
 
         /**
         * Sets the OnLoadTexture callback
         *@param fOnLoadTexture - callback function handle
         */
-        void Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture);
+        void Set_OnLoadTexture(Texture::ITfOnLoadTexture fOnLoadTexture);
 
     private:
         /**
@@ -120,7 +102,7 @@ class XModel
         *@note Tokens MSDN reference:
         *      https://docs.microsoft.com/en-us/windows/desktop/direct3d9/tokens
         */
-        enum IEToken
+        enum class IEToken
         {
             // custom tokens
             IE_T_Unknown       = 0,
@@ -162,7 +144,7 @@ class XModel
         /**
         * X file data structure identifiers
         */
-        enum IEDataStructID
+        enum class IEDataStructID
         {
             IE_DS_Link_ID                   = -1, // set to -1 because not part of the official IDs
             IE_DS_Unknown                   =  0,
@@ -181,18 +163,6 @@ class XModel
             IE_DS_Animation_Set_ID          =  72,
             IE_DS_Animation_ID              =  73,
             IE_DS_Animation_Key_ID          =  74
-        };
-
-        /**
-        * 2D vector
-        */
-        struct IVector2
-        {
-            float m_X;
-            float m_Y;
-
-            IVector2();
-            ~IVector2();
         };
 
         /**
@@ -400,14 +370,14 @@ class XModel
             ~IFileItem();
         };
 
-        Model*              m_pModel;
-        VertexFormat        m_VertFormatTemplate;
-        VertexCulling       m_VertCullingTemplate;
-        Material            m_MaterialTemplate;
-        bool                m_MeshOnly;
-        bool                m_PoseOnly;
-        ITfOnGetVertexColor m_fOnGetVertexColor;
-        ITfOnLoadTexture    m_fOnLoadTexture;
+        Model*                            m_pModel;
+        VertexFormat                      m_VertFormatTemplate;
+        VertexCulling                     m_VertCullingTemplate;
+        Material                          m_MaterialTemplate;
+        bool                              m_MeshOnly;
+        bool                              m_PoseOnly;
+        VertexBuffer::ITfOnGetVertexColor m_fOnGetVertexColor;
+        Texture::ITfOnLoadTexture         m_fOnLoadTexture;
 
         /**
         * Parses the x file content
@@ -506,14 +476,14 @@ class XModel
         *@param fOnLoadTexture - load texture callback function to use, nullptr if not used
         *@return true on success, otherwise false
         */
-        bool ItemToModel(const IFileItem*          pItem,
-                               Model*              pModel,
-                               Model::IBone*       pBone,
-                         const VertexFormat*       pVertFormat,
-                         const VertexCulling*      pVertCulling,
-                         const Material*           pMaterial,
-                         const ITfOnGetVertexColor fOnGetVertexColor,
-                         const ITfOnLoadTexture    fOnLoadTexture) const;
+        bool ItemToModel(const IFileItem*                        pItem,
+                               Model*                            pModel,
+                               Model::IBone*                     pBone,
+                         const VertexFormat*                     pVertFormat,
+                         const VertexCulling*                    pVertCulling,
+                         const Material*                         pMaterial,
+                         const VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor,
+                         const Texture::ITfOnLoadTexture         fOnLoadTexture) const;
 
         /**
         * Builds a mesh
@@ -527,14 +497,14 @@ class XModel
         *@param fOnLoadTexture - load texture callback function to use, nullptr if not used
         *@return true on success, otherwise false
         */
-        bool BuildMesh(const IFileItem*          pItem,
-                             Model*              pModel,
-                             Model::IBone*       pBone,
-                       const VertexFormat*       pVertFormat,
-                       const VertexCulling*      pVertCulling,
-                       const Material*           pMaterial,
-                       const ITfOnGetVertexColor fOnGetVertexColor,
-                       const ITfOnLoadTexture    fOnLoadTexture) const;
+        bool BuildMesh(const IFileItem*                        pItem,
+                             Model*                            pModel,
+                             Model::IBone*                     pBone,
+                       const VertexFormat*                     pVertFormat,
+                       const VertexCulling*                    pVertCulling,
+                       const Material*                         pMaterial,
+                       const VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor,
+                       const Texture::ITfOnLoadTexture         fOnLoadTexture) const;
 
         /**
         * Builds a vertex
@@ -553,19 +523,19 @@ class XModel
         *@param fOnGetVertexColor - get vertex color callback function to use, nullptr if not used
         *@return true on success, otherwise false
         */
-        bool BuildVertex(const IFileItem*            pItem,
-                               Model*                pModel,
-                               Mesh*                 pMesh,
-                               std::size_t           meshIndex,
-                               std::size_t           vertexIndex,
-                               std::size_t           matListIndex,
-                         const ColorF&               prevColor,
-                         const IVertexBufferDataset* pMeshDataset,
-                         const IVertexBufferDataset* pNormalsDataset,
-                         const ITexCoordsDataset*    pUVDataset,
-                         const IFileItem*            pMatList,
-                         const IMaterialListDataset* pMatListDataset,
-                         const ITfOnGetVertexColor   fOnGetVertexColor) const;
+        bool BuildVertex(const IFileItem*                        pItem,
+                               Model*                            pModel,
+                               Mesh*                             pMesh,
+                               std::size_t                       meshIndex,
+                               std::size_t                       vertexIndex,
+                               std::size_t                       matListIndex,
+                         const ColorF&                           prevColor,
+                         const IVertexBufferDataset*             pMeshDataset,
+                         const IVertexBufferDataset*             pNormalsDataset,
+                         const ITexCoordsDataset*                pUVDataset,
+                         const IFileItem*                        pMatList,
+                         const IMaterialListDataset*             pMatListDataset,
+                         const VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor) const;
 
         /**
         * Builds the animation set
@@ -582,23 +552,6 @@ class XModel
         *@return the material, nullptr if not found or on error
         */
         IFileItem* GetMaterial(const IFileItem* pItem, std::size_t index) const;
-
-        /**
-        * Adds a vertex to a vertex buffer
-        *@param pVertex - vertex
-        *@param pNormal - normal
-        *@param pUV - texture coordinate
-        *@param groupIndex - the vertex group index (e.g. the inner and outer vertices of a ring)
-        *@param fOnGetVertexColor - get vertex color callback function to use, nullptr if not used
-        *@param pVB - vertex buffer to add to
-        *@return true on success, otherwise false
-        */
-        bool VertexBufferAdd(const Vector3F*           pVertex,
-                             const Vector3F*           pNormal,
-                             const IVector2*           pUV,
-                                   std::size_t         groupIndex,
-                             const ITfOnGetVertexColor fOnGetVertexColor,
-                                   VertexBuffer*       pVB) const;
 
         /**
         * Builds the parent hierarchy

@@ -171,6 +171,7 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureHelper.h" />
     <ClInclude Include="Texture_OpenGL.h" />
+    <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="XModel.h" />
@@ -187,6 +188,7 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureHelper.cpp" />
     <ClCompile Include="Texture_OpenGL.cpp" />
+    <ClCompile Include="Vector2.cpp" />
     <ClCompile Include="Vector3.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="X.cpp" />

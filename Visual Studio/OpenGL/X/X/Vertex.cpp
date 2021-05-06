@@ -138,6 +138,109 @@ VertexBuffer* VertexBuffer::Clone(bool includeData) const
     return pClone.release();
 }
 //---------------------------------------------------------------------------
+bool VertexBuffer::Add(const Vector3F*           pVertex,
+                       const Vector3F*           pNormal,
+                       const Vector2F*           pUV,
+                             std::size_t         groupIndex,
+                       const ITfOnGetVertexColor fOnGetVertexColor)
+{
+    // the stride should be already calculated
+    if (!m_Format.m_Stride)
+    {
+        m_Format.CalculateStride();
+
+        // still empty?
+        if (!m_Format.m_Stride)
+            return false;
+    }
+
+    // keep the current offset
+    std::size_t offset = m_Data.size();
+
+    // allocate space for new vertex
+    m_Data.resize(m_Data.size() + m_Format.m_Stride);
+
+    // source vertex exists?
+    if (!pVertex)
+    {
+        // cannot add a nonexistent vertex, fill with empty data in this case
+        m_Data[offset]     = 0.0f;
+        m_Data[offset + 1] = 0.0f;
+        m_Data[offset + 2] = 0.0f;
+    }
+    else
+    {
+        // copy vertex from source
+        m_Data[offset]     = pVertex->m_X;
+        m_Data[offset + 1] = pVertex->m_Y;
+        m_Data[offset + 2] = pVertex->m_Z;
+    }
+
+    offset += 3;
+
+    // vertex has a normal?
+    if ((unsigned)m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Normals)
+    {
+        // source normal exists?
+        if (!pNormal)
+        {
+            // cannot add a nonexistent normal, fill with empty data in this case
+            m_Data[offset]     = 0.0f;
+            m_Data[offset + 1] = 0.0f;
+            m_Data[offset + 2] = 0.0f;
+        }
+        else
+        {
+            // copy normal from source
+            m_Data[offset]     = pNormal->m_X;
+            m_Data[offset + 1] = pNormal->m_Y;
+            m_Data[offset + 2] = pNormal->m_Z;
+        }
+
+        offset += 3;
+    }
+
+    // vertex has UV texture coordinates?
+    if ((unsigned)m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords)
+    {
+        // source texture coordinates exists?
+        if (!pUV)
+        {
+            // cannot add nonexistent texture coordinates, fill with empty data in this case
+            m_Data[offset]     = 0.0f;
+            m_Data[offset + 1] = 0.0f;
+        }
+        else
+        {
+            // copy texture coordinates from source
+            m_Data[offset]     = pUV->m_X;
+            m_Data[offset + 1] = pUV->m_Y;
+        }
+
+        offset += 2;
+    }
+
+    // vertex has color?
+    if ((unsigned)m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Colors)
+    {
+        ColorF color;
+
+        // get the vertex color
+        if (fOnGetVertexColor)
+            color = fOnGetVertexColor(this, pNormal, groupIndex);
+        else
+            color = m_Material.m_Color;
+
+        // set color data
+        m_Data[offset]     = color.m_R;
+        m_Data[offset + 1] = color.m_G;
+        m_Data[offset + 2] = color.m_B;
+        m_Data[offset + 3] = color.m_A;
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
 // Mesh
 //---------------------------------------------------------------------------
 Mesh::Mesh()
