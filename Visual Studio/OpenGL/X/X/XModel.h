@@ -62,9 +62,12 @@ class XModel
 
         /**
         * Gets the model
+        *@param animSetIndex - animation set index
+        *@param frameCount - frame count
+        *@param frameInex - frame index
         *@return the model, nullptr if no model or on error
         */
-        virtual Model* GetModel() const;
+        virtual Model* GetModel(int animSetIndex, int frameCount, int frameIndex) const;
 
         /**
         * Changes the vertex format template
@@ -370,10 +373,13 @@ class XModel
             ~IFileItem();
         };
 
+        typedef std::vector<VertexBuffer*> IVertexBuffers;
+
         Model*                            m_pModel;
         VertexFormat                      m_VertFormatTemplate;
         VertexCulling                     m_VertCullingTemplate;
         Material                          m_MaterialTemplate;
+        IVertexBuffers                    m_SourceVB;
         bool                              m_MeshOnly;
         bool                              m_PoseOnly;
         VertexBuffer::ITfOnGetVertexColor m_fOnGetVertexColor;
@@ -526,6 +532,7 @@ class XModel
         bool BuildVertex(const IFileItem*                        pItem,
                                Model*                            pModel,
                                Mesh*                             pMesh,
+                               VertexBuffer*                     pSourceVB,
                                std::size_t                       meshIndex,
                                std::size_t                       vertexIndex,
                                std::size_t                       matListIndex,

@@ -97,17 +97,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 //---------------------------------------------------------------------------
 void DrawX(const XModel&          xModel,
-           const Model*           pModel,
            const Matrix4x4F&      modelMatrix,
            const Shader_OpenGL*   pShader,
            const Renderer_OpenGL* pRenderer,
                  int              animSetIndex,
                  int              frameCount)
 {
-    // no model to draw?
-    if (!pModel || !pModel->m_Mesh.size())
-        return;
-
     // no renderer?
     if (!pRenderer)
         return;
@@ -116,120 +111,18 @@ void DrawX(const XModel&          xModel,
     if (!pShader)
         return;
 
-    // do draw only the mesh and ignore all other data like bones?
-    if (pModel->m_MeshOnly)
-    {
-        // iterate through the meshes to draw
-        for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
-            // draw the model mesh
-            pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
+    Model* pModel = xModel.GetModel(animSetIndex, frameCount, (::GetTickCount64() * 5) % frameCount);
 
+    // no model to draw?
+    if (!pModel)
         return;
-    }
 
-    // calculate the next frame index
-    const int frameIndex = (::GetTickCount64() * 5) % frameCount;
+    const std::size_t meshCount = pModel->m_Mesh.size();
 
     // iterate through the meshes to draw
-    for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
-    {
-        // if mesh has no skeleton, perform a simple draw
-        if (!pModel->m_pSkeleton)
-        {
-            // draw the model mesh
-            pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
-            return;
-        }
-
-        // get the current model mesh to draw
-        Mesh* pMesh = pModel->m_Mesh[i];
-
-        // found it?
-        if (!pMesh)
-            continue;
-
-        // normally each mesh should contain only one vertex buffer
-        if (pMesh->m_VB.size() != 1)
-            // unsupported if not (because cannot know which texture should be binded. If a such model
-            // exists, a custom version of this function should also be written for it)
-            continue;
-
-        // mesh contains deformers?
-        if (pModel->m_Deformers[i]->m_SkinWeights.size())
-        {
-            // clear the previous print vertices (needs to be cleared to properly apply the weights)
-            for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
-            {
-                pModel->m_Print[i]->m_Data[j]     = 0.0f;
-                pModel->m_Print[i]->m_Data[j + 1] = 0.0f;
-                pModel->m_Print[i]->m_Data[j + 2] = 0.0f;
-            }
-
-            // iterate through mesh skin weights
-            for (std::size_t j = 0; j < pModel->m_Deformers[i]->m_SkinWeights.size(); ++j)
-            {
-                Matrix4x4F boneMatrix;
-
-                // get the bone matrix
-                if (pModel->m_PoseOnly)
-                    pModel->GetBoneMatrix(pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
-                else
-                    pModel->GetBoneAnimMatrix(pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
-                                              pModel->m_AnimationSet[animSetIndex],
-                                              frameIndex,
-                                              Matrix4x4F::Identity(),
-                                              boneMatrix);
-
-                // get the final matrix after bones transform
-                const Matrix4x4F finalMatrix = pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
-
-                // apply the bone and its skin weights to each vertices
-                for (std::size_t k = 0; k < pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size(); ++k)
-                    for (std::size_t l = 0; l < pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size(); ++l)
-                    {
-                        // get the next vertex to which the next skin weight should be applied
-                        const std::size_t iX = pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
-                        const std::size_t iY = pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
-                        const std::size_t iZ = pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
-
-                        Vector3F inputVertex;
-
-                        // get input vertex
-                        inputVertex.m_X = pMesh->m_VB[0]->m_Data[iX];
-                        inputVertex.m_Y = pMesh->m_VB[0]->m_Data[iY];
-                        inputVertex.m_Z = pMesh->m_VB[0]->m_Data[iZ];
-
-                        // apply bone transformation to vertex
-                        const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
-
-                        // apply the skin weights and calculate the final output vertex
-                        pModel->m_Print[i]->m_Data[iX] += (outputVertex.m_X * pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                        pModel->m_Print[i]->m_Data[iY] += (outputVertex.m_Y * pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                        pModel->m_Print[i]->m_Data[iZ] += (outputVertex.m_Z * pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    }
-            }
-        }
-
-        // todo FIXME -cImprovement -oJean: weak solution to draw the mesh, find a better concept
-        // use the model print as final vertex buffer
-        VertexBuffer* pSrcBuffer = pMesh->m_VB[0];
-        pMesh->m_VB[0]           = pModel->m_Print[i];
-
-        try
-        {
-            // draw the model mesh
-            pRenderer->Draw(*pMesh, modelMatrix, pShader);
-        }
-        catch (...)
-        {
-            // restore the correct mesh vertex buffer
-            pMesh->m_VB[0] = pSrcBuffer;
-            throw;
-        }
-
-        // restore the correct mesh vertex buffer
-        pMesh->m_VB[0] = pSrcBuffer;
-    }
+    for (std::size_t i = 0; i < meshCount; ++i)
+        // draw the model mesh
+        pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
 }
 //------------------------------------------------------------------------------
 Texture* OnLoadTexture(const std::string& textureName)
@@ -363,8 +256,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     Matrix4x4F viewMatrix = Matrix4x4F::Identity();
     renderer.ConnectViewMatrixToShader(&shader, viewMatrix);
 
-    Model* pModel = x.GetModel();
-
     ColorF bgColor;
     bgColor.m_R = 0.08f;
     bgColor.m_G = 0.12f;
@@ -424,7 +315,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
             // draw the scene
             renderer.BeginScene(bgColor, (Renderer::IESceneFlags)((unsigned)Renderer::IESceneFlags::IE_SF_ClearColor | (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
-            DrawX(x, pModel, modelMatrix, &shader, &renderer, 1, 4800);
+            DrawX(x, modelMatrix, &shader, &renderer, 1, 4800);
             renderer.EndScene();
 
             // calculate the elapsed time

@@ -424,8 +424,94 @@ bool XModel::Read(const std::string& data)
     return true;
 }
 //---------------------------------------------------------------------------
-Model* XModel::GetModel() const
+Model* XModel::GetModel(int animSetIndex, int frameCount, int frameIndex) const
 {
+    if (!m_pModel)
+        return nullptr;
+
+    // only get the mesh and ignore all other data like bones?
+    if (m_pModel->m_MeshOnly)
+        return m_pModel;
+
+    // if mesh has no skeleton, just get it
+    if (!m_pModel->m_pSkeleton)
+        return m_pModel;
+
+    const std::size_t meshCount = m_pModel->m_Mesh.size();
+
+    // iterate through the meshes to get
+    for (std::size_t i = 0; i < meshCount; ++i)
+    {
+        // get the current model mesh to draw
+        Mesh* pMesh = m_pModel->m_Mesh[i];
+
+        // found it?
+        if (!pMesh)
+            continue;
+
+        // normally each mesh should contain only one vertex buffer
+        if (pMesh->m_VB.size() != 1)
+            // unsupported if not (because cannot know which texture should be binded. If a such model
+            // exists, a custom version of this function should also be written for it)
+            continue;
+
+        // mesh contains deformers?
+        if (m_pModel->m_Deformers[i]->m_SkinWeights.size())
+        {
+            // clear the previous print vertices (needs to be cleared to properly apply the weights)
+            for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
+            {
+                pMesh->m_VB[0]->m_Data[j]     = 0.0f;
+                pMesh->m_VB[0]->m_Data[j + 1] = 0.0f;
+                pMesh->m_VB[0]->m_Data[j + 2] = 0.0f;
+            }
+
+            // iterate through mesh skin weights
+            for (std::size_t j = 0; j < m_pModel->m_Deformers[i]->m_SkinWeights.size(); ++j)
+            {
+                Matrix4x4F boneMatrix;
+
+                // get the bone matrix
+                if (m_pModel->m_PoseOnly)
+                    m_pModel->GetBoneMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
+                else
+                    m_pModel->GetBoneAnimMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
+                                                m_pModel->m_AnimationSet[animSetIndex],
+                                                frameIndex,
+                                                Matrix4x4F::Identity(),
+                                                boneMatrix);
+
+                // get the final matrix after bones transform
+                const Matrix4x4F finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
+
+                // apply the bone and its skin weights to each vertices
+                for (std::size_t k = 0; k < m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size(); ++k)
+                    for (std::size_t l = 0; l < m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size(); ++l)
+                    {
+                        // get the next vertex to which the next skin weight should be applied
+                        const std::size_t iX = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
+                        const std::size_t iY = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
+                        const std::size_t iZ = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
+
+                        Vector3F inputVertex;
+
+                        // get input vertex
+                        inputVertex.m_X = m_SourceVB[i]->m_Data[iX];
+                        inputVertex.m_Y = m_SourceVB[i]->m_Data[iY];
+                        inputVertex.m_Z = m_SourceVB[i]->m_Data[iZ];
+
+                        // apply bone transformation to vertex
+                        const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
+
+                        // apply the skin weights and calculate the final output vertex
+                        pMesh->m_VB[0]->m_Data[iX] += (outputVertex.m_X * m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                        pMesh->m_VB[0]->m_Data[iY] += (outputVertex.m_Y * m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                        pMesh->m_VB[0]->m_Data[iZ] += (outputVertex.m_Z * m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                    }
+            }
+        }
+    }
+
     return m_pModel;
 }
 //---------------------------------------------------------------------------
@@ -2254,22 +2340,6 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
     // calculate the stride
     pVB->m_Format.CalculateStride();
 
-    // is model supporting animations?
-    if (!pModel->m_MeshOnly)
-    {
-        // if the animation is used, also create the associated mesh print
-        std::unique_ptr<VertexBuffer> pPrint(new VertexBuffer());
-
-        // copy the vertex format, culling and material from the source mesh
-        pPrint->m_Format   = pVB->m_Format;
-        pPrint->m_Culling  = pVB->m_Culling;
-        pPrint->m_Material = pVB->m_Material;
-
-        // update the model mesh print data
-        pModel->m_Print.push_back(pPrint.get());
-        pPrint.release();
-    }
-
     bool hasTexture = false;
 
     // mesh contains materials?
@@ -2316,6 +2386,13 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
     pMesh->m_VB.push_back(pVB.get());
     pVB.release();
 
+    // also create an extra vertex buffer to keep the original vertex buffer,
+    // which may be used later to calculate the final vertices after their
+    // transformation by the bones and weights
+    std::unique_ptr<VertexBuffer> pSourceVB(pMesh->m_VB[0]->Clone());
+    const_cast<IVertexBuffers&>(m_SourceVB).push_back(pSourceVB.get());
+    VertexBuffer* pSourceVBPtr = pSourceVB.release();
+
     // keep the previous color, it may change while the mesh is created
     ColorF      prevColor     = pMesh->m_VB[pMesh->m_VB.size() - 1]->m_Material.m_Color;
     std::size_t materialIndex = 0;
@@ -2344,6 +2421,7 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
                 if (!BuildVertex(pItem,
                                  pModel,
                                  pMesh.get(),
+                                 pSourceVBPtr,
                                  index,
                                  vertIndex,
                                  materialIndex,
@@ -2371,6 +2449,7 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
 bool XModel::BuildVertex(const IFileItem*                        pItem,
                                Model*                            pModel,
                                Mesh*                             pMesh,
+                               VertexBuffer*                     pSourceVB,
                                std::size_t                       meshIndex,
                                std::size_t                       vertexIndex,
                                std::size_t                       matListIndex,
@@ -2460,14 +2539,8 @@ bool XModel::BuildVertex(const IFileItem*                        pItem,
 
             // found it?
             if (pMaterialDataset)
-            {
                 // change the vertex color to match with the material one
                 pMesh->m_VB[0]->m_Material.m_Color = pMaterialDataset->m_Color;
-
-                // do the same thing for the print
-                if (!pModel->m_MeshOnly)
-                    pModel->m_Print[meshIndex]->m_Material.m_Color = pMesh->m_VB[0]->m_Material.m_Color;
-            }
         }
     }
 
@@ -2490,15 +2563,15 @@ bool XModel::BuildVertex(const IFileItem*                        pItem,
         return true;
 
     // also add the new vertex to the print if mesh is animated
-    if (!pModel->m_Print[meshIndex]->Add(&vertex,
-                                          pNormal,
-                                          pUV,
-                                          0,
-                                          fOnGetVertexColor))
+    if (!pSourceVB->Add(&vertex,
+                         pNormal,
+                         pUV,
+                         0,
+                         fOnGetVertexColor))
         return false;
 
     // reset the previous print vertex color
-    pModel->m_Print[meshIndex]->m_Material.m_Color = prevColor;
+    pSourceVB->m_Material.m_Color = prevColor;
 
     std::size_t weightIndex = 0;
 

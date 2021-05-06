@@ -177,7 +177,6 @@ class Model
         };
 
         std::vector<Mesh*>          m_Mesh;         // meshes composing the model
-        std::vector<VertexBuffer*>  m_Print;        // REM FIX AND DELETE THIS
         std::vector<IDeformers*>    m_Deformers;    // mesh deformers, sorted in the same order as the meshes
         std::vector<IAnimationSet*> m_AnimationSet; // set of animations to apply to bones
         IBone*                      m_pSkeleton;    // model skeleton
