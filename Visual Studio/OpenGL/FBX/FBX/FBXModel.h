@@ -32,6 +32,7 @@
 #include "Color.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
+#include "Quaternion.h"
 #include "Vertex.h"
 #include "Model.h"
 
@@ -569,10 +570,10 @@ class FBXModel
                 * Gets the value
                 *@return the value
                 */
-                virtual Vector3F Get() const;
+                virtual QuaternionF Get() const;
 
             private:
-                Vector3F m_Value;
+                QuaternionF m_Value;
         };
 
         /**
@@ -711,9 +712,14 @@ class FBXModel
                 */
                 virtual std::size_t GetCount() const;
 
+                /**
+                * Gets the values array pointer
+                *@return the values array pointer
+                */
+                const std::vector<double>* GetPtr() const;
+
             private:
-                std::vector<int>    m_IntValues;
-                std::vector<double> m_DoubleValues;
+                std::vector<double> m_Values;
                 std::size_t         m_Capacity;
 
                 /**
@@ -913,7 +919,34 @@ class FBXModel
             ~IFBXLink();
         };
 
-        typedef std::map<IFBXNode*, IFBXLink*> IBoneDictionary;
+        /**
+         * Mesh template, contains the source data to use to generate the model meshes vertex buffers
+         */
+        struct IMeshTemplate
+        {
+            const std::vector<double>* m_pVertices;
+            const std::vector<double>* m_pIndices;
+            const std::vector<double>* m_pNormals;
+            const std::vector<double>* m_pNormalIndices;
+            const std::vector<double>* m_pUVs;
+            const std::vector<double>* m_pUVIndices;
+
+            IMeshTemplate();
+            ~IMeshTemplate();
+
+            /**
+            * Checks if mesh template is valid
+            *@return true if mesh template is valid, otherwise false
+            */
+            bool IsValid() const;
+        };
+
+        typedef std::vector<IMeshTemplate*> IMeshTemplates;
+
+        /**
+        * Bone dictionary
+        */
+        typedef std::map<IFBXNode*, Model::IBone*> IBoneDictionary;
 
         /**
         * Used properties set
@@ -922,10 +955,10 @@ class FBXModel
 
         IFBXNodes        m_Nodes;
         IFBXLinks        m_Links;
+        IMeshTemplates   m_Templates;
         IUsedProps       m_UsedProps;
         IItemDictionary  m_ItemDict;
         IBoneDictionary  m_BoneDict;
-        Model*           m_pTemplate;
         Model*           m_pModel;
         std::string      m_Data;
         ITfOnLoadTexture m_fOnLoadTexture;
@@ -991,19 +1024,21 @@ class FBXModel
         * Performs the link between 2 FBX objects
         *@param pParentLink - parent link in which the link will be added
         *@param id - parent link identifier
+        //REM *@param isSkeleton - if true, the data contains the skeleton model
         *@param pConnections - connection list containing all the links to perform
         *@return true on success, otherwise false
         */
         bool PerformLink(IFBXLink* pParentLink, std::size_t id, IFBXNode* pConnections);
 
         /**
-         * Gets the link data
-         *@param pProp - property containing the link
-         *@param[out] type - connection type
-         *@param[out] srcID - source identifier (i.e. object id which belongs to destination object)
-         *@param[out] dstID - destination identifier (i.e. object which will contain the source object)
-         *@param[out] propDesc - property description (optional, empty if destination isn't a property)
-         */
+        * Gets the link data
+        *@param pProp - property containing the link
+        *@param[out] type - connection type
+        *@param[out] srcID - source identifier (i.e. object id which belongs to destination object)
+        *@param[out] dstID - destination identifier (i.e. object which will contain the source object)
+        *@param[out] propDesc - property description (optional, empty if destination isn't a property)
+        *@return true on success, otherwise false
+        */
         bool GetLinkData(IFBXProperty*     pProp,
                          IEConnectionType& type,
                          std::size_t&      srcID,
@@ -1030,9 +1065,30 @@ class FBXModel
 
         /**
         * Builds the model
+        *@return true on success, otherwise false
         */
-        // NOTE weights point the vertices
+        // REM NOTE weights point the vertices
         bool BuildModel();
+
+        /**
+        * Builds the skeleton
+        *@param pLink - link containing the bone data
+        *@param pBone - if true, link contains the skeleton root node
+        *@param boneDict - bone dictionary
+        *@return true on success, otherwise false
+        */
+        bool BuildSkeleton(IFBXLink* pLink, Model::IBone* pBone, bool isRoot, IBoneDictionary& boneDict) const;
+
+        /**
+        * Populates a bone
+        *@param pNode - node containing the bone data
+        *@param pBone - if true, link contains the skeleton root node
+        *@param boneDict - bone dictionary
+        *@return true on success, otherwise false
+        */
+        bool PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const;
+
+        bool PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBuffer* pModelVB) const;
 
         void __TEMP(std::string& log) const; //REM
 };

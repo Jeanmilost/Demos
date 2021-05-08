@@ -44,7 +44,7 @@ class Model
         /**
         * Animation key type
         */
-        enum IEAnimKeyType
+        enum class IEAnimKeyType
         {
             IE_KT_Unknown    = -1,
             IE_KT_Rotation   =  0,
@@ -62,9 +62,8 @@ class Model
 
             std::string m_Name;     // bone name
             Matrix4x4F  m_Matrix;   // matrix containing the bone transformation to apply
-            IBone*      m_pParent;  // bone parent, root bone if 0
+            IBone*      m_pParent;  // bone parent, root bone if nullptr
             IBones      m_Children; // bone children
-            void*       m_pCustom;  // custom value, may be e.g. a reference to a format dependent object
 
             IBone();
             virtual ~IBone();
@@ -103,7 +102,6 @@ class Model
             Matrix4x4F        m_Matrix;           // matrix to transform the mesh vertices to the bone space
             IWeightInfluences m_WeightInfluences; // table allowing to retrieve the vertices influenced by a weight
             IWeights          m_Weights;          // weights indicating the bone influence on vertices, between 0.0f and 1.0f
-            void*             m_pCustom;          // custom value, may be e.g. a reference to a format dependent object
 
             ISkinWeights();
             virtual ~ISkinWeights();
@@ -112,7 +110,6 @@ class Model
         /**
         * Mesh deformers, it's a list of skin weights belonging to a mesh
         */
-        // todo FIXME -cFeature -oJean: previously named IMeshSkinWeights
         struct IDeformers
         {
             typedef std::vector<ISkinWeights*> ISkinWeightsData;
@@ -188,4 +185,47 @@ class Model
 
         Model();
         virtual ~Model();
+
+        /**
+        * Finds a bone in the skeleton
+        *@param pBone - root bone to search from
+        *@param name - bone name to find
+        *@return the bone, nullptr if not found or on error
+        */
+        virtual IBone* FindBone(IBone* pBone, const std::string& name) const;
+
+        /**
+        * Gets the bone animation matrix
+        *@param pBone - skeleton root bone
+        *@param initialMatrix - the initial matrix
+        *@param[out] matrix - animation matrix
+        */
+        virtual void GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const;
+
+        /**
+        * Gets the bone animation matrix
+        *@param pBone - skeleton root bone
+        *@param pAnimSet - animation set containing the animation to get
+        *@param frameIndex - animation frame index
+        *@param initialMatrix - the initial matrix
+        *@param[out] matrix - animation matrix
+        */
+        virtual void GetBoneAnimMatrix(const IBone*         pBone,
+                                       const IAnimationSet* pAnimSet,
+                                             std::size_t    frameIndex,
+                                       const Matrix4x4F&    initialMatrix,
+                                             Matrix4x4F&    matrix) const;
+
+        /**
+        * Gets the animation matrix
+        *@param pAnimSet - animation set containing the animation to search
+        *@param pBone - skeleton root bone
+        *@param frame - animation frame
+        *@param[out] matrix - animation matrix
+        *@return true on success, otherwise false
+        */
+        virtual bool GetAnimationMatrix(const IAnimationSet* pAnimSet,
+                                        const IBone*         pBone,
+                                              std::size_t    frame,
+                                              Matrix4x4F&    matrix) const;
 };

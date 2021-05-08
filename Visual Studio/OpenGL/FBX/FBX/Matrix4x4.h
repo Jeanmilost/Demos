@@ -106,6 +106,30 @@ class Matrix4x4
         virtual inline bool operator != (const Matrix4x4& other);
 
         /**
+        * Set matrix content
+        *@param _11 - matrix value
+        *@param _12 - matrix value
+        *@param _13 - matrix value
+        *@param _14 - matrix value
+        *@param _21 - matrix value
+        *@param _22 - matrix value
+        *@param _23 - matrix value
+        *@param _24 - matrix value
+        *@param _31 - matrix value
+        *@param _32 - matrix value
+        *@param _33 - matrix value
+        *@param _34 - matrix value
+        *@param _41 - matrix value
+        *@param _42 - matrix value
+        *@param _43 - matrix value
+        *@param _44 - matrix value
+        */
+        virtual inline void Set(T _11, T _12, T _13, T _14,
+                                T _21, T _22, T _23, T _24,
+                                T _31, T _32, T _33, T _34,
+                                T _41, T _42, T _43, T _44);
+
+        /**
         * Copies matrix from another
         *@param other - other matrix to copy from
         */
@@ -246,6 +270,18 @@ template <class T>
 bool Matrix4x4<T>::operator != (const Matrix4x4& other)
 {
     return !IsEqual(other);
+}
+//---------------------------------------------------------------------------
+template <class T>
+void Matrix4x4<T>::Set(T _11, T _12, T _13, T _14,
+                       T _21, T _22, T _23, T _24,
+                       T _31, T _32, T _33, T _34,
+                       T _41, T _42, T _43, T _44)
+{
+    m_Table[0][0] = _11; m_Table[1][0] = _12; m_Table[2][0] = _13; m_Table[3][0] = _14;
+    m_Table[0][1] = _21; m_Table[1][1] = _22; m_Table[2][1] = _23; m_Table[3][1] = _24;
+    m_Table[0][2] = _31; m_Table[1][2] = _32; m_Table[2][2] = _33; m_Table[3][2] = _34;
+    m_Table[0][3] = _41; m_Table[1][3] = _42; m_Table[2][3] = _43; m_Table[3][3] = _44;
 }
 //---------------------------------------------------------------------------
 template <class T>
