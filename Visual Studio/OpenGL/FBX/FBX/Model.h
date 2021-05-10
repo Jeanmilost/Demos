@@ -97,11 +97,13 @@ class Model
         */
         struct ISkinWeights
         {
-            std::string       m_BoneName;         // linked bone name (required to find the bone in skeleton)
-            IBone*            m_pBone;            // linked bone
-            Matrix4x4F        m_Matrix;           // matrix to transform the mesh vertices to the bone space
-            IWeightInfluences m_WeightInfluences; // table allowing to retrieve the vertices influenced by a weight
-            IWeights          m_Weights;          // weights indicating the bone influence on vertices, between 0.0f and 1.0f
+            std::string       m_BoneName;            // linked bone name (required to find the bone in skeleton)
+            IBone*            m_pBone;               // linked bone
+            Matrix4x4F        m_Matrix;              // matrix to transform the mesh vertices to the bone space
+            Matrix4x4F        m_TransformMatrix;     // transform matrix (used in FBX files)
+            Matrix4x4F        m_TransformLinkMatrix; // transform link matrix (used in FBX files)
+            IWeightInfluences m_WeightInfluences;    // table allowing to retrieve the vertices influenced by a weight
+            IWeights          m_Weights;             // weights indicating the bone influence on vertices, between 0.0f and 1.0f
 
             ISkinWeights();
             virtual ~ISkinWeights();

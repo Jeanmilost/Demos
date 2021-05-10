@@ -478,7 +478,8 @@ void FBXModel::IFBXNumberProperty::GetValues() const
 
     // read and cache values
     for (std::size_t i = 4; i < count; ++i)
-        const_cast<std::vector<double>&>(m_Values).push_back(GetValue(i)->m_Type == IEDataType::IE_DT_Int ? (float)GetValue(i)->GetInt() : GetValue(i)->GetDouble());
+        const_cast<std::vector<double>&>(m_Values).push_back
+                (GetValue(i)->m_Type == IEDataType::IE_DT_Int ? (float)GetValue(i)->GetInt() : GetValue(i)->GetDouble());
 
     const_cast<bool&>(m_Cached) = true;
 }
@@ -767,7 +768,7 @@ FBXModel::IFBXLclRotationProperty::IFBXLclRotationProperty() :
 FBXModel::IFBXLclRotationProperty::~IFBXLclRotationProperty()
 {}
 //---------------------------------------------------------------------------
-QuaternionF FBXModel::IFBXLclRotationProperty::Get() const
+Matrix4x4F FBXModel::IFBXLclRotationProperty::Get() const
 {
     // already cached?
     if (m_Cached)
@@ -777,7 +778,7 @@ QuaternionF FBXModel::IFBXLclRotationProperty::Get() const
 
     // no available value?
     if (count <= 4)
-        return QuaternionF();
+        return Matrix4x4F::Identity();
 
     float x = 0.0f;
     float y = 0.0f;
@@ -794,14 +795,17 @@ QuaternionF FBXModel::IFBXLclRotationProperty::Get() const
 
     const float degToRad = (float)(M_PI / 180.0f);
 
-    // todo -cCheck -oJean: verify that code, it's based on:
-    //                      https://github.com/jMonkeyEngine/jmonkeyengine/blob/master/jme3-plugins/src/fbx/java/com/jme3/scene/plugins/fbx/node/FbxNode.java
-    //                      https://cgi.csc.liv.ac.uk/~konev/COMP222/jME/doc/com/jme/math/Quaternion.html#fromAngles(float,%20float,%20float)
-    //                      http://www.euclideanspace.com/maths/geometry/rotations/conversions/eulerToQuaternion/index.htm
-    //                      https://www.geeksforgeeks.org/program-to-convert-degree-to-radian/
-    //REM const_cast<QuaternionF&>(m_Value).FromPitchYawRoll(z * degToRad, x * degToRad, y * degToRad);
-    const_cast<QuaternionF&>(m_Value).FromPitchYawRoll(x * degToRad, y * degToRad, z * degToRad);
-    const_cast<bool&>(m_Cached) = true;
+    // get the x y and z rotation matrices based on their respective Euler angles
+    Matrix4x4F rotMatX = Matrix4x4F::Identity();
+    rotMatX.Rotate(x * degToRad, Vector3F(1.0f, 0.0f, 0.0f));
+    Matrix4x4F rotMatY = Matrix4x4F::Identity();
+    rotMatY.Rotate(y * degToRad, Vector3F(0.0f, 1.0f, 0.0f));
+    Matrix4x4F rotMatZ = Matrix4x4F::Identity();
+    rotMatZ.Rotate(z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
+
+    // build the final rotation matrix and cache it
+    const_cast<Matrix4x4F&>(m_Value)  = rotMatX.Multiply(rotMatY).Multiply(rotMatZ);
+    const_cast<bool&>      (m_Cached) = true;
 
     return m_Value;
 }
@@ -1553,137 +1557,8 @@ Model* FBXModel::GetModel() const
     if (templateCount != meshCount)
         return nullptr;
 
-    /*REM
-    // no renderer?
-    if (!pRenderer)
-        return;
-
-    // no shader?
-    if (!pShader)
-        return;
-    */
-
-    /*REM
-    // do draw only the mesh and ignore all other data like bones?
-    if (m_pModel->m_MeshOnly)
-    {
-        // iterate through the meshes to draw
-        for (std::size_t i = 0; i < m_pModel->m_Mesh.size(); ++i)
-            // draw the model mesh
-            pRenderer->Draw(*m_pModel->m_Mesh[i], modelMatrix, pShader);
-
-        return;
-    }
-    */
-
-    /*REM
-    // calculate the next frame index
-    const int frameIndex = (::GetTickCount64() * 5) % frameCount;
-
-    // iterate through the meshes to draw
-    for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
-    {
-        // if mesh has no skeleton, perform a simple draw
-        if (!pModel->m_pSkeleton)
-        {
-            // draw the model mesh
-            pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
-            return;
-        }
-
-        // get the current model mesh to draw
-        Mesh* pMesh = pModel->m_Mesh[i];
-
-        // found it?
-        if (!pMesh)
-            continue;
-
-        // normally each mesh should contain only one vertex buffer
-        if (pMesh->m_VB.size() != 1)
-            // unsupported if not (because cannot know which texture should be binded. If a such model
-            // exists, a custom version of this function should also be written for it)
-            continue;
-
-        // mesh contains skin weights?
-        if (pModel->m_MeshWeights[i]->m_SkinWeights.size())
-        {
-            // clear the previous print vertices (needs to be cleared to properly apply the weights)
-            for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
-            {
-                pModel->m_Print[i]->m_Data[j] = 0.0f;
-                pModel->m_Print[i]->m_Data[j + 1] = 0.0f;
-                pModel->m_Print[i]->m_Data[j + 2] = 0.0f;
-            }
-
-            // iterate through mesh skin weights
-            for (std::size_t j = 0; j < pModel->m_MeshWeights[i]->m_SkinWeights.size(); ++j)
-            {
-                Matrix4x4F boneMatrix;
-
-                // get the bone matrix
-                if (pModel->m_PoseOnly)
-                    xModel.GetBoneMatrix(pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
-                else
-                    xModel.GetBoneAnimMatrix(pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_pBone,
-                                             pModel->m_AnimationSet[animSetIndex],
-                                             frameIndex,
-                                             Matrix4x4F::Identity(),
-                                             boneMatrix);
-
-                // get the final matrix after bones transform
-                const Matrix4x4F finalMatrix = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
-
-                // apply the bone and its skin weights to each vertices
-                for (std::size_t k = 0; k < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences.size(); ++k)
-                    for (std::size_t l = 0; l < pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size(); ++l)
-                    {
-                        // get the next vertex to which the next skin weight should be applied
-                        const std::size_t iX = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
-                        const std::size_t iY = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
-                        const std::size_t iZ = pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
-
-                        Vector3F inputVertex;
-
-                        // get input vertex
-                        inputVertex.m_X = pMesh->m_VB[0]->m_Data[iX];
-                        inputVertex.m_Y = pMesh->m_VB[0]->m_Data[iY];
-                        inputVertex.m_Z = pMesh->m_VB[0]->m_Data[iZ];
-
-                        // apply bone transformation to vertex
-                        const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
-
-                        // apply the skin weights and calculate the final output vertex
-                        pModel->m_Print[i]->m_Data[iX] += (outputVertex.m_X * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
-                        pModel->m_Print[i]->m_Data[iY] += (outputVertex.m_Y * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
-                        pModel->m_Print[i]->m_Data[iZ] += (outputVertex.m_Z * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
-                    }
-            }
-        }
-
-        // todo FIXME -cImprovement -oJean: weak solution to draw the mesh, find a better concept
-        // use the model print as final vertex buffer
-        VertexBuffer* pSrcBuffer = pMesh->m_VB[0];
-        pMesh->m_VB[0] = pModel->m_Print[i];
-
-        try
-        {
-            // draw the model mesh
-            pRenderer->Draw(*pMesh, modelMatrix, pShader);
-        }
-        catch (...)
-        {
-            // restore the correct mesh vertex buffer
-            pMesh->m_VB[0] = pSrcBuffer;
-            throw;
-        }
-
-        // restore the correct mesh vertex buffer
-        pMesh->m_VB[0] = pSrcBuffer;
-    }
-    */
-
     // if mesh has no skeleton, perform a simple draw
-    //if (!m_pModel->m_pSkeleton)
+    if (!m_pModel->m_pSkeleton)
     {
         for (std::size_t i = 0; i < templateCount; ++i)
         {
@@ -1733,18 +1608,7 @@ Model* FBXModel::GetModel() const
         if (!weightCount)
             return nullptr;
 
-        /*REM
-        // clear the previous print vertices (needs to be cleared to properly apply the weights)
-        for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
-        {
-            pModel->m_Print[i]->m_Data[j] = 0.0f;
-            pModel->m_Print[i]->m_Data[j + 1] = 0.0f;
-            pModel->m_Print[i]->m_Data[j + 2] = 0.0f;
-        }
-        */
-
         std::vector<double> skinVertices = *m_Templates[i]->m_pVertices;
-        //skinVertices.resize(m_Templates[i]->m_pVertices->size());
 
         // iterate through mesh skin weights
         for (std::size_t j = 0; j < weightCount; ++j)
@@ -1752,13 +1616,14 @@ Model* FBXModel::GetModel() const
             // get the weight influence count
             const std::size_t weightInfluenceCount = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size();
 
-            // apply the bone and its skin weights to each vertices
+            // iterate through weights influences
             for (std::size_t k = 0; k < weightInfluenceCount; ++k)
             {
                 // get the vertex index count
                 const std::size_t vertexIndexCount =
-                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size();
+                        m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size();
 
+                // iterate through weights influences vertex indices
                 for (std::size_t l = 0; l < vertexIndexCount; ++l)
                 {
                     // get the next vertex to which the next skin weight should be applied
@@ -1766,6 +1631,7 @@ Model* FBXModel::GetModel() const
                     const std::size_t iY = (m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] * 3) + 1;
                     const std::size_t iZ = (m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] * 3) + 2;
 
+                    // clear it
                     skinVertices[iX] = 0.0f;
                     skinVertices[iY] = 0.0f;
                     skinVertices[iZ] = 0.0f;
@@ -1794,6 +1660,7 @@ Model* FBXModel::GetModel() const
                 const std::size_t vertexIndexCount =
                         m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size();
 
+                // iterate through weights influences vertex indices
                 for (std::size_t l = 0; l < vertexIndexCount; ++l)
                 {
                     // get the next vertex to which the next skin weight should be applied
@@ -1810,28 +1677,16 @@ Model* FBXModel::GetModel() const
 
                     // apply bone transformation to vertex
                     const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
-                    //const Vector3F outputVertex = boneMatrix.Transform(inputVertex);
 
-                    /*REM
-                    // apply the skin weights and calculate the final output vertex
-                    pModel->m_Print[i]->m_Data[iX] += (outputVertex.m_X * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
-                    pModel->m_Print[i]->m_Data[iY] += (outputVertex.m_Y * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
-                    pModel->m_Print[i]->m_Data[iZ] += (outputVertex.m_Z * pModel->m_MeshWeights[i]->m_SkinWeights[j]->m_Weights[k]);
-                    */
                     // apply the skin weights and calculate the final output vertex
                     skinVertices[iX] += (outputVertex.m_X * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
                     skinVertices[iY] += (outputVertex.m_Y * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
                     skinVertices[iZ] += (outputVertex.m_Z * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    //skinVertices[iX] = (outputVertex.m_X * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    //skinVertices[iY] = (outputVertex.m_Y * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    //skinVertices[iZ] = (outputVertex.m_Z * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    //REM skinVertices[iX] = (outputVertex.m_X);// * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    //REM skinVertices[iY] = (outputVertex.m_Y);// * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    //REM skinVertices[iZ] = (outputVertex.m_Z);// * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
                 }
             }
         }
 
+        // get the mesh template to use to generate the final vertex buffer
         IMeshTemplate meshTemplate;
         meshTemplate.m_pVertices      = &skinVertices;
         meshTemplate.m_pIndices       = m_Templates[i]->m_pIndices;
@@ -1848,7 +1703,7 @@ Model* FBXModel::GetModel() const
     return m_pModel;
 }
 //---------------------------------------------------------------------------
-void FBXModel::Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture)
+void FBXModel::Set_OnLoadTexture(Texture::ITfOnLoadTexture fOnLoadTexture)
 {
     m_fOnLoadTexture = fOnLoadTexture;
 }
@@ -2543,12 +2398,6 @@ bool FBXModel::BuildModel()
             break;
         }
 
-    /*REM
-    Vector3F vertex;
-    Vector3F normal;
-    Vector2F uv;
-    */
-
     // iterate through links
     for (std::size_t i = 0; i < linkCount; ++i)
     {
@@ -2634,182 +2483,10 @@ bool FBXModel::BuildModel()
                 pModelVB->m_Material.m_Color.m_A = 1.0f;
 
                 // get the vertices and indices count
-                //REM const std::size_t verticesCount = pTemplate->m_pVertices->size();
-                const std::size_t indicesCount  = pTemplate->m_pIndices->size();
+                const std::size_t indicesCount = pTemplate->m_pIndices->size();
 
-                /*REM
-                std::vector<int> indices;
-                indices.reserve(4);
-
-                std::vector<int> normalIndices;
-                normalIndices.reserve(4);
-
-                std::vector<int> uvIndices;
-                uvIndices.reserve(4);
-                */
-
-                // reserve the vertex buffer data size
+                // reserve the vertex buffer data size (will be built later)
                 pModelVB->m_Data.reserve(indicesCount * 9 * ((*pTemplate->m_pIndices)[4] < 0 ? 6 : 3));
-
-                /*REM
-                // iterate through indices
-                for (std::size_t k = 0; k < indicesCount; ++k)
-                {
-                    // get indice
-                    const int indice = (*pTemplate->m_pIndices)[k];
-
-                    // is the last indice of a group?
-                    if (indice >= 0)
-                    {
-                        // no, keep it
-                        indices.push_back(indice);
-                        normalIndices.push_back((*pTemplate->m_pNormalIndices)[k]);
-                        uvIndices.push_back((*pTemplate->m_pUVIndices)[k]);
-                    }
-                    else
-                    {
-                        // yes, calculate and keep the last indice
-                        indices.push_back(std::abs(indice) - 1);
-                        normalIndices.push_back(std::abs((*pTemplate->m_pNormalIndices)[k]));
-                        uvIndices.push_back(std::abs((*pTemplate->m_pUVIndices)[k]));
-
-                        // is surface a polygon or a quad?
-                        switch (indices.size())
-                        {
-                            case 3:
-                                // polygon, extract it
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[0] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[0] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[0] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[0] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[0] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[0] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[0] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[1] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[1] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[1] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[1] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[1] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[1] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[1] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[1] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[2] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[2] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[2] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[2] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[2] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[2] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[2] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                break;
-
-                            case 4:
-                                // quad, extract the first polygon...
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[0] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[0] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[0] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[0] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[0] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[0] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[0] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[1] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[1] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[1] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[1] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[1] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[1] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[1] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[1] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[2] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[2] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[2] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[2] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[2] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[2] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[2] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                // ...and the second
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[0] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[0] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[0] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[0] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[0] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[0] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[0] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[2] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[2] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[2] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[2] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[2] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[2] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[2] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                vertex.m_X = (float)(*pTemplate->m_pVertices)[ indices[3] * 3];
-                                vertex.m_Y = (float)(*pTemplate->m_pVertices)[(indices[3] * 3) + 1];
-                                vertex.m_Z = (float)(*pTemplate->m_pVertices)[(indices[3] * 3) + 2];
-
-                                normal.m_X = (float)(*pTemplate->m_pNormals)[ normalIndices[3] * 3];
-                                normal.m_Y = (float)(*pTemplate->m_pNormals)[(normalIndices[3] * 3) + 1];
-                                normal.m_Z = (float)(*pTemplate->m_pNormals)[(normalIndices[3] * 3) + 2];
-
-                                uv.m_X = (float)(*pTemplate->m_pUVs)[ uvIndices[3] * 2];
-                                uv.m_Y = (float)(*pTemplate->m_pUVs)[(uvIndices[3] * 2) + 1];
-
-                                pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
-
-                                break;
-                        }
-
-                        // clear the indice tables for the next round
-                        indices.clear();
-                        normalIndices.clear();
-                        uvIndices.clear();
-                    }
-                }
-                */
 
                 // keep the source template
                 m_Templates.push_back(pTemplate.get());
@@ -2920,6 +2597,30 @@ bool FBXModel::BuildModel()
                                             }
                                         }
                                         else
+                                        if (propName == "Transform")
+                                        {
+                                            // get source matrix
+                                            const std::vector<double>* pMatrix =
+                                                    static_cast<IFBXArrayProperty*>(pDefChildNode->GetProp(0))->GetPtr();
+
+                                            // found it?
+                                            if (pMatrix)
+                                            {
+                                                if (pMatrix->size() != 16)
+                                                    continue;
+
+                                                // get and cache the weight transform matrix
+                                                pModelSkinWeights->m_TransformMatrix.Set((float)(*pMatrix)[0], (float)(*pMatrix)[4], (float)(*pMatrix)[8],  (float)(*pMatrix)[12],
+                                                                                         (float)(*pMatrix)[1], (float)(*pMatrix)[5], (float)(*pMatrix)[9],  (float)(*pMatrix)[13],
+                                                                                         (float)(*pMatrix)[2], (float)(*pMatrix)[6], (float)(*pMatrix)[10], (float)(*pMatrix)[14],
+                                                                                         (float)(*pMatrix)[3], (float)(*pMatrix)[7], (float)(*pMatrix)[11], (float)(*pMatrix)[15]);
+
+                                                // inverse it
+                                                float determinant = 0.0f;
+                                                pModelSkinWeights->m_TransformMatrix = pModelSkinWeights->m_TransformMatrix.Inverse(determinant);
+                                            }
+                                        }
+                                        else
                                         if (propName == "TransformLink")
                                         {
                                             // get source matrix
@@ -2932,43 +2633,23 @@ bool FBXModel::BuildModel()
                                                 if (pMatrix->size() != 16)
                                                     continue;
 
-                                                /*
-                                                pModelSkinWeights->m_Matrix.Set((float)(*pMatrix)[0],  (float)(*pMatrix)[1],  (float)(*pMatrix)[2],  (float)(*pMatrix)[3],
-                                                                                (float)(*pMatrix)[4],  (float)(*pMatrix)[5],  (float)(*pMatrix)[6],  (float)(*pMatrix)[7],
-                                                                                (float)(*pMatrix)[8],  (float)(*pMatrix)[9],  (float)(*pMatrix)[10], (float)(*pMatrix)[11],
-                                                                                (float)(*pMatrix)[12], (float)(*pMatrix)[13], (float)(*pMatrix)[14], (float)(*pMatrix)[15]);
-                                                */
-                                                pModelSkinWeights->m_Matrix.Set((float)(*pMatrix)[0], (float)(*pMatrix)[4], (float)(*pMatrix)[8],  (float)(*pMatrix)[12],
-                                                                                (float)(*pMatrix)[1], (float)(*pMatrix)[5], (float)(*pMatrix)[9],  (float)(*pMatrix)[13],
-                                                                                (float)(*pMatrix)[2], (float)(*pMatrix)[6], (float)(*pMatrix)[10], (float)(*pMatrix)[14],
-                                                                                (float)(*pMatrix)[3], (float)(*pMatrix)[7], (float)(*pMatrix)[11], (float)(*pMatrix)[15]);
-                                                /**/
-
-                                                float determinant = 0.0f;
-                                                pModelSkinWeights->m_Matrix = pModelSkinWeights->m_Matrix.Inverse(determinant);
-
-                                                /*
-                                                if (pModelSkinWeights->m_pBone)
-                                                {
-                                                    pModelSkinWeights->m_pBone->m_Matrix.Set((float)(*pMatrix)[0],  (float)(*pMatrix)[1],  (float)(*pMatrix)[2],  (float)(*pMatrix)[3],
-                                                                                             (float)(*pMatrix)[4],  (float)(*pMatrix)[5],  (float)(*pMatrix)[6],  (float)(*pMatrix)[7],
-                                                                                             (float)(*pMatrix)[8],  (float)(*pMatrix)[9],  (float)(*pMatrix)[10], (float)(*pMatrix)[11],
-                                                                                             (float)(*pMatrix)[12], (float)(*pMatrix)[13], (float)(*pMatrix)[14], (float)(*pMatrix)[15]);
-                                                    pModelSkinWeights->m_pBone->m_Matrix.Set((float)(*pMatrix)[0], (float)(*pMatrix)[4], (float)(*pMatrix)[8],  (float)(*pMatrix)[12],
+                                                // get and cache the weight transform link matrix
+                                                pModelSkinWeights->m_TransformLinkMatrix.Set((float)(*pMatrix)[0], (float)(*pMatrix)[4], (float)(*pMatrix)[8],  (float)(*pMatrix)[12],
                                                                                              (float)(*pMatrix)[1], (float)(*pMatrix)[5], (float)(*pMatrix)[9],  (float)(*pMatrix)[13],
                                                                                              (float)(*pMatrix)[2], (float)(*pMatrix)[6], (float)(*pMatrix)[10], (float)(*pMatrix)[14],
                                                                                              (float)(*pMatrix)[3], (float)(*pMatrix)[7], (float)(*pMatrix)[11], (float)(*pMatrix)[15]);
 
-                                                    float determinant = 0.0f;
-                                                    pModelSkinWeights->m_pBone->m_Matrix = pModelSkinWeights->m_pBone->m_Matrix.Inverse(determinant);
-
-                                                    int ii = 0;
-                                                }
-                                                */
+                                                // inverse it
+                                                float determinant = 0.0f;
+                                                pModelSkinWeights->m_TransformLinkMatrix =
+                                                        pModelSkinWeights->m_TransformLinkMatrix.Inverse(determinant);
                                             }
                                         }
                                     }
                                 }
+
+                                // get the weight matrix to apply
+                                pModelSkinWeights->m_Matrix = pModelSkinWeights->m_TransformLinkMatrix;
 
                                 // add model skin weights to model deformers
                                 pModelDeformers->m_SkinWeights.push_back(pModelSkinWeights.get());
@@ -3020,18 +2701,6 @@ bool FBXModel::BuildModel()
             }
         }
 
-        /*REM
-        // link the built vertex buffer to its mesh, and the built mesh to its model
-        if (pModelVB->m_Data.size())
-        {
-            std::unique_ptr<Mesh> pMesh(new Mesh());
-            pMesh->m_VB.push_back(pModelVB.get());
-            pModelVB.release();
-
-            pModel->m_Mesh.push_back(pMesh.get());
-            pMesh.release();
-        }
-        */
         // link the built vertex buffer to its mesh
         std::unique_ptr<Mesh> pMesh(new Mesh());
         pMesh->m_VB.push_back(pModelVB.get());
@@ -3132,9 +2801,9 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
             // get property count
             const std::size_t propCount = pChild->GetPropCount();
 
-            Vector3F    translation;
-            Vector3F    scaling(1.0f, 1.0f, 1.0f);
-            QuaternionF rotation;
+            Vector3F   translation;
+            Vector3F   scaling(1.0f, 1.0f, 1.0f);
+            Matrix4x4F rotMat = Matrix4x4F::Identity();
 
             // iterate through properties
             for (std::size_t j = 0; j < propCount; ++j)
@@ -3170,7 +2839,7 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
                         if (!pLclRotatProp)
                             return false;
 
-                        rotation = pLclRotatProp->Get();
+                        rotMat = pLclRotatProp->Get();
                     }
                     else
                     if (name == "Lcl Scaling")
@@ -3191,9 +2860,6 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
             transMat.m_Table[3][1] = translation.m_Y;
             transMat.m_Table[3][2] = translation.m_Z;
 
-            // get the rotation matrix
-            Matrix4x4F rotMat = rotation.ToMatrix();
-
             // create the scale matrix
             Matrix4x4F scaleMat = Matrix4x4F::Identity();
             scaleMat.m_Table[0][0] = scaling.m_X;
@@ -3201,101 +2867,12 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
             scaleMat.m_Table[2][2] = scaling.m_Z;
 
             // build the bone matrix
-            const Matrix4x4F transRotMat = transMat.Multiply(rotMat);
-            //const Matrix4x4F transRotMat = rotMat.Multiply(transMat);
-            pBone->m_Matrix              = transRotMat.Multiply(scaleMat);
-            //REM const Matrix4x4F transRotMat = scaleMat.Multiply(rotMat);
-            //REM pBone->m_Matrix = transMat;// transMat.Multiply(transRotMat);
-            //pBone->m_Matrix = rotMat.Multiply(scaleMat);
-            //pBone->m_Matrix.m_Table[3][0] = translation.m_X;
-            //pBone->m_Matrix.m_Table[3][1] = translation.m_Y;
-            //pBone->m_Matrix.m_Table[3][2] = translation.m_Z;
+            pBone->m_Matrix = rotMat.Multiply(transMat).Multiply(scaleMat);
         }
     }
 
     return true;
 }
-/*REM
-    public void fromElement(FbxElement element) {
-        super.fromElement(element);
-
-        Vector3f localTranslation = new Vector3f();
-        Quaternion localRotation = new Quaternion();
-        Vector3f localScale = new Vector3f(Vector3f.UNIT_XYZ);
-        Quaternion preRotation = new Quaternion();
-
-        for (FbxElement e2 : element.getFbxProperties()) {
-            String propName = (String) e2.properties.get(0);
-            String type = (String) e2.properties.get(3);
-            if (propName.equals("Lcl Translation")) {
-                double x = (Double) e2.properties.get(4);
-                double y = (Double) e2.properties.get(5);
-                double z = (Double) e2.properties.get(6);
-                localTranslation.set((float) x, (float) y, (float) z); //.divideLocal(unitSize);
-            } else if (propName.equals("Lcl Rotation")) {
-                double x = (Double) e2.properties.get(4);
-                double y = (Double) e2.properties.get(5);
-                double z = (Double) e2.properties.get(6);
-                localRotation.fromAngles((float) x * FastMath.DEG_TO_RAD, (float) y * FastMath.DEG_TO_RAD, (float) z * FastMath.DEG_TO_RAD);
-            } else if (propName.equals("Lcl Scaling")) {
-                double x = (Double) e2.properties.get(4);
-                double y = (Double) e2.properties.get(5);
-                double z = (Double) e2.properties.get(6);
-                localScale.set((float) x, (float) y, (float) z); //.multLocal(unitSize);
-            } else if (propName.equals("PreRotation")) {
-                double x = (Double) e2.properties.get(4);
-                double y = (Double) e2.properties.get(5);
-                double z = (Double) e2.properties.get(6);
-                preRotation.set(FbxNodeUtil.quatFromBoneAngles((float) x * FastMath.DEG_TO_RAD, (float) y * FastMath.DEG_TO_RAD, (float) z * FastMath.DEG_TO_RAD));
-            } else if (propName.equals("InheritType")) {
-                int inheritType = (Integer) e2.properties.get(4);
-                inheritMode = InheritMode.values()[inheritType];
-            } else if (propName.equals("Visibility")) {
-                visibility = (Double) e2.properties.get(4);
-            } else if (type.contains("U")) {
-                String userDataKey = (String) e2.properties.get(0);
-                String userDataType = (String) e2.properties.get(1);
-                Object userDataValue;
-
-                if (userDataType.equals("KString")) {
-                    userDataValue = e2.properties.get(4);
-                } else if (userDataType.equals("int")) {
-                    userDataValue = e2.properties.get(4);
-                } else if (userDataType.equals("double")) {
-                    // NOTE: jME3 does not support doubles in UserData.
-                    //       Need to convert to float.
-                    userDataValue = ((Double) e2.properties.get(4)).floatValue();
-                } else if (userDataType.equals("Vector")) {
-                    float x = ((Double) e2.properties.get(4)).floatValue();
-                    float y = ((Double) e2.properties.get(5)).floatValue();
-                    float z = ((Double) e2.properties.get(6)).floatValue();
-                    userDataValue = new Vector3f(x, y, z);
-                } else {
-                    logger.log(Level.WARNING, "Unsupported user data type: {0}. Ignoring.", userDataType);
-                    continue;
-                }
-
-                userData.put(userDataKey, userDataValue);
-            }
-        }
-
-        // Create local transform
-        // TODO: take into account Maya-style transforms (pre / post rotation ..)
-        jmeLocalNodeTransform.setTranslation(localTranslation);
-        jmeLocalNodeTransform.setRotation(localRotation);
-        jmeLocalNodeTransform.setScale(localScale);
-
-        if (element.getChildById("Vertices") != null) {
-            // This is an old-style FBX 6.1
-            // Meshes could be embedded inside the node..
-
-            // Inject the mesh into ourselves..
-            FbxMesh mesh = new FbxMesh(assetManager, sceneFolderName);
-            mesh.fromElement(element);
-            connectObject(mesh);
-        }
-    }
-*/
 //---------------------------------------------------------------------------
 bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBuffer* pModelVB) const
 {

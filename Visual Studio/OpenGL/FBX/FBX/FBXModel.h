@@ -32,7 +32,6 @@
 #include "Color.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
-#include "Quaternion.h"
 #include "Vertex.h"
 #include "Model.h"
 
@@ -570,10 +569,10 @@ class FBXModel
                 * Gets the value
                 *@return the value
                 */
-                virtual QuaternionF Get() const;
+                virtual Matrix4x4F Get() const;
 
             private:
-                QuaternionF m_Value;
+                Matrix4x4F m_Value;
         };
 
         /**
@@ -787,15 +786,6 @@ class FBXModel
         */
         typedef std::vector<IFBXNode*> IFBXNodes;
 
-        /**
-        * Called when a texture should be loaded
-        *@param textureName - texture name to load
-        *@param is32bit - if true, the image should be opened in 32 bit BGRA format
-        *@return the loaded texture
-        *@note The loaded texture will be deleted internally, and should no longer be deleted from outside
-        */
-        typedef Texture* (*ITfOnLoadTexture)(const std::string& textureName, bool is32bit);
-
         FBXModel();
         virtual ~FBXModel();
 
@@ -818,13 +808,17 @@ class FBXModel
         */
         virtual bool Read(const std::string& data);
 
+        /**
+        * Gets a ready-to-draw copy of the model
+        *@return a ready-to-draw copy of the model, nullptr on error
+        */
         virtual Model* GetModel() const;
 
         /**
         * Sets the OnLoadTexture callback
         *@param fOnLoadTexture - callback function handle
         */
-        void Set_OnLoadTexture(ITfOnLoadTexture fOnLoadTexture);
+        void Set_OnLoadTexture(Texture::ITfOnLoadTexture fOnLoadTexture);
 
     private:
         /**
@@ -953,15 +947,15 @@ class FBXModel
         */
         typedef std::set<IFBXProperty*> IUsedProps;
 
-        IFBXNodes        m_Nodes;
-        IFBXLinks        m_Links;
-        IMeshTemplates   m_Templates;
-        IUsedProps       m_UsedProps;
-        IItemDictionary  m_ItemDict;
-        IBoneDictionary  m_BoneDict;
-        Model*           m_pModel;
-        std::string      m_Data;
-        ITfOnLoadTexture m_fOnLoadTexture;
+        IFBXNodes                 m_Nodes;
+        IFBXLinks                 m_Links;
+        IMeshTemplates            m_Templates;
+        IUsedProps                m_UsedProps;
+        IItemDictionary           m_ItemDict;
+        IBoneDictionary           m_BoneDict;
+        Model*                    m_pModel;
+        std::string               m_Data;
+        Texture::ITfOnLoadTexture m_fOnLoadTexture;
 
         /**
         * Clears a dataset
@@ -1024,7 +1018,6 @@ class FBXModel
         * Performs the link between 2 FBX objects
         *@param pParentLink - parent link in which the link will be added
         *@param id - parent link identifier
-        //REM *@param isSkeleton - if true, the data contains the skeleton model
         *@param pConnections - connection list containing all the links to perform
         *@return true on success, otherwise false
         */
@@ -1067,7 +1060,6 @@ class FBXModel
         * Builds the model
         *@return true on success, otherwise false
         */
-        // REM NOTE weights point the vertices
         bool BuildModel();
 
         /**
@@ -1088,6 +1080,12 @@ class FBXModel
         */
         bool PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const;
 
+        /**
+        * Populates the vertex buffer
+        *@param pMeshTemplate - mesh templates to use to populate the vertex buffer
+        *@param pModelVB - model vertex buffer to populate
+        *@return true on success, otherwise false
+        */
         bool PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBuffer* pModelVB) const;
 
         void __TEMP(std::string& log) const; //REM
