@@ -129,6 +129,13 @@ class FBXModel
             *@return string, empty string if not found or on error
             */
             virtual std::string GetStr() const;
+
+            /**
+            * Gets data content as a generic value
+            *@return value, 0.0 if not found or on error
+            */
+            template <class T>
+            T GetT() const;
         };
 
         /**
@@ -673,6 +680,7 @@ class FBXModel
         /**
         * FBX array property
         */
+        template <class T>
         class IFBXArrayProperty : public IFBXProperty
         {
             public:
@@ -685,25 +693,11 @@ class FBXModel
                 virtual ~IFBXArrayProperty();
 
                 /**
-                * Gets the value as integer
+                * Gets the value at index
                 *@param index - the value index
                 *@return the value, 0 if not found or on error
                 */
-                virtual int GetI(std::size_t index) const;
-
-                /**
-                * Gets the value as float
-                *@param index - the value index
-                *@return the value, 0.0f if not found or on error
-                */
-                virtual float GetF(std::size_t index) const;
-
-                /**
-                * Gets the value as double
-                *@param index - the value index
-                *@return the value, 0.0 if not found or on error
-                */
-                virtual double GetD(std::size_t index) const;
+                virtual T Get(std::size_t index) const;
 
                 /**
                 * Gets the value count
@@ -715,11 +709,11 @@ class FBXModel
                 * Gets the values array pointer
                 *@return the values array pointer
                 */
-                const std::vector<double>* GetPtr() const;
+                const std::vector<T>* GetPtr() const;
 
             private:
-                std::vector<double> m_Values;
-                std::size_t         m_Capacity;
+                std::vector<T> m_Values;
+                std::size_t    m_Capacity;
 
                 /**
                 * Gets and caches all the values
@@ -810,9 +804,31 @@ class FBXModel
 
         /**
         * Gets a ready-to-draw copy of the model
+        *@param animSetIndex - animation set index
+        *@param elapsedTime - elapsed time in milliseconds
         *@return a ready-to-draw copy of the model, nullptr on error
         */
-        virtual Model* GetModel() const;
+        virtual Model* GetModel(int animSetIndex, double elapsedTime) const;
+
+        /**
+        * Gets the bone animation matrix
+        *@param pBone - skeleton root bone
+        *@param pAnimSet - animation set containing the animation to get
+        *@param elapsedTime - elapsed time in milliseconds
+        *@param initialMatrix - the initial matrix
+        *@param[out] matrix - animation matrix
+        */
+        virtual void GetBoneAnimMatrix(const Model::IBone*         pBone,
+                                       const Model::IAnimationSet* pAnimSet,
+                                             double                elapsedTime,
+                                       const Matrix4x4F&           initialMatrix,
+                                             Matrix4x4F&           matrix) const;
+
+        /**
+        * Sets the OnGetVertexColor callback
+        *@param fOnGetVertexColor - callback function handle
+        */
+        void Set_OnGetVertexColor(VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor);
 
         /**
         * Sets the OnLoadTexture callback
@@ -918,12 +934,12 @@ class FBXModel
          */
         struct IMeshTemplate
         {
-            const std::vector<double>* m_pVertices;
-            const std::vector<double>* m_pIndices;
-            const std::vector<double>* m_pNormals;
-            const std::vector<double>* m_pNormalIndices;
-            const std::vector<double>* m_pUVs;
-            const std::vector<double>* m_pUVIndices;
+            const std::vector<double>*      m_pVertices;
+            const std::vector<std::size_t>* m_pIndices;
+            const std::vector<double>*      m_pNormals;
+            const std::vector<std::size_t>* m_pNormalIndices;
+            const std::vector<double>*      m_pUVs;
+            const std::vector<std::size_t>* m_pUVIndices;
 
             IMeshTemplate();
             ~IMeshTemplate();
@@ -947,15 +963,16 @@ class FBXModel
         */
         typedef std::set<IFBXProperty*> IUsedProps;
 
-        IFBXNodes                 m_Nodes;
-        IFBXLinks                 m_Links;
-        IMeshTemplates            m_Templates;
-        IUsedProps                m_UsedProps;
-        IItemDictionary           m_ItemDict;
-        IBoneDictionary           m_BoneDict;
-        Model*                    m_pModel;
-        std::string               m_Data;
-        Texture::ITfOnLoadTexture m_fOnLoadTexture;
+        IFBXNodes                         m_Nodes;
+        IFBXLinks                         m_Links;
+        IMeshTemplates                    m_Templates;
+        IUsedProps                        m_UsedProps;
+        IItemDictionary                   m_ItemDict;
+        IBoneDictionary                   m_BoneDict;
+        Model*                            m_pModel;
+        std::string                       m_Data;
+        VertexBuffer::ITfOnGetVertexColor m_fOnGetVertexColor;
+        Texture::ITfOnLoadTexture         m_fOnLoadTexture;
 
         /**
         * Clears a dataset
@@ -1067,9 +1084,15 @@ class FBXModel
         *@param pLink - link containing the bone data
         *@param pBone - if true, link contains the skeleton root node
         *@param boneDict - bone dictionary
+        *@param pAmimationSet - mesh animation set
+        *@param isRoot - if true, the bone represents the root bone, i.e the skeleton itself
         *@return true on success, otherwise false
         */
-        bool BuildSkeleton(IFBXLink* pLink, Model::IBone* pBone, bool isRoot, IBoneDictionary& boneDict) const;
+        bool BuildSkeleton(IFBXLink*             pLink,
+                           Model::IBone*         pBone,
+                           IBoneDictionary&      boneDict,
+                           Model::IAnimationSet* pAmimationSet,
+                           bool                  isRoot) const;
 
         /**
         * Populates a bone
@@ -1088,5 +1111,115 @@ class FBXModel
         */
         bool PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBuffer* pModelVB) const;
 
+        /**
+        * Gets the animation matrix
+        *@param pAnimSet - animation set containing the animation to search
+        *@param pBone - skeleton root bone
+        *@param elapsedTime - elapsed time in milliseconds
+        *@param[out] matrix - animation matrix
+        *@return true on success, otherwise false
+        */
+        bool GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
+                                const Model::IBone*         pBone,
+                                      double                elapsedTime,
+                                      Matrix4x4F&           matrix) const;
+
         void __TEMP(std::string& log) const; //REM
 };
+
+//---------------------------------------------------------------------------
+// FBXModel::IFBXData
+//---------------------------------------------------------------------------
+template <class T>
+T FBXModel::IFBXData::GetT() const
+{
+    // get raw value
+    const std::string str = GetRaw();
+
+    // found it?
+    if (str.empty())
+        return (T)0;
+
+    // convert raw data to double
+    T value = (T)0;
+    std::istringstream sstr(str);
+    sstr >> value;
+
+    // full string must be converted for success
+    if (sstr.rdstate() == std::ios_base::eofbit)
+        return value;
+
+    return (T)0;
+}
+//---------------------------------------------------------------------------
+// FBXModel::IFBXArrayProperty
+//---------------------------------------------------------------------------
+template <class T>
+FBXModel::IFBXArrayProperty<T>::IFBXArrayProperty(std::size_t capacity) :
+    IFBXProperty(IEPropType::IE_PT_Array),
+    m_Capacity(capacity)
+{}
+//---------------------------------------------------------------------------
+template <class T>
+FBXModel::IFBXArrayProperty<T>::~IFBXArrayProperty()
+{}
+//---------------------------------------------------------------------------
+template <class T>
+T FBXModel::IFBXArrayProperty<T>::Get(std::size_t index) const
+{
+    // already cached?
+    if (!m_Cached)
+        GetValues();
+
+    // is index out of bounds?
+    if (index >= m_Values.size())
+        return (T)0;
+
+    return m_Values[index];
+}
+//---------------------------------------------------------------------------
+template <class T>
+std::size_t FBXModel::IFBXArrayProperty<T>::GetCount() const
+{
+    // already cached?
+    if (!m_Cached)
+        GetValues();
+
+    return m_Values.size();
+}
+//---------------------------------------------------------------------------
+template <class T>
+const std::vector<T>* FBXModel::IFBXArrayProperty<T>::GetPtr() const
+{
+    // already cached?
+    if (!m_Cached)
+        GetValues();
+
+    return &m_Values;
+}
+//---------------------------------------------------------------------------
+template <class T>
+void FBXModel::IFBXArrayProperty<T>::GetValues() const
+{
+    // already cached?
+    if (m_Cached)
+        return;
+
+    const std::size_t count = GetValueCount();
+
+    // no available value?
+    if (!count)
+        return;
+
+    // reserve memory for numbers
+    if (m_Capacity)
+        const_cast<std::vector<T>&>(m_Values).reserve(m_Capacity);
+
+    // get the numbers
+    for (std::size_t i = 0; i < count; ++i)
+        const_cast<std::vector<T>&>(m_Values).push_back(GetValue(i)->GetT<T>());
+
+    // notify that values were cached
+    const_cast<bool&>(m_Cached) = true;
+}
+//---------------------------------------------------------------------------

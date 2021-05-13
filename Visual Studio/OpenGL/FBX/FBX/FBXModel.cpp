@@ -959,96 +959,6 @@ std::string FBXModel::IFBXObjectProperty::Get() const
     return m_Value;
 }
 //---------------------------------------------------------------------------
-// FBXModel::IFBXArrayProperty
-//---------------------------------------------------------------------------
-FBXModel::IFBXArrayProperty::IFBXArrayProperty(std::size_t capacity) :
-    IFBXProperty(IEPropType::IE_PT_Array),
-    m_Capacity(capacity)
-{}
-//---------------------------------------------------------------------------
-FBXModel::IFBXArrayProperty::~IFBXArrayProperty()
-{}
-//---------------------------------------------------------------------------
-int FBXModel::IFBXArrayProperty::GetI(std::size_t index) const
-{
-    // already cached?
-    if (!m_Cached)
-        GetValues();
-
-    // is index out of bounds?
-    if (index >= m_Values.size())
-        return 0;
-
-    return (int)m_Values[index];
-}
-//---------------------------------------------------------------------------
-float FBXModel::IFBXArrayProperty::GetF(std::size_t index) const
-{
-    return (float)GetD(index);
-}
-//---------------------------------------------------------------------------
-double FBXModel::IFBXArrayProperty::GetD(std::size_t index) const
-{
-    // already cached?
-    if (!m_Cached)
-        GetValues();
-
-    // is index out of bounds?
-    if (index >= m_Values.size())
-        return 0.0;
-
-    return m_Values[index];
-}
-//---------------------------------------------------------------------------
-std::size_t FBXModel::IFBXArrayProperty::GetCount() const
-{
-    // already cached?
-    if (!m_Cached)
-        GetValues();
-
-    return m_Values.size();
-}
-//---------------------------------------------------------------------------
-const std::vector<double>* FBXModel::IFBXArrayProperty::GetPtr() const
-{
-    // already cached?
-    if (!m_Cached)
-        GetValues();
-
-    return &m_Values;
-}
-//---------------------------------------------------------------------------
-void FBXModel::IFBXArrayProperty::GetValues() const
-{
-    // already cached?
-    if (m_Cached)
-        return;
-
-    const std::size_t count = GetValueCount();
-
-    // no available value?
-    if (!count)
-        return;
-
-    // reserve space for numbers
-    if (m_Capacity)
-        const_cast<std::vector<double>&>(m_Values).reserve(m_Capacity);
-
-    // get the numbers
-    for (std::size_t i = 0; i < count; ++i)
-        switch (GetValue(i)->m_Type)
-        {
-            case IEDataType::IE_DT_Int:   const_cast<std::vector<double>&>(m_Values).push_back(GetValue(i)->GetInt());    continue;
-            case IEDataType::IE_DT_Float: const_cast<std::vector<double>&>(m_Values).push_back(GetValue(i)->GetDouble()); continue;
-
-            default:
-                const_cast<std::vector<double>&>(m_Values).clear();
-                return;
-        }
-
-    const_cast<bool&>(m_Cached) = true;
-}
-//---------------------------------------------------------------------------
 // FBXModel::IFBXNode
 //---------------------------------------------------------------------------
 FBXModel::IFBXNode::IFBXNode() :
@@ -1270,6 +1180,7 @@ bool FBXModel::IMeshTemplate::IsValid() const
 //---------------------------------------------------------------------------
 FBXModel::FBXModel() :
     m_pModel(nullptr),
+    m_fOnGetVertexColor(nullptr),
     m_fOnLoadTexture(nullptr)
 {}
 //---------------------------------------------------------------------------
@@ -1545,7 +1456,7 @@ bool FBXModel::Read(const std::string& data)
     return PerformLinks() && BuildModel();
 }
 //---------------------------------------------------------------------------
-Model* FBXModel::GetModel() const
+Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
 {
     // no model?
     if (!m_pModel)
@@ -1595,8 +1506,10 @@ Model* FBXModel::GetModel() const
             continue;
 
         // vertex buffer was already built?
-        if (pMesh->m_VB[0]->m_Data.size())
+        if (m_pModel->m_PoseOnly && pMesh->m_VB[0]->m_Data.size())
             continue;
+        else
+            m_pModel->m_Mesh[i]->m_VB[0]->m_Data.clear();
 
         // malformed deformers?
         if (meshCount != m_pModel->m_Deformers.size())
@@ -1645,7 +1558,14 @@ Model* FBXModel::GetModel() const
             Matrix4x4F boneMatrix;
 
             // get the bone matrix
-            m_pModel->GetBoneMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
+            if (m_pModel->m_PoseOnly)
+                m_pModel->GetBoneMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
+            else
+                GetBoneAnimMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
+                                  m_pModel->m_AnimationSet[animSetIndex],
+                                  std::fmod(elapsedTime, (double)m_pModel->m_AnimationSet[animSetIndex]->m_MaxValue / 46186158000.0),
+                                  Matrix4x4F::Identity(),
+                                  boneMatrix);
 
             // get the final matrix after bones transform
             const Matrix4x4F finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
@@ -1701,6 +1621,59 @@ Model* FBXModel::GetModel() const
     }
 
     return m_pModel;
+}
+//---------------------------------------------------------------------------
+void FBXModel::GetBoneAnimMatrix(const Model::IBone*         pBone,
+                                 const Model::IAnimationSet* pAnimSet,
+                                       double                elapsedTime,
+                                 const Matrix4x4F&           initialMatrix,
+                                       Matrix4x4F&           matrix) const
+{
+    // no bone?
+    if (!pBone)
+        return;
+
+    // set the output matrix as identity
+    matrix = Matrix4x4F::Identity();
+
+    Matrix4x4F animMatrix;
+
+    // iterate through bones
+    while (pBone)
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        const Matrix4x4F localMatrix = matrix;
+
+        // get the animated bone matrix matching with frame. If not found use the identity one
+        if (!GetAnimationMatrix(pAnimSet, pBone, elapsedTime, animMatrix))
+            animMatrix = Matrix4x4F::Identity();
+
+        // stack the previously calculated matrix with the current bone one
+        //matrix = pBone->m_Matrix.Multiply(localMatrix).Multiply(animMatrix);
+        //matrix = pBone->m_Matrix.Multiply(animMatrix).Multiply(localMatrix);
+        //matrix = localMatrix.Multiply(pBone->m_Matrix).Multiply(animMatrix);
+        matrix = localMatrix.Multiply(animMatrix).Multiply(pBone->m_Matrix);
+        //matrix = animMatrix.Multiply(pBone->m_Matrix).Multiply(localMatrix);
+        //matrix = animMatrix.Multiply(localMatrix).Multiply(pBone->m_Matrix);
+
+        // go to parent bone
+        pBone = pBone->m_pParent;
+    }
+
+    // initial matrix provided?
+    if (!initialMatrix.IsIdentity())
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        const Matrix4x4F localMatrix = matrix;
+
+        // stack the previously calculated matrix with the initial one
+        matrix = localMatrix.Multiply(initialMatrix);
+    }
+}
+//---------------------------------------------------------------------------
+void FBXModel::Set_OnGetVertexColor(VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor)
+{
+    m_fOnGetVertexColor = fOnGetVertexColor;
 }
 //---------------------------------------------------------------------------
 void FBXModel::Set_OnLoadTexture(Texture::ITfOnLoadTexture fOnLoadTexture)
@@ -2093,13 +2066,27 @@ bool FBXModel::SetProperty(const std::string& name,
     else
     if (name == "a")
     {
+        // property is an array
+        if (!pParent)
+            return false;
+
         std::size_t capacity = 0;
 
-        if (pParent && pParent->GetValueCount() && pParent->GetValue(0)->m_Type == IEDataType::IE_DT_Int)
+        // get array capacity, if possible
+        if (pParent->GetValueCount() && pParent->GetValue(0)->m_Type == IEDataType::IE_DT_Int)
             capacity = pParent->GetValue(0)->GetInt();
 
-        // property is an array
-        pProp.reset(new IFBXArrayProperty(capacity));
+        // get parent name
+        const std::string name = pParent->GetName();
+
+        // search for array value type (depends on parent name)
+        if (name == "PolygonVertexIndex" || name == "NormalsIndex" || name == "UVIndex" || name == "Indexes")
+            pProp.reset(new IFBXArrayProperty<std::size_t>(capacity));
+        else
+        if (name == "KeyTime")
+            pProp.reset(new IFBXArrayProperty<long long>(capacity));
+        else
+            pProp.reset(new IFBXArrayProperty<double>(capacity));
     }
     else
         // unknown property
@@ -2387,13 +2374,18 @@ bool FBXModel::BuildModel()
             // create a new skeleton
             std::unique_ptr<Model::IBone> pSkeleton(new Model::IBone);
 
+            // create a new animation set
+            std::unique_ptr<Model::IAnimationSet> pAnimationSet(new Model::IAnimationSet());
+
             // build it
-            if (!BuildSkeleton(m_Links[i], pSkeleton.get(), true, m_BoneDict))
+            if (!BuildSkeleton(m_Links[i], pSkeleton.get(), m_BoneDict, pAnimationSet.get(), true))
                 return false;
 
             // add skeleton to model
             m_BoneDict[m_Links[i]->m_pNode] = pSkeleton.get();
             pModel->m_pSkeleton             = pSkeleton.release();
+            pModel->m_AnimationSet.push_back(pAnimationSet.get());
+            pAnimationSet.release();
 
             break;
         }
@@ -2430,12 +2422,14 @@ bool FBXModel::BuildModel()
                     if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "Vertices" &&
                         m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetPropCount())
                         pTemplate->m_pVertices =
-                                static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0))->GetPtr();
+                                static_cast<IFBXArrayProperty<double>*>
+                                        (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0))->GetPtr();
                     else
                     if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "PolygonVertexIndex" &&
                         m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetPropCount())
                         pTemplate->m_pIndices =
-                                static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0))->GetPtr();
+                                static_cast<IFBXArrayProperty<std::size_t>*>
+                                        (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetProp(0))->GetPtr();
                     else
                     if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "LayerElementNormal")
                     {
@@ -2445,12 +2439,14 @@ bool FBXModel::BuildModel()
                             if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetName() == "Normals" &&
                                 m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetPropCount())
                                 pTemplate->m_pNormals =
-                                        static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0))->GetPtr();
+                                        static_cast<IFBXArrayProperty<double>*>
+                                                (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0))->GetPtr();
                             else
                             if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetName() == "NormalsIndex" &&
                                 m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetPropCount())
                                 pTemplate->m_pNormalIndices =
-                                        static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0))->GetPtr();
+                                        static_cast<IFBXArrayProperty<std::size_t>*>
+                                                (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0))->GetPtr();
                     }
                     else
                     if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetName() == "LayerElementUV")
@@ -2461,12 +2457,14 @@ bool FBXModel::BuildModel()
                             if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetName() == "UV" &&
                                 m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetPropCount())
                                 pTemplate->m_pUVs =
-                                        static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0))->GetPtr();
+                                        static_cast<IFBXArrayProperty<double>*>
+                                                (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0))->GetPtr();
                             else
                             if (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetName() == "UVIndex" &&
                                 m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetPropCount())
                                 pTemplate->m_pUVIndices =
-                                        static_cast<IFBXArrayProperty*>(m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0))->GetPtr();
+                                        static_cast<IFBXArrayProperty<std::size_t>*>
+                                                (m_Links[i]->m_Children[j]->m_pNode->GetChild(k)->GetChild(l)->GetProp(0))->GetPtr();
                     }
 
                 // found all required tables?
@@ -2552,8 +2550,8 @@ bool FBXModel::BuildModel()
                                         if (propName == "Indexes")
                                         {
                                             // get source index table
-                                            const std::vector<double>* pIndexes =
-                                                    static_cast<IFBXArrayProperty*>(pDefChildNode->GetProp(0))->GetPtr();
+                                            const std::vector<std::size_t>* pIndexes =
+                                                    static_cast<IFBXArrayProperty<std::size_t>*>(pDefChildNode->GetProp(0))->GetPtr();
 
                                             // found it?
                                             if (pIndexes)
@@ -2568,7 +2566,7 @@ bool FBXModel::BuildModel()
                                                 for (std::size_t n = 0; n < indexCount; ++n)
                                                 {
                                                     std::unique_ptr<Model::IWeightInfluence> pInfluence(new Model::IWeightInfluence());
-                                                    pInfluence->m_VertexIndex.push_back((int)(*pIndexes)[n]);
+                                                    pInfluence->m_VertexIndex.push_back((*pIndexes)[n]);
 
                                                     pModelSkinWeights->m_WeightInfluences[n] = pInfluence.get();
                                                     pInfluence.release();
@@ -2580,7 +2578,7 @@ bool FBXModel::BuildModel()
                                         {
                                             // get source weights table
                                             const std::vector<double>* pWeights =
-                                                    static_cast<IFBXArrayProperty*>(pDefChildNode->GetProp(0))->GetPtr();
+                                                    static_cast<IFBXArrayProperty<double>*>(pDefChildNode->GetProp(0))->GetPtr();
 
                                             // found it?
                                             if (pWeights)
@@ -2601,7 +2599,7 @@ bool FBXModel::BuildModel()
                                         {
                                             // get source matrix
                                             const std::vector<double>* pMatrix =
-                                                    static_cast<IFBXArrayProperty*>(pDefChildNode->GetProp(0))->GetPtr();
+                                                    static_cast<IFBXArrayProperty<double>*>(pDefChildNode->GetProp(0))->GetPtr();
 
                                             // found it?
                                             if (pMatrix)
@@ -2625,7 +2623,7 @@ bool FBXModel::BuildModel()
                                         {
                                             // get source matrix
                                             const std::vector<double>* pMatrix =
-                                                    static_cast<IFBXArrayProperty*>(pDefChildNode->GetProp(0))->GetPtr();
+                                                    static_cast<IFBXArrayProperty<double>*>(pDefChildNode->GetProp(0))->GetPtr();
 
                                             // found it?
                                             if (pMatrix)
@@ -2647,6 +2645,10 @@ bool FBXModel::BuildModel()
                                         }
                                     }
                                 }
+
+                                // get the weight bone name
+                                if (pDeformers->m_Children[l]->m_pNode->GetValueCount() >= 2)
+                                    pModelSkinWeights->m_BoneName = pDeformers->m_Children[l]->m_pNode->GetValue(1)->GetStr();
 
                                 // get the weight matrix to apply
                                 pModelSkinWeights->m_Matrix = pModelSkinWeights->m_TransformLinkMatrix;
@@ -2714,10 +2716,17 @@ bool FBXModel::BuildModel()
     // keep the built model
     m_pModel = pModel.release();
 
+    // to show only the pose without animation
+    //m_pModel->m_PoseOnly = true;
+
     return true;
 }
 //---------------------------------------------------------------------------
-bool FBXModel::BuildSkeleton(IFBXLink* pLink, Model::IBone* pBone, bool isRoot, IBoneDictionary& boneDict) const
+bool FBXModel::BuildSkeleton(IFBXLink*             pLink,
+                             Model::IBone*         pBone,
+                             IBoneDictionary&      boneDict,
+                             Model::IAnimationSet* pAmimationSet,
+                             bool                  isRoot) const
 {
     if (!pLink)
         return false;
@@ -2725,14 +2734,20 @@ bool FBXModel::BuildSkeleton(IFBXLink* pLink, Model::IBone* pBone, bool isRoot, 
     if (!pBone)
         return false;
 
+    std::unique_ptr<Model::IAnimation> pAnimation(new Model::IAnimation());
+    IFBXNode*                          pModel = nullptr;
+
     // get link child count
     const std::size_t childCount = pLink->m_Children.size();
 
-    // iterate through link children
+    // iterate through children links
     for (std::size_t i = 0; i < childCount; ++i)
         // found a model node?
         if (pLink->m_Children[i]->m_NodeType == IENodeType::IE_NT_Model)
         {
+            // keep the bone model, it will be reused to retrieve the bone while animation will be built
+            pModel = pLink->m_Children[i]->m_pNode;
+
             // is the root link?
             if (isRoot)
             {
@@ -2741,9 +2756,10 @@ bool FBXModel::BuildSkeleton(IFBXLink* pLink, Model::IBone* pBone, bool isRoot, 
                     return false;
 
                 // build children bones
-                if (!BuildSkeleton(pLink->m_Children[i], pBone, false, boneDict))
+                if (!BuildSkeleton(pLink->m_Children[i], pBone, boneDict, pAmimationSet, false))
                     return false;
 
+                boneDict[pLink->m_Children[i]->m_pNode] = pBone;
                 continue;
             }
 
@@ -2756,7 +2772,7 @@ bool FBXModel::BuildSkeleton(IFBXLink* pLink, Model::IBone* pBone, bool isRoot, 
                 return false;
 
             // build children bones
-            if (!BuildSkeleton(pLink->m_Children[i], pChildBone.get(), false, boneDict))
+            if (!BuildSkeleton(pLink->m_Children[i], pChildBone.get(), boneDict, pAmimationSet, false))
                 return false;
 
             // add bone to skeleton
@@ -2764,6 +2780,127 @@ bool FBXModel::BuildSkeleton(IFBXLink* pLink, Model::IBone* pBone, bool isRoot, 
             pBone->m_Children.push_back(pChildBone.get());
             pChildBone.release();
         }
+        else
+        if (pLink->m_Children[i]->m_NodeType == IENodeType::IE_NT_AnimationCurveNode)
+        {
+            std::unique_ptr<Model::IAnimationKeys> pAnimationKeys(new Model::IAnimationKeys());
+
+            if (pLink->m_Children[i]->m_pNode->GetValueCount() >= 2)
+            {
+                const std::string type = pLink->m_Children[i]->m_pNode->GetValue(1)->GetStr();
+
+                if (type.length())
+                {
+                    const std::size_t lastIndex = type.length() - 1;
+
+                    if (type[lastIndex] == 'T')
+                        pAnimationKeys->m_Type = Model::IEAnimKeyType::IE_KT_Position;
+                    else
+                    if (type[lastIndex] == 'R')
+                        pAnimationKeys->m_Type = Model::IEAnimKeyType::IE_KT_Rotation;
+                    else
+                    if (type[lastIndex] == 'S')
+                        pAnimationKeys->m_Type = Model::IEAnimKeyType::IE_KT_Scale;
+                    else
+                        continue;
+                }
+            }
+
+            // get link grandchildren count
+            const std::size_t nodeChildCount = pLink->m_Children[i]->m_Children.size();
+
+            // iterate through link grandchildren
+            for (std::size_t j = 0; j < nodeChildCount; ++j)
+                // found an animation curve?
+                if (pLink->m_Children[i]->m_Children[j]->m_NodeType == IENodeType::IE_NT_AnimationCurve)
+                {
+                    IFBXNode* pAnimationCurve = pLink->m_Children[i]->m_Children[j]->m_pNode;
+
+                    if (!pAnimationCurve)
+                        continue;
+
+                    IFBXArrayProperty<long long>* pKeys   = nullptr;
+                    IFBXArrayProperty<double>*    pValues = nullptr;
+
+                    // get animation curve children count
+                    const std::size_t animCurveChildCount = pAnimationCurve->GetChildCount();
+
+                    // iterate through animation curve children
+                    for (std::size_t k = 0; k < animCurveChildCount; ++k)
+                    {
+                        IFBXNode* pAnimCurveChildNode = pAnimationCurve->GetChild(k);
+
+                        if (pAnimCurveChildNode && pAnimCurveChildNode->GetPropCount())
+                            if (pAnimCurveChildNode->GetName() == "KeyTime")
+                                pKeys = static_cast<IFBXArrayProperty<long long>*>(pAnimCurveChildNode->GetProp(0));
+                            else
+                            if (pAnimCurveChildNode->GetName() == "KeyValueFloat")
+                                pValues = static_cast<IFBXArrayProperty<double>*>(pAnimCurveChildNode->GetProp(0));
+                    }
+
+                    if (!pKeys || !pValues)
+                        continue;
+
+                    if (pKeys->GetCount() != pValues->GetCount())
+                        continue;
+
+                    // get animation value count
+                    const std::size_t valueCount = pValues->GetCount();
+
+                    // iterate through animation values
+                    for (std::size_t k = 0; k < valueCount; ++k)
+                    {
+                        std::unique_ptr<Model::IAnimationKey> pNewAnimationKey;
+                        Model::IAnimationKey*                 pAnimationKey;
+
+                        if (!j)
+                        {
+                            pNewAnimationKey.reset(new Model::IAnimationKey());
+                            pAnimationKey              = pNewAnimationKey.get();
+                            pAnimationKey->m_TimeStamp = pKeys->Get(k);
+                            pAmimationSet->m_MaxValue  = std::max(pAnimationKey->m_TimeStamp, pAmimationSet->m_MaxValue);
+                        }
+                        else
+                            pAnimationKey = pAnimationKeys->m_Keys[k];
+
+                        if (pAnimationKey->m_TimeStamp != pKeys->Get(k))
+                        {
+                            // do something...
+                            int ii = 0;
+                        }
+
+                        pAnimationKey->m_Values.push_back((float)pValues->Get(k));
+
+                        if (!j)
+                        {
+                            pAnimationKeys->m_Keys.push_back(pNewAnimationKey.get());
+                            pNewAnimationKey.release();
+                        }
+                    }
+                }
+
+            pAnimation->m_Keys.push_back(pAnimationKeys.get());
+            pAnimationKeys.release();
+        }
+
+    // found a model node?
+    if (pModel)
+    {
+        // get the bone linked with this model
+        IBoneDictionary::const_iterator it = m_BoneDict.find(pModel);
+
+        // found it?
+        if (it != m_BoneDict.end())
+        {
+            // link the bone to the animation
+            pAnimation->m_BoneName = it->second->m_Name;
+            pAnimation->m_pBone    = it->second;
+        }
+
+        // add the animation to the animation set
+        pAmimationSet->m_Animations.push_back(pAnimation.get());
+        pAnimation.release();
+    }
 
     return true;
 }
@@ -2936,7 +3073,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[0] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[1] * 3];
                     vertex.m_Y = (float)(*pMeshTemplate->m_pVertices)[(indices[1] * 3) + 1];
@@ -2949,7 +3086,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[1] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[1] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[2] * 3];
                     vertex.m_Y = (float)(*pMeshTemplate->m_pVertices)[(indices[2] * 3) + 1];
@@ -2962,7 +3099,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[2] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     break;
 
@@ -2979,7 +3116,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[0] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[1] * 3];
                     vertex.m_Y = (float)(*pMeshTemplate->m_pVertices)[(indices[1] * 3) + 1];
@@ -2992,7 +3129,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[1] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[1] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[2] * 3];
                     vertex.m_Y = (float)(*pMeshTemplate->m_pVertices)[(indices[2] * 3) + 1];
@@ -3005,7 +3142,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[2] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     // ...and the second
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[0] * 3];
@@ -3019,7 +3156,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[0] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[2] * 3];
                     vertex.m_Y = (float)(*pMeshTemplate->m_pVertices)[(indices[2] * 3) + 1];
@@ -3032,7 +3169,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[2] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[3] * 3];
                     vertex.m_Y = (float)(*pMeshTemplate->m_pVertices)[(indices[3] * 3) + 1];
@@ -3045,7 +3182,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[3] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[3] * 2) + 1];
 
-                    pModelVB->Add(&vertex, &normal, &uv, 0, nullptr);
+                    pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     break;
             }
@@ -3058,6 +3195,217 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
     }
 
     return true;
+}
+//---------------------------------------------------------------------------
+bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
+                                  const Model::IBone*         pBone,
+                                        double                elapsedTime,
+                                        Matrix4x4F&           matrix) const
+{
+    // no animation set?
+    if (!pAnimSet)
+        return false;
+
+    // no bone?
+    if (!pBone)
+        return false;
+
+    // iterate through animations
+    for (std::size_t i = 0; i < pAnimSet->m_Animations.size(); ++i)
+    {
+        // found the animation matching with the bone for which the matrix should be get?
+        if (pAnimSet->m_Animations[i]->m_pBone != pBone)
+            continue;
+
+        double   rotFrame       = 0.0;
+        double   nextRotFrame   = 0.0;
+        double   posFrame       = 0.0;
+        double   nextPosFrame   = 0.0;
+        double   scaleFrame     = 0.0;
+        double   nextScaleFrame = 0.0;
+        Vector3F rotation;
+        Vector3F nextRotation;
+        Vector3F finalRotation;
+        Vector3F position;
+        Vector3F nextPosition;
+        Vector3F finalPosition;
+        Vector3F scaling(1.0f, 1.0f, 1.0f);
+        Vector3F nextScaling(1.0f, 1.0f, 1.0f);
+        Vector3F finalScaling(1.0f, 1.0f, 1.0f);
+
+        // iterate through animation keys
+        for (std::size_t j = 0; j < pAnimSet->m_Animations[i]->m_Keys.size(); ++j)
+        {
+            std::size_t keyIndex = 0;
+
+            // iterate through animation key items
+            for (std::size_t k = 0; k < pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size(); ++k)
+            {
+                // the time unit in FBX (FbxTime) is 1/46186158000 of one second
+                const double frameTime = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[k]->m_TimeStamp / 46186158000.0;
+
+                if (elapsedTime >= frameTime)
+                    keyIndex = k;
+                else
+                    break;
+            }
+
+            // search for keys type
+            switch (pAnimSet->m_Animations[i]->m_Keys[j]->m_Type)
+            {
+                case Model::IEAnimKeyType::IE_KT_Rotation:
+                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
+                        return false;
+
+                    // get the rotation quaternion at index
+                    rotation.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[0];
+                    rotation.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[1];
+                    rotation.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[2];
+                    rotFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_TimeStamp / 46186158000.0;
+
+                    // get the next rotation quaternion
+                    if (keyIndex + 1 >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size())
+                    {
+                        nextRotation.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[0];
+                        nextRotation.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[1];
+                        nextRotation.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[2];
+                        nextRotFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_TimeStamp / 46186158000.0;
+                    }
+                    else
+                    {
+                        nextRotation.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[0];
+                        nextRotation.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[1];
+                        nextRotation.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[2];
+                        nextRotFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_TimeStamp / 46186158000.0;
+                    }
+
+                    continue;
+
+                case Model::IEAnimKeyType::IE_KT_Scale:
+                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
+                        return false;
+
+                    // get the scale values at index
+                    scaling.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[0];
+                    scaling.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[1];
+                    scaling.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[2];
+                    scaleFrame  = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_TimeStamp / 46186158000.0;
+
+                    // get the next rotation quaternion
+                    if (keyIndex + 1 >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size())
+                    {
+                        nextScaling.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[0];
+                        nextScaling.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[1];
+                        nextScaling.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[2];
+                        nextScaleFrame  = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_TimeStamp / 46186158000.0;
+                    }
+                    else
+                    {
+                        nextScaling.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[0];
+                        nextScaling.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[1];
+                        nextScaling.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[2];
+                        nextScaleFrame  = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_TimeStamp / 46186158000.0;
+                    }
+
+                    continue;
+
+                case Model::IEAnimKeyType::IE_KT_Position:
+                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
+                        return false;
+
+                    // get the position values at index
+                    position.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[0];
+                    position.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[1];
+                    position.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[2];
+                    posFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_TimeStamp / 46186158000.0;
+
+                    // get the next rotation quaternion
+                    if (keyIndex + 1 >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size())
+                    {
+                        nextPosition.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[0];
+                        nextPosition.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[1];
+                        nextPosition.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[2];
+                        nextPosFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_TimeStamp / 46186158000.0;
+                    }
+                    else
+                    {
+                        nextPosition.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[0];
+                        nextPosition.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[1];
+                        nextPosition.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[2];
+                        nextPosFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_TimeStamp / 46186158000.0;
+                    }
+
+                    continue;
+
+                default:
+                    continue;
+            }
+        }
+
+        // calculate the frame delta, the frame length and the interpolation for the position
+        float frameDelta    = (float)(elapsedTime  - posFrame);
+        float frameLength   = (float)(nextPosFrame - posFrame);
+        float interpolation = frameLength ? frameDelta / frameLength : 0.0f;
+
+        // interpolate the position
+        finalPosition.m_X = position.m_X + ((nextPosition.m_X - position.m_X) * interpolation);
+        finalPosition.m_Y = position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation);
+        finalPosition.m_Z = position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation);
+
+        // calculate the frame delta, the frame length and the interpolation for the rotation
+        frameDelta    = (float)(elapsedTime  - rotFrame);
+        frameLength   = (float)(nextRotFrame - rotFrame);
+        interpolation = frameLength ? frameDelta / frameLength : 0.0f;
+
+        // interpolate the rotation
+        finalRotation.m_X = rotation.m_X + ((nextRotation.m_X - rotation.m_X) * interpolation);
+        finalRotation.m_Y = rotation.m_Y + ((nextRotation.m_Y - rotation.m_Y) * interpolation);
+        finalRotation.m_Z = rotation.m_Z + ((nextRotation.m_Z - rotation.m_Z) * interpolation);
+
+        const float degToRad = (float)(M_PI / 180.0f);
+
+        // get the x y and z rotation matrices based on their respective Euler angles
+        Matrix4x4F rotMatX = Matrix4x4F::Identity();
+        rotMatX.Rotate(finalRotation.m_X * degToRad, Vector3F(1.0f, 0.0f, 0.0f));
+        rotMatX = rotMatX.Transpose();
+        Matrix4x4F rotMatY = Matrix4x4F::Identity();
+        rotMatY.Rotate(finalRotation.m_Y * degToRad, Vector3F(0.0f, 1.0f, 0.0f));
+        rotMatY = rotMatY.Transpose();
+        Matrix4x4F rotMatZ = Matrix4x4F::Identity();
+        rotMatZ.Rotate(finalRotation.m_Z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
+        rotMatZ = rotMatZ.Transpose();
+
+        // calculate the frame delta, the frame length and the interpolation for the scaling
+        frameDelta    = (float)(elapsedTime    - scaleFrame);
+        frameLength   = (float)(nextScaleFrame - scaleFrame);
+        interpolation = frameLength ? frameDelta / frameLength : 0.0f;
+
+        // interpolate the scaling
+        finalScaling.m_X = scaling.m_X + ((nextScaling.m_X - scaling.m_X) * interpolation);
+        finalScaling.m_Y = scaling.m_Y + ((nextScaling.m_Y - scaling.m_Y) * interpolation);
+        finalScaling.m_Z = scaling.m_Z + ((nextScaling.m_Z - scaling.m_Z) * interpolation);
+
+        Matrix4x4F translateMatrix = Matrix4x4F::Identity();
+        //Matrix4x4F rotateMatrix    = rotMatX.Multiply(rotMatY).Multiply(rotMatZ);
+        Matrix4x4F rotateMatrix    = rotMatZ.Multiply(rotMatY).Multiply(rotMatX);
+        Matrix4x4F scaleMatrix     = Matrix4x4F::Identity();
+
+        // get the rotation quaternion and the scale and translate vectors
+        scaleMatrix.Scale(finalScaling);
+        translateMatrix.Translate(finalPosition);
+
+        //rotateMatrix = rotateMatrix.Transpose();
+
+        // build the final matrix
+        //matrix = scaleMatrix.Multiply(rotateMatrix).Multiply(translateMatrix);
+        matrix = rotateMatrix.Multiply(translateMatrix).Multiply(scaleMatrix);
+        //matrix = translateMatrix.Multiply(rotateMatrix).Multiply(scaleMatrix);
+        //matrix = matrix.Transpose();
+
+        return true;
+    }
+
+    return false;
 }
 //---------------------------------------------------------------------------
 //REM

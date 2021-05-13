@@ -103,9 +103,9 @@ void DrawFBX(const FBXModel&        fbxModel,
              const Shader_OpenGL*   pShader,
              const Renderer_OpenGL* pRenderer,
                    int              animSetIndex,
-                   int              frameCount)
+                   double           elapsedTime)
 {
-    Model* pModel = fbxModel.GetModel();
+    Model* pModel = fbxModel.GetModel(animSetIndex, elapsedTime);
 
     // iterate through the meshes to draw
     for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
@@ -310,15 +310,18 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             modelMatrix.m_Table[3][1] = -17.5f;
             modelMatrix.m_Table[3][2] = -50.0f;
 
-            // draw the scene
-            renderer.BeginScene(bgColor, (Renderer::IESceneFlags)((unsigned)Renderer::IESceneFlags::IE_SF_ClearColor | (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
-            DrawFBX(fbx, modelMatrix, &shader, &renderer, 1, 4800);
-            renderer.EndScene();
-
             // calculate the elapsed time
             double elapsedTime = (double)::GetTickCount64() - lastTime;
-            lastTime           = (double)::GetTickCount64();
-            angle              = std::fmodf(angle + ((float)elapsedTime * 0.001f), 2.0f * (float)M_PI);
+                   lastTime    = (double)::GetTickCount64();
+
+            // draw the scene
+            renderer.BeginScene(bgColor, (Renderer::IESceneFlags)((unsigned)Renderer::IESceneFlags::IE_SF_ClearColor |
+                                                                  (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
+            DrawFBX(fbx, modelMatrix, &shader, &renderer, 0, lastTime * 0.001);
+            renderer.EndScene();
+
+            // calculate the next angle
+            angle = std::fmodf(angle + ((float)elapsedTime * 0.001f), 2.0f * (float)M_PI);
 
             Sleep(1);
         }

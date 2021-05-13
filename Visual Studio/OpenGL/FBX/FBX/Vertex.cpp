@@ -157,7 +157,7 @@ bool VertexBuffer::Add(const Vector3F*           pVertex,
     // keep the current offset
     std::size_t offset = m_Data.size();
 
-    // allocate space for new vertex
+    // allocate memory for new vertex
     m_Data.resize(m_Data.size() + m_Format.m_Stride);
 
     // source vertex exists?

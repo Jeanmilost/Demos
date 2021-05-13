@@ -130,6 +130,7 @@ class Model
             typedef std::vector<float> IValues;
 
             std::size_t m_Frame;
+            long long   m_TimeStamp;
             IValues     m_Values;
 
             IAnimationKey();
@@ -172,7 +173,8 @@ class Model
         {
             typedef std::vector<IAnimation*> IAnimations;
 
-            IAnimations m_Animations;
+            IAnimations m_Animations; // animations belonging to this set
+            long long   m_MaxValue;   // maximum value the animation may reach before looping or stopping
 
             IAnimationSet();
             virtual ~IAnimationSet();
@@ -203,31 +205,4 @@ class Model
         *@param[out] matrix - animation matrix
         */
         virtual void GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const;
-
-        /**
-        * Gets the bone animation matrix
-        *@param pBone - skeleton root bone
-        *@param pAnimSet - animation set containing the animation to get
-        *@param frameIndex - animation frame index
-        *@param initialMatrix - the initial matrix
-        *@param[out] matrix - animation matrix
-        */
-        virtual void GetBoneAnimMatrix(const IBone*         pBone,
-                                       const IAnimationSet* pAnimSet,
-                                             std::size_t    frameIndex,
-                                       const Matrix4x4F&    initialMatrix,
-                                             Matrix4x4F&    matrix) const;
-
-        /**
-        * Gets the animation matrix
-        *@param pAnimSet - animation set containing the animation to search
-        *@param pBone - skeleton root bone
-        *@param frame - animation frame
-        *@param[out] matrix - animation matrix
-        *@return true on success, otherwise false
-        */
-        virtual bool GetAnimationMatrix(const IAnimationSet* pAnimSet,
-                                        const IBone*         pBone,
-                                              std::size_t    frame,
-                                              Matrix4x4F&    matrix) const;
 };
