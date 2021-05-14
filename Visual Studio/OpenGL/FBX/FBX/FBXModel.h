@@ -825,6 +825,13 @@ class FBXModel
                                              Matrix4x4F&           matrix) const;
 
         /**
+        * Sets if only the pose should be rendered, without animation
+        *@param value - if true, only the pose will be rendered
+        *@note This function should be called before open the model
+        */
+        virtual void SetPoseOnly(bool value);
+
+        /**
         * Sets the OnGetVertexColor callback
         *@param fOnGetVertexColor - callback function handle
         */
@@ -971,6 +978,7 @@ class FBXModel
         IBoneDictionary                   m_BoneDict;
         Model*                            m_pModel;
         std::string                       m_Data;
+        bool                              m_PoseOnly;
         VertexBuffer::ITfOnGetVertexColor m_fOnGetVertexColor;
         Texture::ITfOnLoadTexture         m_fOnLoadTexture;
 

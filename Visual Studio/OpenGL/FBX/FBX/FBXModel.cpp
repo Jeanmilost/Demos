@@ -1180,6 +1180,7 @@ bool FBXModel::IMeshTemplate::IsValid() const
 //---------------------------------------------------------------------------
 FBXModel::FBXModel() :
     m_pModel(nullptr),
+    m_PoseOnly(false),
     m_fOnGetVertexColor(nullptr),
     m_fOnLoadTexture(nullptr)
 {}
@@ -1556,19 +1557,54 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
         for (std::size_t j = 0; j < weightCount; ++j)
         {
             Matrix4x4F boneMatrix;
+            Matrix4x4F finalMatrix;
 
             // get the bone matrix
             if (m_pModel->m_PoseOnly)
+            {
                 m_pModel->GetBoneMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
+
+                // get the final matrix after bones transform
+                finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
+            }
             else
+            {
                 GetBoneAnimMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
                                   m_pModel->m_AnimationSet[animSetIndex],
                                   std::fmod(elapsedTime, (double)m_pModel->m_AnimationSet[animSetIndex]->m_MaxValue / 46186158000.0),
                                   Matrix4x4F::Identity(),
                                   boneMatrix);
 
-            // get the final matrix after bones transform
-            const Matrix4x4F finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
+                // get the final matrix after bones transform
+                /*
+                */
+                finalMatrix =
+                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix.
+                    Multiply(boneMatrix).
+                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix);
+                /*
+                finalMatrix =
+                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix.
+                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix).
+                    Multiply(boneMatrix);
+                finalMatrix =
+                    boneMatrix.
+                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix).
+                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix);
+                finalMatrix =
+                    boneMatrix.
+                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix).
+                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix);
+                finalMatrix =
+                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix.
+                    Multiply(boneMatrix).
+                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix);
+                finalMatrix =
+                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix.
+                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix).
+                    Multiply(boneMatrix);
+                */
+            }
 
             // get the weight influence count
             const std::size_t weightInfluenceCount = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size();
@@ -1647,14 +1683,17 @@ void FBXModel::GetBoneAnimMatrix(const Model::IBone*         pBone,
         // get the animated bone matrix matching with frame. If not found use the identity one
         if (!GetAnimationMatrix(pAnimSet, pBone, elapsedTime, animMatrix))
             animMatrix = Matrix4x4F::Identity();
+            //animMatrix = pBone->m_Matrix;
 
         // stack the previously calculated matrix with the current bone one
-        //matrix = pBone->m_Matrix.Multiply(localMatrix).Multiply(animMatrix);
+        matrix = pBone->m_Matrix.Multiply(localMatrix).Multiply(animMatrix);
         //matrix = pBone->m_Matrix.Multiply(animMatrix).Multiply(localMatrix);
         //matrix = localMatrix.Multiply(pBone->m_Matrix).Multiply(animMatrix);
-        matrix = localMatrix.Multiply(animMatrix).Multiply(pBone->m_Matrix);
+        //matrix = localMatrix.Multiply(animMatrix).Multiply(pBone->m_Matrix);
         //matrix = animMatrix.Multiply(pBone->m_Matrix).Multiply(localMatrix);
         //matrix = animMatrix.Multiply(localMatrix).Multiply(pBone->m_Matrix);
+        //matrix = animMatrix.Multiply(localMatrix);
+        //matrix = localMatrix.Multiply(animMatrix);
 
         // go to parent bone
         pBone = pBone->m_pParent;
@@ -1669,6 +1708,11 @@ void FBXModel::GetBoneAnimMatrix(const Model::IBone*         pBone,
         // stack the previously calculated matrix with the initial one
         matrix = localMatrix.Multiply(initialMatrix);
     }
+}
+//---------------------------------------------------------------------------
+void FBXModel::SetPoseOnly(bool value)
+{
+    m_PoseOnly = value;
 }
 //---------------------------------------------------------------------------
 void FBXModel::Set_OnGetVertexColor(VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor)
@@ -2613,9 +2657,10 @@ bool FBXModel::BuildModel()
                                                                                          (float)(*pMatrix)[2], (float)(*pMatrix)[6], (float)(*pMatrix)[10], (float)(*pMatrix)[14],
                                                                                          (float)(*pMatrix)[3], (float)(*pMatrix)[7], (float)(*pMatrix)[11], (float)(*pMatrix)[15]);
 
+                                                //REM?
                                                 // inverse it
-                                                float determinant = 0.0f;
-                                                pModelSkinWeights->m_TransformMatrix = pModelSkinWeights->m_TransformMatrix.Inverse(determinant);
+                                                //float determinant = 0.0f;
+                                                //pModelSkinWeights->m_TransformMatrix = pModelSkinWeights->m_TransformMatrix.Inverse(determinant);
                                             }
                                         }
                                         else
@@ -2717,7 +2762,7 @@ bool FBXModel::BuildModel()
     m_pModel = pModel.release();
 
     // to show only the pose without animation
-    //m_pModel->m_PoseOnly = true;
+    m_pModel->m_PoseOnly = m_PoseOnly;
 
     return true;
 }
@@ -3367,13 +3412,13 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         // get the x y and z rotation matrices based on their respective Euler angles
         Matrix4x4F rotMatX = Matrix4x4F::Identity();
         rotMatX.Rotate(finalRotation.m_X * degToRad, Vector3F(1.0f, 0.0f, 0.0f));
-        rotMatX = rotMatX.Transpose();
+        //rotMatX = rotMatX.Transpose();
         Matrix4x4F rotMatY = Matrix4x4F::Identity();
         rotMatY.Rotate(finalRotation.m_Y * degToRad, Vector3F(0.0f, 1.0f, 0.0f));
-        rotMatY = rotMatY.Transpose();
+        //rotMatY = rotMatY.Transpose();
         Matrix4x4F rotMatZ = Matrix4x4F::Identity();
         rotMatZ.Rotate(finalRotation.m_Z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
-        rotMatZ = rotMatZ.Transpose();
+        //rotMatZ = rotMatZ.Transpose();
 
         // calculate the frame delta, the frame length and the interpolation for the scaling
         frameDelta    = (float)(elapsedTime    - scaleFrame);
@@ -3381,18 +3426,30 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         interpolation = frameLength ? frameDelta / frameLength : 0.0f;
 
         // interpolate the scaling
-        finalScaling.m_X = scaling.m_X + ((nextScaling.m_X - scaling.m_X) * interpolation);
-        finalScaling.m_Y = scaling.m_Y + ((nextScaling.m_Y - scaling.m_Y) * interpolation);
-        finalScaling.m_Z = scaling.m_Z + ((nextScaling.m_Z - scaling.m_Z) * interpolation);
+        //finalScaling.m_X = scaling.m_X + ((nextScaling.m_X - scaling.m_X) * interpolation);
+        //finalScaling.m_Y = scaling.m_Y + ((nextScaling.m_Y - scaling.m_Y) * interpolation);
+        //finalScaling.m_Z = scaling.m_Z + ((nextScaling.m_Z - scaling.m_Z) * interpolation);
 
-        Matrix4x4F translateMatrix = Matrix4x4F::Identity();
-        //Matrix4x4F rotateMatrix    = rotMatX.Multiply(rotMatY).Multiply(rotMatZ);
-        Matrix4x4F rotateMatrix    = rotMatZ.Multiply(rotMatY).Multiply(rotMatX);
-        Matrix4x4F scaleMatrix     = Matrix4x4F::Identity();
+        //Matrix4x4F translateMatrix = Matrix4x4F::Identity();
+        Matrix4x4F rotateMatrix    = rotMatX.Multiply(rotMatY).Multiply(rotMatZ);
+        //Matrix4x4F rotateMatrix    = rotMatZ.Multiply(rotMatY).Multiply(rotMatX);
+        //Matrix4x4F scaleMatrix     = Matrix4x4F::Identity();
 
         // get the rotation quaternion and the scale and translate vectors
-        scaleMatrix.Scale(finalScaling);
-        translateMatrix.Translate(finalPosition);
+        //scaleMatrix.Scale(finalScaling);
+        //translateMatrix.Translate(finalPosition);
+
+        // create the translation matrix
+        Matrix4x4F translateMatrix = Matrix4x4F::Identity();
+        translateMatrix.m_Table[3][0] = finalPosition.m_X;
+        translateMatrix.m_Table[3][1] = finalPosition.m_Y;
+        translateMatrix.m_Table[3][2] = finalPosition.m_Z;
+
+        // create the scale matrix
+        Matrix4x4F scaleMatrix = Matrix4x4F::Identity();
+        scaleMatrix.m_Table[0][0] = finalScaling.m_X;
+        scaleMatrix.m_Table[1][1] = finalScaling.m_Y;
+        scaleMatrix.m_Table[2][2] = finalScaling.m_Z;
 
         //rotateMatrix = rotateMatrix.Transpose();
 
@@ -3401,6 +3458,9 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         matrix = rotateMatrix.Multiply(translateMatrix).Multiply(scaleMatrix);
         //matrix = translateMatrix.Multiply(rotateMatrix).Multiply(scaleMatrix);
         //matrix = matrix.Transpose();
+
+        //float determinant = 0.0f;
+        //matrix = matrix.Inverse(determinant);
 
         return true;
     }

@@ -158,7 +158,7 @@ class Matrix4x4
         * Inverses a matrix
         *@param[out] determinant - matrix determinant
         */
-        virtual inline Matrix4x4 Inverse(float& determinant);
+        virtual inline Matrix4x4 Inverse(float& determinant) const;
 
         /**
         * Transposes a matrix
@@ -322,10 +322,10 @@ Matrix4x4<T> Matrix4x4<T>::Identity()
 }
 //---------------------------------------------------------------------------
 template <class T>
-Matrix4x4<T> Matrix4x4<T>::Inverse(float& determinant)
+Matrix4x4<T> Matrix4x4<T>::Inverse(float& determinant) const
 {
-    T t[3];
-    T v[16];
+    T t[3]  = {0};
+    T v[16] = {0};
 
     t[0] = m_Table[2][2] * m_Table[3][3] - m_Table[2][3] * m_Table[3][2];
     t[1] = m_Table[1][2] * m_Table[3][3] - m_Table[1][3] * m_Table[3][2];

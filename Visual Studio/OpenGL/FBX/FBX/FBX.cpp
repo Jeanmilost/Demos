@@ -238,6 +238,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     FBXModel fbx;
     fbx.Set_OnLoadTexture(OnLoadTexture);
+    fbx.SetPoseOnly(true);
     fbx.Open("Resources\\Models\\Laure\\Angry.fbx");
 
     Matrix4x4F projMatrix;
