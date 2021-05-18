@@ -139,11 +139,14 @@ void DrawFBX(const FBXModel&        fbxModel,
         pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
 }
 //---------------------------------------------------------------------------
-void DrawBone(const Model*           pModel,
+void DrawBone(const FBXModel&        fbxModel,
+              const Model*           pModel,
               const Model::IBone*    pBone,
               const Matrix4x4F&      modelMatrix,
               const Shader_OpenGL*   pShader,
-              const Renderer_OpenGL* pRenderer)
+              const Renderer_OpenGL* pRenderer,
+              int                    animSetIndex,
+              double                 elapsedTime)
 {
     if (!pModel)
         return;
@@ -162,10 +165,26 @@ void DrawBone(const Model*           pModel,
         Model::IBone* pChild = pBone->m_Children[i];
 
         Matrix4x4F topMatrix;
-        pModel->GetBoneMatrix(pBone, Matrix4x4F::Identity(), topMatrix);
+
+        if (pModel->m_PoseOnly)
+            pModel->GetBoneMatrix(pBone, Matrix4x4F::Identity(), topMatrix);
+        else
+            fbxModel.GetBoneAnimMatrix(pBone,
+                                       pModel->m_AnimationSet[animSetIndex],
+                                       std::fmod(elapsedTime, (double)pModel->m_AnimationSet[animSetIndex]->m_MaxValue / 46186158000.0),
+                                       Matrix4x4F::Identity(),
+                                       topMatrix);
 
         Matrix4x4F bottomMatrix;
-        pModel->GetBoneMatrix(pChild, Matrix4x4F::Identity(), bottomMatrix);
+
+        if (pModel->m_PoseOnly)
+            pModel->GetBoneMatrix(pChild, Matrix4x4F::Identity(), bottomMatrix);
+        else
+            fbxModel.GetBoneAnimMatrix(pChild,
+                                       pModel->m_AnimationSet[animSetIndex],
+                                       std::fmod(elapsedTime, (double)pModel->m_AnimationSet[animSetIndex]->m_MaxValue / 46186158000.0),
+                                       Matrix4x4F::Identity(),
+                                       bottomMatrix);
 
         glDisable(GL_DEPTH_TEST);
         pRenderer->DrawLine(Vector3F(topMatrix.m_Table[3][0],    topMatrix.m_Table[3][1],    topMatrix.m_Table[3][2]),
@@ -176,16 +195,16 @@ void DrawBone(const Model*           pModel,
                             pShader);
         glEnable(GL_DEPTH_TEST);
 
-        DrawBone(pModel, pChild, modelMatrix, pShader, pRenderer);
+        DrawBone(fbxModel, pModel, pChild, modelMatrix, pShader, pRenderer, animSetIndex, elapsedTime);
     }
 }
 //---------------------------------------------------------------------------
-void DrawSkeleton(const FBXModel& fbxModel,
-                  const Matrix4x4F& modelMatrix,
-                  const Shader_OpenGL* pShader,
+void DrawSkeleton(const FBXModel&        fbxModel,
+                  const Matrix4x4F&      modelMatrix,
+                  const Shader_OpenGL*   pShader,
                   const Renderer_OpenGL* pRenderer,
-                  int              animSetIndex,
-                  double           elapsedTime)
+                  int                    animSetIndex,
+                  double                 elapsedTime)
 {
     if (!pRenderer)
         return;
@@ -195,7 +214,7 @@ void DrawSkeleton(const FBXModel& fbxModel,
 
     Model* pModel = fbxModel.GetModel(animSetIndex, elapsedTime);
 
-    DrawBone(pModel, pModel->m_pSkeleton, modelMatrix, pShader, pRenderer);
+    DrawBone(fbxModel, pModel, pModel->m_pSkeleton, modelMatrix, pShader, pRenderer, animSetIndex, elapsedTime);
 }
 //------------------------------------------------------------------------------
 Texture* OnLoadTexture(const std::string& textureName, bool is32bit)
@@ -414,10 +433,10 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                                                                   (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
 
             // draw the model
-            DrawFBX(fbx, modelMatrix, &shader, &renderer, 0, lastTime * 0.001);
+            DrawFBX(fbx, modelMatrix, &shader, &renderer, 0, 0.0f);//lastTime * 0.001);
 
             // draw the skeleton
-            DrawSkeleton(fbx, modelMatrix, &lineShader, &renderer, 0, lastTime * 0.001);
+            DrawSkeleton(fbx, modelMatrix, &lineShader, &renderer, 0, 0.0f);// lastTime * 0.001);
 
             renderer.EndScene();
 

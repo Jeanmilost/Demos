@@ -1577,12 +1577,10 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
 
                 // get the final matrix after bones transform
                 /*
-                */
                 finalMatrix =
                     m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix.
                     Multiply(boneMatrix).
                     Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix);
-                /*
                 finalMatrix =
                     m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix.
                     Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix).
@@ -1604,6 +1602,7 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
                     Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix).
                     Multiply(boneMatrix);
                 */
+                finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
             }
 
             // get the weight influence count
@@ -1682,18 +1681,19 @@ void FBXModel::GetBoneAnimMatrix(const Model::IBone*         pBone,
 
         // get the animated bone matrix matching with frame. If not found use the identity one
         if (!GetAnimationMatrix(pAnimSet, pBone, elapsedTime, animMatrix))
-            animMatrix = Matrix4x4F::Identity();
-            //animMatrix = pBone->m_Matrix;
+            //animMatrix = Matrix4x4F::Identity();
+            animMatrix = pBone->m_Matrix;
 
         // stack the previously calculated matrix with the current bone one
-        matrix = pBone->m_Matrix.Multiply(localMatrix).Multiply(animMatrix);
+        // //REM
+        //matrix = pBone->m_Matrix.Multiply(localMatrix).Multiply(animMatrix);
         //matrix = pBone->m_Matrix.Multiply(animMatrix).Multiply(localMatrix);
         //matrix = localMatrix.Multiply(pBone->m_Matrix).Multiply(animMatrix);
         //matrix = localMatrix.Multiply(animMatrix).Multiply(pBone->m_Matrix);
         //matrix = animMatrix.Multiply(pBone->m_Matrix).Multiply(localMatrix);
         //matrix = animMatrix.Multiply(localMatrix).Multiply(pBone->m_Matrix);
         //matrix = animMatrix.Multiply(localMatrix);
-        //matrix = localMatrix.Multiply(animMatrix);
+        matrix = localMatrix.Multiply(animMatrix);
 
         // go to parent bone
         pBone = pBone->m_pParent;
@@ -3274,9 +3274,13 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         Vector3F position;
         Vector3F nextPosition;
         Vector3F finalPosition;
-        Vector3F scaling(1.0f, 1.0f, 1.0f);
-        Vector3F nextScaling(1.0f, 1.0f, 1.0f);
+        Vector3F scaling     (1.0f, 1.0f, 1.0f);
+        Vector3F nextScaling (1.0f, 1.0f, 1.0f);
         Vector3F finalScaling(1.0f, 1.0f, 1.0f);
+
+        bool foundTrans = false;
+        bool foundRot   = false;
+        bool foundScale = false;
 
         // iterate through animation keys
         for (std::size_t j = 0; j < pAnimSet->m_Animations[i]->m_Keys.size(); ++j)
@@ -3298,6 +3302,35 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
             // search for keys type
             switch (pAnimSet->m_Animations[i]->m_Keys[j]->m_Type)
             {
+                case Model::IEAnimKeyType::IE_KT_Position:
+                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
+                        return false;
+
+                    // get the position values at index
+                    position.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[0];
+                    position.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[1];
+                    position.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[2];
+                    posFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_TimeStamp / 46186158000.0;
+
+                    // get the next rotation quaternion
+                    if (keyIndex + 1 >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size())
+                    {
+                        nextPosition.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[0];
+                        nextPosition.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[1];
+                        nextPosition.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[2];
+                        nextPosFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_TimeStamp / 46186158000.0;
+                    }
+                    else
+                    {
+                        nextPosition.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[0];
+                        nextPosition.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[1];
+                        nextPosition.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[2];
+                        nextPosFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_TimeStamp / 46186158000.0;
+                    }
+
+                    foundTrans = true;
+                    continue;
+
                 case Model::IEAnimKeyType::IE_KT_Rotation:
                     if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
                         return false;
@@ -3324,6 +3357,7 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
                         nextRotFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_TimeStamp / 46186158000.0;
                     }
 
+                    foundRot = true;
                     continue;
 
                 case Model::IEAnimKeyType::IE_KT_Scale:
@@ -3352,34 +3386,7 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
                         nextScaleFrame  = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_TimeStamp / 46186158000.0;
                     }
 
-                    continue;
-
-                case Model::IEAnimKeyType::IE_KT_Position:
-                    if (pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values.size() != 3)
-                        return false;
-
-                    // get the position values at index
-                    position.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[0];
-                    position.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[1];
-                    position.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[2];
-                    posFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_TimeStamp / 46186158000.0;
-
-                    // get the next rotation quaternion
-                    if (keyIndex + 1 >= pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys.size())
-                    {
-                        nextPosition.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[0];
-                        nextPosition.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[1];
-                        nextPosition.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_Values[2];
-                        nextPosFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[0]->m_TimeStamp / 46186158000.0;
-                    }
-                    else
-                    {
-                        nextPosition.m_X =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[0];
-                        nextPosition.m_Y =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[1];
-                        nextPosition.m_Z =         pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_Values[2];
-                        nextPosFrame     = (double)pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex + 1]->m_TimeStamp / 46186158000.0;
-                    }
-
+                    foundScale = true;
                     continue;
 
                 default:
@@ -3387,25 +3394,43 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
             }
         }
 
-        // calculate the frame delta, the frame length and the interpolation for the position
-        float frameDelta    = (float)(elapsedTime  - posFrame);
-        float frameLength   = (float)(nextPosFrame - posFrame);
-        float interpolation = frameLength ? frameDelta / frameLength : 0.0f;
+        if (foundTrans)
+        {
+            // calculate the frame delta, the frame length and the interpolation for the position
+            float frameDelta    = (float)(elapsedTime  - posFrame);
+            float frameLength   = (float)(nextPosFrame - posFrame);
+            float interpolation = frameLength ? frameDelta / frameLength : 0.0f;
 
-        // interpolate the position
-        finalPosition.m_X = position.m_X + ((nextPosition.m_X - position.m_X) * interpolation);
-        finalPosition.m_Y = position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation);
-        finalPosition.m_Z = position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation);
+            // interpolate the position
+            finalPosition.m_X = position.m_X;// (position.m_X + ((nextPosition.m_X - position.m_X) * interpolation)) * 1.0f;
+            finalPosition.m_Y = position.m_Z;//(position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation)) * 1.0f;
+            finalPosition.m_Z = position.m_Y;//(position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation)) * 1.0f;
+        }
+        else
+        {
+            finalPosition.m_X = pBone->m_Matrix.m_Table[3][0];
+            finalPosition.m_Y = pBone->m_Matrix.m_Table[3][1];
+            finalPosition.m_Z = pBone->m_Matrix.m_Table[3][2];
+        }
 
-        // calculate the frame delta, the frame length and the interpolation for the rotation
-        frameDelta    = (float)(elapsedTime  - rotFrame);
-        frameLength   = (float)(nextRotFrame - rotFrame);
-        interpolation = frameLength ? frameDelta / frameLength : 0.0f;
+        if (foundRot)
+        {
+            // calculate the frame delta, the frame length and the interpolation for the rotation
+            float frameDelta    = (float)(elapsedTime  - rotFrame);
+            float frameLength   = (float)(nextRotFrame - rotFrame);
+            float interpolation = frameLength ? frameDelta / frameLength : 0.0f;
 
-        // interpolate the rotation
-        finalRotation.m_X = rotation.m_X + ((nextRotation.m_X - rotation.m_X) * interpolation);
-        finalRotation.m_Y = rotation.m_Y + ((nextRotation.m_Y - rotation.m_Y) * interpolation);
-        finalRotation.m_Z = rotation.m_Z + ((nextRotation.m_Z - rotation.m_Z) * interpolation);
+            // interpolate the rotation
+            finalRotation.m_X = -rotation.m_X;// rotation.m_X + ((nextRotation.m_X - rotation.m_X) * interpolation);
+            finalRotation.m_Y = -rotation.m_Z;//rotation.m_Y + ((nextRotation.m_Y - rotation.m_Y) * interpolation);
+            finalRotation.m_Z = -rotation.m_Y;//rotation.m_Z + ((nextRotation.m_Z - rotation.m_Z) * interpolation);
+        }
+        else
+        {
+            finalRotation.m_X = 0.0f;
+            finalRotation.m_Y = 0.0f;
+            finalRotation.m_Z = 0.0f;
+        }
 
         const float degToRad = (float)(M_PI / 180.0f);
 
@@ -3420,15 +3445,24 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         rotMatZ.Rotate(finalRotation.m_Z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
         //rotMatZ = rotMatZ.Transpose();
 
-        // calculate the frame delta, the frame length and the interpolation for the scaling
-        frameDelta    = (float)(elapsedTime    - scaleFrame);
-        frameLength   = (float)(nextScaleFrame - scaleFrame);
-        interpolation = frameLength ? frameDelta / frameLength : 0.0f;
+        if (foundRot)
+        {
+            // calculate the frame delta, the frame length and the interpolation for the scaling
+            float frameDelta    = (float)(elapsedTime    - scaleFrame);
+            float frameLength   = (float)(nextScaleFrame - scaleFrame);
+            float interpolation = frameLength ? frameDelta / frameLength : 0.0f;
 
-        // interpolate the scaling
-        //finalScaling.m_X = scaling.m_X + ((nextScaling.m_X - scaling.m_X) * interpolation);
-        //finalScaling.m_Y = scaling.m_Y + ((nextScaling.m_Y - scaling.m_Y) * interpolation);
-        //finalScaling.m_Z = scaling.m_Z + ((nextScaling.m_Z - scaling.m_Z) * interpolation);
+            // interpolate the scaling
+            finalScaling.m_X = scaling.m_X + ((nextScaling.m_X - scaling.m_X) * interpolation);
+            finalScaling.m_Y = scaling.m_Y + ((nextScaling.m_Y - scaling.m_Y) * interpolation);
+            finalScaling.m_Z = scaling.m_Z + ((nextScaling.m_Z - scaling.m_Z) * interpolation);
+        }
+        else
+        {
+            finalScaling.m_X = 1.0f;
+            finalScaling.m_Y = 1.0f;
+            finalScaling.m_Z = 1.0f;
+        }
 
         //Matrix4x4F translateMatrix = Matrix4x4F::Identity();
         Matrix4x4F rotateMatrix    = rotMatX.Multiply(rotMatY).Multiply(rotMatZ);
@@ -3440,13 +3474,13 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         //translateMatrix.Translate(finalPosition);
 
         // create the translation matrix
-        Matrix4x4F translateMatrix = Matrix4x4F::Identity();
+        Matrix4x4F translateMatrix    = Matrix4x4F::Identity();
         translateMatrix.m_Table[3][0] = finalPosition.m_X;
         translateMatrix.m_Table[3][1] = finalPosition.m_Y;
         translateMatrix.m_Table[3][2] = finalPosition.m_Z;
 
         // create the scale matrix
-        Matrix4x4F scaleMatrix = Matrix4x4F::Identity();
+        Matrix4x4F scaleMatrix    = Matrix4x4F::Identity();
         scaleMatrix.m_Table[0][0] = finalScaling.m_X;
         scaleMatrix.m_Table[1][1] = finalScaling.m_Y;
         scaleMatrix.m_Table[2][2] = finalScaling.m_Z;
@@ -3461,6 +3495,10 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
 
         //float determinant = 0.0f;
         //matrix = matrix.Inverse(determinant);
+
+        //matrix = pBone->m_Matrix;
+        //matrix = pBone->m_Matrix.Multiply(rotateMatrix).Multiply(translateMatrix).Multiply(scaleMatrix);
+        //matrix = rotateMatrix.Multiply(translateMatrix).Multiply(scaleMatrix).Multiply(pBone->m_Matrix);
 
         return true;
     }
