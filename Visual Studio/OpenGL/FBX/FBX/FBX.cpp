@@ -58,6 +58,19 @@ const char vertexShader[] = "precision mediump float;"
                             "    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
                             "}";
 //------------------------------------------------------------------------------
+const char lineVertShader[] = "precision mediump float;"
+                              "attribute    vec3 aVertices;"
+                              "attribute    vec4 aColor;"
+                              "uniform      mat4 uProjection;"
+                              "uniform      mat4 uView;"
+                              "uniform      mat4 uModel;"
+                              "varying lowp vec4 vColor;"
+                              "void main(void)"
+                              "{"
+                              "    vColor      = aColor;"
+                              "    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
+                              "}";
+//------------------------------------------------------------------------------
 const char fragmentShader[] = "precision mediump float;"
                               "uniform      sampler2D sTexture;"
                               "varying lowp vec4      vColor;"
@@ -68,6 +81,13 @@ const char fragmentShader[] = "precision mediump float;"
                               ""
                               "    if (gl_FragColor.a < 0.5)"
                               "        discard;"
+                              "}";
+//------------------------------------------------------------------------------
+const char lineFragShader[] = "precision mediump float;"
+                              "varying lowp vec4 vColor;"
+                              "void main(void)"
+                              "{"
+                              "    gl_FragColor = vColor;"
                               "}";
 //------------------------------------------------------------------------------
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -105,12 +125,77 @@ void DrawFBX(const FBXModel&        fbxModel,
                    int              animSetIndex,
                    double           elapsedTime)
 {
+    if (!pRenderer)
+        return;
+
+    if (!pShader)
+        return;
+
     Model* pModel = fbxModel.GetModel(animSetIndex, elapsedTime);
 
     // iterate through the meshes to draw
     for (std::size_t i = 0; i < pModel->m_Mesh.size(); ++i)
         // draw the model mesh
         pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
+}
+//---------------------------------------------------------------------------
+void DrawBone(const Model*           pModel,
+              const Model::IBone*    pBone,
+              const Matrix4x4F&      modelMatrix,
+              const Shader_OpenGL*   pShader,
+              const Renderer_OpenGL* pRenderer)
+{
+    if (!pModel)
+        return;
+
+    if (!pBone)
+        return;
+
+    if (!pRenderer)
+        return;
+
+    if (!pShader)
+        return;
+
+    for (std::size_t i = 0; i < pBone->m_Children.size(); ++i)
+    {
+        Model::IBone* pChild = pBone->m_Children[i];
+
+        Matrix4x4F topMatrix;
+        pModel->GetBoneMatrix(pBone, Matrix4x4F::Identity(), topMatrix);
+
+        Matrix4x4F bottomMatrix;
+        pModel->GetBoneMatrix(pChild, Matrix4x4F::Identity(), bottomMatrix);
+
+        glDisable(GL_DEPTH_TEST);
+        pRenderer->DrawLine(Vector3F(topMatrix.m_Table[3][0],    topMatrix.m_Table[3][1],    topMatrix.m_Table[3][2]),
+                            Vector3F(bottomMatrix.m_Table[3][0], bottomMatrix.m_Table[3][1], bottomMatrix.m_Table[3][2]),
+                            ColorF(1.0f, 0.0f, 0.0f, 1.0f),
+                            ColorF(0.0f, 1.0f, 0.0f, 1.0f),
+                            modelMatrix,
+                            pShader);
+        glEnable(GL_DEPTH_TEST);
+
+        DrawBone(pModel, pChild, modelMatrix, pShader, pRenderer);
+    }
+}
+//---------------------------------------------------------------------------
+void DrawSkeleton(const FBXModel& fbxModel,
+                  const Matrix4x4F& modelMatrix,
+                  const Shader_OpenGL* pShader,
+                  const Renderer_OpenGL* pRenderer,
+                  int              animSetIndex,
+                  double           elapsedTime)
+{
+    if (!pRenderer)
+        return;
+
+    if (!pShader)
+        return;
+
+    Model* pModel = fbxModel.GetModel(animSetIndex, elapsedTime);
+
+    DrawBone(pModel, pModel->m_pSkeleton, modelMatrix, pShader, pRenderer);
 }
 //------------------------------------------------------------------------------
 Texture* OnLoadTexture(const std::string& textureName, bool is32bit)
@@ -236,6 +321,12 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     shader.Attach(fragmentShader, Shader::IEType::IE_ST_Fragment);
     shader.Link(true);
 
+    Shader_OpenGL lineShader;
+    lineShader.CreateProgram();
+    lineShader.Attach(lineVertShader, Shader::IEType::IE_ST_Vertex);
+    lineShader.Attach(lineFragShader, Shader::IEType::IE_ST_Fragment);
+    lineShader.Link(true);
+
     FBXModel fbx;
     fbx.Set_OnLoadTexture(OnLoadTexture);
     fbx.SetPoseOnly(true);
@@ -251,8 +342,11 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                             &shader,
                             projMatrix);
 
+    renderer.ConnectProjectionMatrixToShader(&lineShader, projMatrix);
+
     Matrix4x4F viewMatrix = Matrix4x4F::Identity();
     renderer.ConnectViewMatrixToShader(&shader, viewMatrix);
+    renderer.ConnectViewMatrixToShader(&lineShader, viewMatrix);
 
     ColorF bgColor;
     bgColor.m_R = 0.08f;
@@ -318,7 +412,13 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             // draw the scene
             renderer.BeginScene(bgColor, (Renderer::IESceneFlags)((unsigned)Renderer::IESceneFlags::IE_SF_ClearColor |
                                                                   (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
+
+            // draw the model
             DrawFBX(fbx, modelMatrix, &shader, &renderer, 0, lastTime * 0.001);
+
+            // draw the skeleton
+            DrawSkeleton(fbx, modelMatrix, &lineShader, &renderer, 0, lastTime * 0.001);
+
             renderer.EndScene();
 
             // calculate the next angle

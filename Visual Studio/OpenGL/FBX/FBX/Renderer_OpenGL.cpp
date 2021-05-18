@@ -468,6 +468,85 @@ bool Renderer_OpenGL::Draw(const Mesh&       mesh,
     return true;
 }
 //---------------------------------------------------------------------------
+void Renderer_OpenGL::DrawLine(const Vector3F&   start,
+                               const Vector3F&   end,
+                               const ColorF&     startColor,
+                               const ColorF&     endColor,
+                               const Matrix4x4F& modelMatrix,
+                               const Shader*     pShader,
+                                     float       width,
+                                     bool        smooth) const
+{
+    // no shader program?
+    if (!pShader)
+        return;
+
+    // set the line width to use
+    glLineWidth(width);
+
+    // do draw smooth lines?
+    if (smooth)
+    {
+        // enabled the line smoothing mode
+        glEnable(GL_LINE_SMOOTH);
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    }
+
+    // bind shader program
+    pShader->Use(true);
+
+    // get model matrix slot from shader
+    const GLint uniform = GetUniform(pShader, Shader::IEAttribute::IE_SA_ModelMatrix);
+
+    // found it?
+    if (uniform != -1)
+        // connect model matrix to shader
+        glUniformMatrix4fv(uniform, 1, GL_FALSE, modelMatrix.GetPtr());
+
+    // generate the line vertex buffer
+    const float lineVertex[] =
+    {
+        start.m_X, start.m_Y, start.m_Z, startColor.m_R, startColor.m_G, startColor.m_B, startColor.m_A,
+        end.m_X,   end.m_Y,   end.m_Z,   endColor.m_R,   endColor.m_G,   endColor.m_B,   endColor.m_A
+    };
+
+    const std::size_t stride = 7;
+
+    // get shader vertices attribute
+    const GLint posAttrib = GetAttribute(pShader, Shader::IEAttribute::IE_SA_Vertices);
+
+    // found it?
+    if (posAttrib == -1)
+        return;
+
+    // get shader color attribute
+    const GLint colorAttrib = GetAttribute(pShader, Shader::IEAttribute::IE_SA_Color);
+
+    // found it?
+    if (colorAttrib == -1)
+        return;
+
+    // link the line buffer to the shader
+    glVertexAttribPointer(posAttrib,
+                          3,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          stride * sizeof(float),
+                          &lineVertex[0]);
+    glVertexAttribPointer(colorAttrib,
+                          4,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          stride * sizeof(float),
+                          &lineVertex[3]);
+
+    // draw the line
+    glDrawArrays(GL_LINES, 0, 2);
+
+    // unbind shader program
+    pShader->Use(false);
+}
+//---------------------------------------------------------------------------
 void Renderer_OpenGL::SelectTexture(const Shader* pShader, const Texture* pTexture) const
 {
     // do draw textures?

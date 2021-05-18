@@ -162,6 +162,27 @@ class Renderer
                           const Shader*     pShader) const = 0;
 
         /**
+        * Draws a line
+        *@param start - start line position
+        *@param end - end line position
+        *@param startColor - line start color
+        *@param endColor - line start color
+        *@param modelMatrix - model matrix that will be used to draw the line
+        *@param pShader - shader that will be used to draw the line
+        *@param width - line width
+        *@param smooth - if true, smoothing mode will be enabled for this line
+        *@return true on success, otherwise false
+        */
+        virtual void DrawLine(const Vector3F&   start,
+                              const Vector3F&   end,
+                              const ColorF&     startColor,
+                              const ColorF&     endColor,
+                              const Matrix4x4F& modelMatrix,
+                              const Shader*     pShader,
+                                    float       width  = 1.0f,
+                                    bool        smooth = true) const = 0;
+
+        /**
         * Selects texture to draw
         *@param pShader - shader that will draw the texture
         *@param pTexture - the texture to select

@@ -198,7 +198,22 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="FBX.ico" />
+    <Image Include="Resources\Models\Laure\Textures\brown_eye.png" />
+    <Image Include="Resources\Models\Laure\Textures\diff3.png" />
+    <Image Include="Resources\Models\Laure\Textures\eyebrow001.png" />
+    <Image Include="Resources\Models\Laure\Textures\eyelashes04.png" />
+    <Image Include="Resources\Models\Laure\Textures\heelsandal.png" />
+    <Image Include="Resources\Models\Laure\Textures\shortjeans.png" />
+    <Image Include="Resources\Models\Laure\Textures\shortjeans_normals.png" />
+    <Image Include="Resources\Models\Laure\Textures\sleeveless.png" />
+    <Image Include="Resources\Models\Laure\Textures\sleeveless_normals.png" />
+    <Image Include="Resources\Models\Laure\Textures\teeth.png" />
+    <Image Include="Resources\Models\Laure\Textures\tongue01_diffuse.png" />
+    <Image Include="Resources\Models\Laure\Textures\young_lightskinned_female_diffuse2.png" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Models\Laure\Angry.fbx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
