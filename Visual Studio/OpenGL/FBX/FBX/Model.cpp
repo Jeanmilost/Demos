@@ -36,7 +36,8 @@
 //---------------------------------------------------------------------------
 Model::IBone::IBone() :
     m_Matrix(Matrix4x4F::Identity()),
-    m_pParent(nullptr)
+    m_pParent(nullptr),
+    m_pCustom(nullptr)
 {}
 //---------------------------------------------------------------------------
 Model::IBone::~IBone()

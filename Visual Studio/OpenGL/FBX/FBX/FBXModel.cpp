@@ -768,7 +768,7 @@ FBXModel::IFBXLclRotationProperty::IFBXLclRotationProperty() :
 FBXModel::IFBXLclRotationProperty::~IFBXLclRotationProperty()
 {}
 //---------------------------------------------------------------------------
-Matrix4x4F FBXModel::IFBXLclRotationProperty::Get() const
+QuaternionF FBXModel::IFBXLclRotationProperty::Get() const
 {
     // already cached?
     if (m_Cached)
@@ -778,7 +778,7 @@ Matrix4x4F FBXModel::IFBXLclRotationProperty::Get() const
 
     // no available value?
     if (count <= 4)
-        return Matrix4x4F::Identity();
+        return QuaternionF();
 
     float x = 0.0f;
     float y = 0.0f;
@@ -795,17 +795,18 @@ Matrix4x4F FBXModel::IFBXLclRotationProperty::Get() const
 
     const float degToRad = (float)(M_PI / 180.0f);
 
-    // get the x y and z rotation matrices based on their respective Euler angles
-    Matrix4x4F rotMatX = Matrix4x4F::Identity();
-    rotMatX.Rotate(x * degToRad, Vector3F(1.0f, 0.0f, 0.0f));
-    Matrix4x4F rotMatY = Matrix4x4F::Identity();
-    rotMatY.Rotate(y * degToRad, Vector3F(0.0f, 1.0f, 0.0f));
-    Matrix4x4F rotMatZ = Matrix4x4F::Identity();
-    rotMatZ.Rotate(z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
+    QuaternionF qx;
+    QuaternionF qy;
+    QuaternionF qz;
+
+    // calculate quaternion based on the x, y and z Euler angles
+    qx.FromAxis(-x * degToRad, Vector3F(1.0f, 0.0f, 0.0f));
+    qy.FromAxis(-y * degToRad, Vector3F(0.0f, 1.0f, 0.0f));
+    qz.FromAxis(-z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
 
     // build the final rotation matrix and cache it
-    const_cast<Matrix4x4F&>(m_Value)  = rotMatX.Multiply(rotMatY).Multiply(rotMatZ);
-    const_cast<bool&>      (m_Cached) = true;
+    const_cast<QuaternionF&>(m_Value)  = qx.Multiply(qy).Multiply(qz).Normalize();
+    const_cast<bool&>       (m_Cached) = true;
 
     return m_Value;
 }
@@ -1557,53 +1558,19 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
         for (std::size_t j = 0; j < weightCount; ++j)
         {
             Matrix4x4F boneMatrix;
-            Matrix4x4F finalMatrix;
 
             // get the bone matrix
             if (m_pModel->m_PoseOnly)
-            {
                 m_pModel->GetBoneMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
-
-                // get the final matrix after bones transform
-                finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
-            }
             else
-            {
                 GetBoneAnimMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
                                   m_pModel->m_AnimationSet[animSetIndex],
                                   std::fmod(elapsedTime, (double)m_pModel->m_AnimationSet[animSetIndex]->m_MaxValue / 46186158000.0),
                                   Matrix4x4F::Identity(),
                                   boneMatrix);
 
-                // get the final matrix after bones transform
-                /*
-                finalMatrix =
-                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix.
-                    Multiply(boneMatrix).
-                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix);
-                finalMatrix =
-                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix.
-                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix).
-                    Multiply(boneMatrix);
-                finalMatrix =
-                    boneMatrix.
-                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix).
-                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix);
-                finalMatrix =
-                    boneMatrix.
-                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix).
-                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix);
-                finalMatrix =
-                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix.
-                    Multiply(boneMatrix).
-                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix);
-                finalMatrix =
-                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformLinkMatrix.
-                    Multiply(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_TransformMatrix).
-                    Multiply(boneMatrix);
-                */
-                finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
-            }
+            // get the final matrix after bones transform
+            const Matrix4x4F finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
 
             // get the weight influence count
             const std::size_t weightInfluenceCount = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size();
@@ -1681,18 +1648,9 @@ void FBXModel::GetBoneAnimMatrix(const Model::IBone*         pBone,
 
         // get the animated bone matrix matching with frame. If not found use the identity one
         if (!GetAnimationMatrix(pAnimSet, pBone, elapsedTime, animMatrix))
-            //animMatrix = Matrix4x4F::Identity();
             animMatrix = pBone->m_Matrix;
 
         // stack the previously calculated matrix with the current bone one
-        // //REM
-        //matrix = pBone->m_Matrix.Multiply(localMatrix).Multiply(animMatrix);
-        //matrix = pBone->m_Matrix.Multiply(animMatrix).Multiply(localMatrix);
-        //matrix = localMatrix.Multiply(pBone->m_Matrix).Multiply(animMatrix);
-        //matrix = localMatrix.Multiply(animMatrix).Multiply(pBone->m_Matrix);
-        //matrix = animMatrix.Multiply(pBone->m_Matrix).Multiply(localMatrix);
-        //matrix = animMatrix.Multiply(localMatrix).Multiply(pBone->m_Matrix);
-        //matrix = animMatrix.Multiply(localMatrix);
         matrix = localMatrix.Multiply(animMatrix);
 
         // go to parent bone
@@ -2225,7 +2183,6 @@ bool FBXModel::PerformLinks()
     #ifdef _DEBUG
         //std::string log;
         //LogLinks(log);
-        //REM __TEMP(log);
     #endif
 
     return true;
@@ -2657,10 +2614,9 @@ bool FBXModel::BuildModel()
                                                                                          (float)(*pMatrix)[2], (float)(*pMatrix)[6], (float)(*pMatrix)[10], (float)(*pMatrix)[14],
                                                                                          (float)(*pMatrix)[3], (float)(*pMatrix)[7], (float)(*pMatrix)[11], (float)(*pMatrix)[15]);
 
-                                                //REM?
                                                 // inverse it
-                                                //float determinant = 0.0f;
-                                                //pModelSkinWeights->m_TransformMatrix = pModelSkinWeights->m_TransformMatrix.Inverse(determinant);
+                                                float determinant = 0.0f;
+                                                pModelSkinWeights->m_TransformMatrix = pModelSkinWeights->m_TransformMatrix.Inverse(determinant);
                                             }
                                         }
                                         else
@@ -2779,65 +2735,52 @@ bool FBXModel::BuildSkeleton(IFBXLink*             pLink,
     if (!pBone)
         return false;
 
-    std::unique_ptr<Model::IAnimation> pAnimation(new Model::IAnimation());
-    IFBXNode*                          pModel = nullptr;
+    // populate the bone
+    if (!PopulateBone(pLink->m_pNode, pBone))
+        return false;
 
     // get link child count
     const std::size_t childCount = pLink->m_Children.size();
 
-    // iterate through children links
+    // iterate through link children
     for (std::size_t i = 0; i < childCount; ++i)
-        // found a model node?
         if (pLink->m_Children[i]->m_NodeType == IENodeType::IE_NT_Model)
         {
-            // keep the bone model, it will be reused to retrieve the bone while animation will be built
-            pModel = pLink->m_Children[i]->m_pNode;
-
-            // is the root link?
-            if (isRoot)
-            {
-                // populate the bone
-                if (!PopulateBone(pLink->m_Children[i]->m_pNode, pBone))
-                    return false;
-
-                // build children bones
-                if (!BuildSkeleton(pLink->m_Children[i], pBone, boneDict, pAmimationSet, false))
-                    return false;
-
-                boneDict[pLink->m_Children[i]->m_pNode] = pBone;
-                continue;
-            }
-
-            // create a new bone
+            // found a model node, create a new child bone
             std::unique_ptr<Model::IBone> pChildBone(new Model::IBone);
             pChildBone->m_pParent = pBone;
 
-            // populate the bone
-            if (!PopulateBone(pLink->m_Children[i]->m_pNode, pChildBone.get()))
-                return false;
+            // add it to bone dictionary
+            boneDict[pLink->m_Children[i]->m_pNode] = pChildBone.get();
 
-            // build children bones
+            // build child bone children
             if (!BuildSkeleton(pLink->m_Children[i], pChildBone.get(), boneDict, pAmimationSet, false))
                 return false;
 
-            // add bone to skeleton
-            boneDict[pLink->m_Children[i]->m_pNode] = pChildBone.get();
+            // add child bone to skeleton
             pBone->m_Children.push_back(pChildBone.get());
             pChildBone.release();
         }
         else
         if (pLink->m_Children[i]->m_NodeType == IENodeType::IE_NT_AnimationCurveNode)
         {
+            // found an animation node, create a new animation and animation keys container
+            std::unique_ptr<Model::IAnimation>     pAnimation    (new Model::IAnimation());
             std::unique_ptr<Model::IAnimationKeys> pAnimationKeys(new Model::IAnimationKeys());
 
+            // animation node contains enough properties?
             if (pLink->m_Children[i]->m_pNode->GetValueCount() >= 2)
             {
+                // get animation type
                 const std::string type = pLink->m_Children[i]->m_pNode->GetValue(1)->GetStr();
 
+                // animation type was declared?
                 if (type.length())
                 {
+                    // get the last char
                     const std::size_t lastIndex = type.length() - 1;
 
+                    // search for animation type
                     if (type[lastIndex] == 'T')
                         pAnimationKeys->m_Type = Model::IEAnimKeyType::IE_KT_Position;
                     else
@@ -2851,30 +2794,34 @@ bool FBXModel::BuildSkeleton(IFBXLink*             pLink,
                 }
             }
 
-            // get link grandchildren count
+            // get animation child count
             const std::size_t nodeChildCount = pLink->m_Children[i]->m_Children.size();
 
-            // iterate through link grandchildren
+            // iterate through animation children
             for (std::size_t j = 0; j < nodeChildCount; ++j)
                 // found an animation curve?
                 if (pLink->m_Children[i]->m_Children[j]->m_NodeType == IENodeType::IE_NT_AnimationCurve)
                 {
+                    // get animation curve
                     IFBXNode* pAnimationCurve = pLink->m_Children[i]->m_Children[j]->m_pNode;
 
+                    // found it?
                     if (!pAnimationCurve)
                         continue;
 
                     IFBXArrayProperty<long long>* pKeys   = nullptr;
                     IFBXArrayProperty<double>*    pValues = nullptr;
 
-                    // get animation curve children count
+                    // get animation curve child count
                     const std::size_t animCurveChildCount = pAnimationCurve->GetChildCount();
 
                     // iterate through animation curve children
                     for (std::size_t k = 0; k < animCurveChildCount; ++k)
                     {
+                        // get animation curve property
                         IFBXNode* pAnimCurveChildNode = pAnimationCurve->GetChild(k);
 
+                        // found a key time or key value array?
                         if (pAnimCurveChildNode && pAnimCurveChildNode->GetPropCount())
                             if (pAnimCurveChildNode->GetName() == "KeyTime")
                                 pKeys = static_cast<IFBXArrayProperty<long long>*>(pAnimCurveChildNode->GetProp(0));
@@ -2883,9 +2830,11 @@ bool FBXModel::BuildSkeleton(IFBXLink*             pLink,
                                 pValues = static_cast<IFBXArrayProperty<double>*>(pAnimCurveChildNode->GetProp(0));
                     }
 
+                    // both keys and values should be found
                     if (!pKeys || !pValues)
                         continue;
 
+                    // also the both arrays should have the same length
                     if (pKeys->GetCount() != pValues->GetCount())
                         continue;
 
@@ -2898,8 +2847,10 @@ bool FBXModel::BuildSkeleton(IFBXLink*             pLink,
                         std::unique_ptr<Model::IAnimationKey> pNewAnimationKey;
                         Model::IAnimationKey*                 pAnimationKey;
 
+                        // first curve?
                         if (!j)
                         {
+                            // create a new animation key ans set its time stamp
                             pNewAnimationKey.reset(new Model::IAnimationKey());
                             pAnimationKey              = pNewAnimationKey.get();
                             pAnimationKey->m_TimeStamp = pKeys->Get(k);
@@ -2908,44 +2859,38 @@ bool FBXModel::BuildSkeleton(IFBXLink*             pLink,
                         else
                             pAnimationKey = pAnimationKeys->m_Keys[k];
 
-                        if (pAnimationKey->m_TimeStamp != pKeys->Get(k))
-                        {
-                            // do something...
-                            int ii = 0;
-                        }
-
+                        // set animation value
                         pAnimationKey->m_Values.push_back((float)pValues->Get(k));
 
+                        // first curve?
                         if (!j)
                         {
+                            // add key to animation key list
                             pAnimationKeys->m_Keys.push_back(pNewAnimationKey.get());
                             pNewAnimationKey.release();
                         }
                     }
                 }
 
+            // add animation key to animation
             pAnimation->m_Keys.push_back(pAnimationKeys.get());
             pAnimationKeys.release();
+
+            // get the bone linked with the model
+            IBoneDictionary::const_iterator it = m_BoneDict.find(pLink->m_pNode);
+
+            // found it?
+            if (it != m_BoneDict.end())
+            {
+                // link the bone to the animation
+                pAnimation->m_BoneName = it->second->m_Name;
+                pAnimation->m_pBone    = it->second;
+            }
+
+            // add the animation to the animation set
+            pAmimationSet->m_Animations.push_back(pAnimation.get());
+            pAnimation.release();
         }
-
-    // found a model node?
-    if (pModel)
-    {
-        // get the bone linked with this model
-        IBoneDictionary::const_iterator it = m_BoneDict.find(pModel);
-
-        // found it?
-        if (it != m_BoneDict.end())
-        {
-            // link the bone to the animation
-            pAnimation->m_BoneName = it->second->m_Name;
-            pAnimation->m_pBone    = it->second;
-        }
-
-        // add the animation to the animation set
-        pAmimationSet->m_Animations.push_back(pAnimation.get());
-        pAnimation.release();
-    }
 
     return true;
 }
@@ -2983,9 +2928,9 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
             // get property count
             const std::size_t propCount = pChild->GetPropCount();
 
-            Vector3F   translation;
-            Vector3F   scaling(1.0f, 1.0f, 1.0f);
-            Matrix4x4F rotMat = Matrix4x4F::Identity();
+            Vector3F    translation;
+            Vector3F    scaling(1.0f, 1.0f, 1.0f);
+            QuaternionF rotation;
 
             // iterate through properties
             for (std::size_t j = 0; j < propCount; ++j)
@@ -3003,7 +2948,7 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
                     // get property name
                     const std::string name = pProp->GetValue(0)->GetRaw();
 
-                    // search for local translation, rotation an scaling
+                    // search for local translation, rotation and scaling
                     if (name == "Lcl Translation")
                     {
                         IFBXLclTranslationProperty* pLclTransProp = static_cast<IFBXLclTranslationProperty*>(pProp);
@@ -3021,7 +2966,7 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
                         if (!pLclRotatProp)
                             return false;
 
-                        rotMat = pLclRotatProp->Get();
+                        rotation = pLclRotatProp->Get();
                     }
                     else
                     if (name == "Lcl Scaling")
@@ -3042,6 +2987,9 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
             transMat.m_Table[3][1] = translation.m_Y;
             transMat.m_Table[3][2] = translation.m_Z;
 
+            // get the rotation matrix
+            const Matrix4x4F rotMat = rotation.ToMatrix();
+
             // create the scale matrix
             Matrix4x4F scaleMat = Matrix4x4F::Identity();
             scaleMat.m_Table[0][0] = scaling.m_X;
@@ -3050,6 +2998,9 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
 
             // build the bone matrix
             pBone->m_Matrix = rotMat.Multiply(transMat).Multiply(scaleMat);
+
+            // keep the source node as custom data, in order to reuse it later
+            pBone->m_pCustom = pNode;
         }
     }
 
@@ -3262,21 +3213,21 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         if (pAnimSet->m_Animations[i]->m_pBone != pBone)
             continue;
 
-        double   rotFrame       = 0.0;
-        double   nextRotFrame   = 0.0;
-        double   posFrame       = 0.0;
-        double   nextPosFrame   = 0.0;
-        double   scaleFrame     = 0.0;
-        double   nextScaleFrame = 0.0;
-        Vector3F rotation;
-        Vector3F nextRotation;
-        Vector3F finalRotation;
-        Vector3F position;
-        Vector3F nextPosition;
-        Vector3F finalPosition;
-        Vector3F scaling     (1.0f, 1.0f, 1.0f);
-        Vector3F nextScaling (1.0f, 1.0f, 1.0f);
-        Vector3F finalScaling(1.0f, 1.0f, 1.0f);
+        double      rotFrame       = 0.0;
+        double      nextRotFrame   = 0.0;
+        double      posFrame       = 0.0;
+        double      nextPosFrame   = 0.0;
+        double      scaleFrame     = 0.0;
+        double      nextScaleFrame = 0.0;
+        Vector3F    rotation;
+        Vector3F    nextRotation;
+        QuaternionF finalRotation;
+        Vector3F    position;
+        Vector3F    nextPosition;
+        Vector3F    finalPosition;
+        Vector3F    scaling     (1.0f, 1.0f, 1.0f);
+        Vector3F    nextScaling (1.0f, 1.0f, 1.0f);
+        Vector3F    finalScaling(1.0f, 1.0f, 1.0f);
 
         bool foundTrans = false;
         bool foundRot   = false;
@@ -3394,25 +3345,28 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
             }
         }
 
+        // process the translation
         if (foundTrans)
         {
             // calculate the frame delta, the frame length and the interpolation for the position
-            float frameDelta    = (float)(elapsedTime  - posFrame);
+            float frameDelta    = (float)(elapsedTime - posFrame);
             float frameLength   = (float)(nextPosFrame - posFrame);
             float interpolation = frameLength ? frameDelta / frameLength : 0.0f;
 
             // interpolate the position
-            finalPosition.m_X = position.m_X;// (position.m_X + ((nextPosition.m_X - position.m_X) * interpolation)) * 1.0f;
-            finalPosition.m_Y = position.m_Z;//(position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation)) * 1.0f;
-            finalPosition.m_Z = position.m_Y;//(position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation)) * 1.0f;
+            finalPosition.m_X = (position.m_X + ((nextPosition.m_X - position.m_X) * interpolation)) * 1.0f;
+            finalPosition.m_Y = (position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation)) * 1.0f;
+            finalPosition.m_Z = (position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation)) * 1.0f;
         }
         else
         {
+            // get the original position from the bone matrix
             finalPosition.m_X = pBone->m_Matrix.m_Table[3][0];
             finalPosition.m_Y = pBone->m_Matrix.m_Table[3][1];
             finalPosition.m_Z = pBone->m_Matrix.m_Table[3][2];
         }
 
+        // process the rotation
         if (foundRot)
         {
             // calculate the frame delta, the frame length and the interpolation for the rotation
@@ -3420,32 +3374,95 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
             float frameLength   = (float)(nextRotFrame - rotFrame);
             float interpolation = frameLength ? frameDelta / frameLength : 0.0f;
 
+            // degree to radians conversion constant
+            const float degToRad = (float)(M_PI / 180.0f);
+
+            QuaternionF qx;
+            QuaternionF qy;
+            QuaternionF qz;
+
+            // build the quaternion from current rotation
+            qx.FromAxis(-rotation.m_X * degToRad, Vector3F(1.0f, 0.0f, 0.0f));
+            qy.FromAxis(-rotation.m_Y * degToRad, Vector3F(0.0f, 1.0f, 0.0f));
+            qz.FromAxis(-rotation.m_Z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
+
+            QuaternionF q = qx.Multiply(qy).Multiply(qz).Normalize();
+
+            // build the quaternion from next rotation
+            qx.FromAxis(-nextRotation.m_X * degToRad, Vector3F(1.0f, 0.0f, 0.0f));
+            qy.FromAxis(-nextRotation.m_Y * degToRad, Vector3F(0.0f, 1.0f, 0.0f));
+            qz.FromAxis(-nextRotation.m_Z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
+
+            QuaternionF nq = qx.Multiply(qy).Multiply(qz).Normalize();
+
+            bool error = false;
+
             // interpolate the rotation
-            finalRotation.m_X = -rotation.m_X;// rotation.m_X + ((nextRotation.m_X - rotation.m_X) * interpolation);
-            finalRotation.m_Y = -rotation.m_Z;//rotation.m_Y + ((nextRotation.m_Y - rotation.m_Y) * interpolation);
-            finalRotation.m_Z = -rotation.m_Y;//rotation.m_Z + ((nextRotation.m_Z - rotation.m_Z) * interpolation);
+            finalRotation = q.Slerp(nq, interpolation, error);
         }
         else
         {
-            finalRotation.m_X = 0.0f;
-            finalRotation.m_Y = 0.0f;
-            finalRotation.m_Z = 0.0f;
+            const IFBXNode*   pSrcNode = static_cast<IFBXNode*>(pBone->m_pCustom);
+                  QuaternionF srcRot;
+
+            if (pSrcNode)
+            {
+                // get node child count
+                const std::size_t count = pSrcNode->GetChildCount();
+
+                // iterate through child nodes
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                    // get child
+                    IFBXNode* pChild = pSrcNode->GetChild(i);
+
+                    // found it?
+                    if (!pChild)
+                        return false;
+
+                    // get properties set containing the bone data
+                    if (pChild->GetName() == "Properties70")
+                    {
+                        // get property count
+                        const std::size_t propCount = pChild->GetPropCount();
+
+                        // iterate through properties
+                        for (std::size_t j = 0; j < propCount; ++j)
+                        {
+                            // get property
+                            IFBXProperty* pProp = pChild->GetProp(j);
+
+                            // found it?
+                            if (!pProp)
+                                return false;
+
+                            // property contains values?
+                            if (pProp->GetValueCount())
+                            {
+                                // get property name
+                                const std::string name = pProp->GetValue(0)->GetRaw();
+
+                                // search for local rotation
+                                if (name == "Lcl Rotation")
+                                {
+                                    IFBXLclRotationProperty* pLclRotatProp = static_cast<IFBXLclRotationProperty*>(pProp);
+
+                                    if (!pLclRotatProp)
+                                        return false;
+
+                                    srcRot = pLclRotatProp->Get();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            finalRotation = srcRot;
         }
 
-        const float degToRad = (float)(M_PI / 180.0f);
-
-        // get the x y and z rotation matrices based on their respective Euler angles
-        Matrix4x4F rotMatX = Matrix4x4F::Identity();
-        rotMatX.Rotate(finalRotation.m_X * degToRad, Vector3F(1.0f, 0.0f, 0.0f));
-        //rotMatX = rotMatX.Transpose();
-        Matrix4x4F rotMatY = Matrix4x4F::Identity();
-        rotMatY.Rotate(finalRotation.m_Y * degToRad, Vector3F(0.0f, 1.0f, 0.0f));
-        //rotMatY = rotMatY.Transpose();
-        Matrix4x4F rotMatZ = Matrix4x4F::Identity();
-        rotMatZ.Rotate(finalRotation.m_Z * degToRad, Vector3F(0.0f, 0.0f, 1.0f));
-        //rotMatZ = rotMatZ.Transpose();
-
-        if (foundRot)
+        // process the scaling
+        if (foundScale)
         {
             // calculate the frame delta, the frame length and the interpolation for the scaling
             float frameDelta    = (float)(elapsedTime    - scaleFrame);
@@ -3464,20 +3481,14 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
             finalScaling.m_Z = 1.0f;
         }
 
-        //Matrix4x4F translateMatrix = Matrix4x4F::Identity();
-        Matrix4x4F rotateMatrix    = rotMatX.Multiply(rotMatY).Multiply(rotMatZ);
-        //Matrix4x4F rotateMatrix    = rotMatZ.Multiply(rotMatY).Multiply(rotMatX);
-        //Matrix4x4F scaleMatrix     = Matrix4x4F::Identity();
-
-        // get the rotation quaternion and the scale and translate vectors
-        //scaleMatrix.Scale(finalScaling);
-        //translateMatrix.Translate(finalPosition);
-
         // create the translation matrix
         Matrix4x4F translateMatrix    = Matrix4x4F::Identity();
         translateMatrix.m_Table[3][0] = finalPosition.m_X;
         translateMatrix.m_Table[3][1] = finalPosition.m_Y;
         translateMatrix.m_Table[3][2] = finalPosition.m_Z;
+
+        // get the rotation matrix
+        const Matrix4x4F rotateMatrix = finalRotation.ToMatrix();
 
         // create the scale matrix
         Matrix4x4F scaleMatrix    = Matrix4x4F::Identity();
@@ -3485,31 +3496,12 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         scaleMatrix.m_Table[1][1] = finalScaling.m_Y;
         scaleMatrix.m_Table[2][2] = finalScaling.m_Z;
 
-        //rotateMatrix = rotateMatrix.Transpose();
-
         // build the final matrix
-        //matrix = scaleMatrix.Multiply(rotateMatrix).Multiply(translateMatrix);
         matrix = rotateMatrix.Multiply(translateMatrix).Multiply(scaleMatrix);
-        //matrix = translateMatrix.Multiply(rotateMatrix).Multiply(scaleMatrix);
-        //matrix = matrix.Transpose();
-
-        //float determinant = 0.0f;
-        //matrix = matrix.Inverse(determinant);
-
-        //matrix = pBone->m_Matrix;
-        //matrix = pBone->m_Matrix.Multiply(rotateMatrix).Multiply(translateMatrix).Multiply(scaleMatrix);
-        //matrix = rotateMatrix.Multiply(translateMatrix).Multiply(scaleMatrix).Multiply(pBone->m_Matrix);
 
         return true;
     }
 
     return false;
-}
-//---------------------------------------------------------------------------
-//REM
-#include <Windows.h>
-void FBXModel::__TEMP(std::string& log) const
-{
-    ::OutputDebugStringA(log.c_str());
 }
 //---------------------------------------------------------------------------

@@ -64,6 +64,7 @@ class Model
             Matrix4x4F  m_Matrix;   // matrix containing the bone transformation to apply
             IBone*      m_pParent;  // bone parent, root bone if nullptr
             IBones      m_Children; // bone children
+            void*       m_pCustom;  // custom data, depends on implementation
 
             IBone();
             virtual ~IBone();

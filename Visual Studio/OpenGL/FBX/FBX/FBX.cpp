@@ -42,6 +42,10 @@
 #include <GL/glew.h>
 
 //------------------------------------------------------------------------------
+bool g_ShowSkeleton = false;
+bool g_PauseAnim    = false;
+bool g_Rotate       = true;
+//------------------------------------------------------------------------------
 const char vertexShader[] = "precision mediump float;"
                             "attribute    vec3 aVertices;"
                             "attribute    vec4 aColor;"
@@ -104,6 +108,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_KEYDOWN:
             switch (wParam)
             {
+                case '1':
+                    g_ShowSkeleton = !g_ShowSkeleton;
+                    break;
+
+                case '2':
+                    g_Rotate = !g_Rotate;
+                    break;
+
+                case VK_SPACE:
+                    g_PauseAnim = !g_PauseAnim;
+                    break;
+
                 case VK_ESCAPE:
                     ::PostQuitMessage(0);
                     break;
@@ -116,6 +132,41 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     return 0;
+}
+//------------------------------------------------------------------------------
+Texture* OnLoadTexture(const std::string& textureName, bool is32bit)
+{
+    std::size_t width   = 0;
+    std::size_t height  = 0;
+    std::size_t format  = 0;
+    std::size_t length  = 0;
+    void*       pPixels = nullptr;
+
+    const std::size_t separator = textureName.rfind('/');
+    const std::string fileName  = textureName.substr(separator + 1, textureName.length() - (separator + 1));
+
+    if (!PngTextureHelper::OpenImage("Resources\\Models\\Laure\\Textures\\" + fileName,
+                                     is32bit,
+                                     width,
+                                     height,
+                                     format,
+                                     length,
+                                     pPixels))
+        return nullptr;
+
+    if (!pPixels)
+        return nullptr;
+
+    std::unique_ptr<Texture_OpenGL> pTexture(new Texture_OpenGL());
+    pTexture->m_Width     = (int)width;
+    pTexture->m_Height    = (int)height;
+    pTexture->m_Format    = format == 24 ? Texture::IEFormat::IE_FT_24bit : Texture::IEFormat::IE_FT_32bit;
+    pTexture->m_WrapMode  = Texture::IEWrapMode::IE_WM_Clamp;
+    pTexture->m_MinFilter = Texture::IEMinFilter::IE_MI_Linear;
+    pTexture->m_MagFilter = Texture::IEMagFilter::IE_MA_Linear;
+    pTexture->Create(pPixels);
+
+    return pTexture.release();
 }
 //---------------------------------------------------------------------------
 void DrawFBX(const FBXModel&        fbxModel,
@@ -217,41 +268,6 @@ void DrawSkeleton(const FBXModel&        fbxModel,
     DrawBone(fbxModel, pModel, pModel->m_pSkeleton, modelMatrix, pShader, pRenderer, animSetIndex, elapsedTime);
 }
 //------------------------------------------------------------------------------
-Texture* OnLoadTexture(const std::string& textureName, bool is32bit)
-{
-    std::size_t width   = 0;
-    std::size_t height  = 0;
-    std::size_t format  = 0;
-    std::size_t length  = 0;
-    void*       pPixels = nullptr;
-
-    const std::size_t separator = textureName.rfind('/');
-    const std::string fileName  = textureName.substr(separator + 1, textureName.length() - (separator + 1));
-
-    if (!PngTextureHelper::OpenImage("Resources\\Models\\Laure\\Textures\\" + fileName,
-                                     is32bit,
-                                     width,
-                                     height,
-                                     format,
-                                     length,
-                                     pPixels))
-        return nullptr;
-
-    if (!pPixels)
-        return nullptr;
-
-    std::unique_ptr<Texture_OpenGL> pTexture(new Texture_OpenGL());
-    pTexture->m_Width     = (int)width;
-    pTexture->m_Height    = (int)height;
-    pTexture->m_Format    = format == 24 ? Texture::IEFormat::IE_FT_24bit : Texture::IEFormat::IE_FT_32bit;
-    pTexture->m_WrapMode  = Texture::IEWrapMode::IE_WM_Clamp;
-    pTexture->m_MinFilter = Texture::IEMinFilter::IE_MI_Linear;
-    pTexture->m_MagFilter = Texture::IEMagFilter::IE_MA_Linear;
-    pTexture->Create(pPixels);
-
-    return pTexture.release();
-}
-//------------------------------------------------------------------------------
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                       _In_opt_ HINSTANCE hPrevInstance,
                       _In_     LPWSTR    lpCmdLine,
@@ -348,7 +364,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     FBXModel fbx;
     fbx.Set_OnLoadTexture(OnLoadTexture);
-    fbx.SetPoseOnly(true);
+    //fbx.SetPoseOnly(true);
     fbx.Open("Resources\\Models\\Laure\\Angry.fbx");
 
     Matrix4x4F projMatrix;
@@ -361,10 +377,12 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                             &shader,
                             projMatrix);
 
+    // connect the projection matrix to the line shader
     renderer.ConnectProjectionMatrixToShader(&lineShader, projMatrix);
 
+    // connect the view matrix to the both model and line shaders
     Matrix4x4F viewMatrix = Matrix4x4F::Identity();
-    renderer.ConnectViewMatrixToShader(&shader, viewMatrix);
+    renderer.ConnectViewMatrixToShader(&shader,     viewMatrix);
     renderer.ConnectViewMatrixToShader(&lineShader, viewMatrix);
 
     ColorF bgColor;
@@ -433,15 +451,17 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                                                                   (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
 
             // draw the model
-            DrawFBX(fbx, modelMatrix, &shader, &renderer, 0, 0.0f);//lastTime * 0.001);
+            DrawFBX(fbx, modelMatrix, &shader, &renderer, 0, g_PauseAnim ? 0.0f : lastTime * 0.001);
 
             // draw the skeleton
-            DrawSkeleton(fbx, modelMatrix, &lineShader, &renderer, 0, 0.0f);// lastTime * 0.001);
+            if (g_ShowSkeleton)
+                DrawSkeleton(fbx, modelMatrix, &lineShader, &renderer, 0, g_PauseAnim ? 0.0f : lastTime * 0.001);
 
             renderer.EndScene();
 
             // calculate the next angle
-            angle = std::fmodf(angle + ((float)elapsedTime * 0.001f), 2.0f * (float)M_PI);
+            if (g_Rotate)
+                angle = std::fmodf(angle + ((float)elapsedTime * 0.001f), 2.0f * (float)M_PI);
 
             Sleep(1);
         }

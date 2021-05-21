@@ -31,6 +31,7 @@
 // classes
 #include "Color.h"
 #include "Vector3.h"
+#include "Quaternion.h"
 #include "Matrix4x4.h"
 #include "Vertex.h"
 #include "Model.h"
@@ -545,7 +546,7 @@ class FBXModel
         };
 
         /**
-        * FBX lcl translation property
+        * FBX local translation property
         */
         class IFBXLclTranslationProperty : public IFBXProperty
         {
@@ -564,7 +565,7 @@ class FBXModel
         };
 
         /**
-        * FBX lcl rotation property
+        * FBX local rotation property
         */
         class IFBXLclRotationProperty : public IFBXProperty
         {
@@ -576,14 +577,14 @@ class FBXModel
                 * Gets the value
                 *@return the value
                 */
-                virtual Matrix4x4F Get() const;
+                virtual QuaternionF Get() const;
 
             private:
-                Matrix4x4F m_Value;
+                QuaternionF m_Value;
         };
 
         /**
-        * FBX lcl scaling property
+        * FBX local scaling property
         */
         class IFBXLclScalingProperty : public IFBXProperty
         {
@@ -1131,8 +1132,6 @@ class FBXModel
                                 const Model::IBone*         pBone,
                                       double                elapsedTime,
                                       Matrix4x4F&           matrix) const;
-
-        void __TEMP(std::string& log) const; //REM
 };
 
 //---------------------------------------------------------------------------

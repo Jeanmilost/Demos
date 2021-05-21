@@ -297,22 +297,22 @@ void Quaternion<T>::FromEuler(T angleX, T angleY, T angleZ)
     const T sin_z_2 = std::sin(T(0.5) * angleZ);
 
     // create the quaternion
-    m_X = cos_z_2 * cos_y_2 * sin_x_2 - sin_z_2 * sin_y_2 * cos_x_2;
-    m_Y = cos_z_2 * sin_y_2 * cos_x_2 + sin_z_2 * cos_y_2 * sin_x_2;
-    m_Z = sin_z_2 * cos_y_2 * cos_x_2 - cos_z_2 * sin_y_2 * sin_x_2;
-    m_W = cos_z_2 * cos_y_2 * cos_x_2 + sin_z_2 * sin_y_2 * sin_x_2;
+    m_X = (cos_z_2 * cos_y_2 * sin_x_2) - (sin_z_2 * sin_y_2 * cos_x_2);
+    m_Y = (sin_z_2 * cos_y_2 * sin_x_2) + (cos_z_2 * sin_y_2 * cos_x_2);
+    m_Z = (sin_z_2 * cos_y_2 * cos_x_2) - (cos_z_2 * sin_y_2 * sin_x_2);
+    m_W = (cos_z_2 * cos_y_2 * cos_x_2) + (sin_z_2 * sin_y_2 * sin_x_2);
 }
 //---------------------------------------------------------------------------
 template <class T>
 void Quaternion<T>::FromPitchYawRoll(T pitch, T yaw, T roll)
 {
     // calculate the sinus and cosinus of each angles
-    const T c1 = std::cos(yaw   / T(2.0));
-    const T c2 = std::cos(pitch / T(2.0));
-    const T c3 = std::cos(roll  / T(2.0));
-    const T s1 = std::sin(yaw   / T(2.0));
-    const T s2 = std::sin(pitch / T(2.0));
-    const T s3 = std::sin(roll  / T(2.0));
+    const T c1 = std::cos(T(0.5) * yaw);
+    const T c2 = std::cos(T(0.5) * pitch);
+    const T c3 = std::cos(T(0.5) * roll);
+    const T s1 = std::sin(T(0.5) * yaw);
+    const T s2 = std::sin(T(0.5) * pitch);
+    const T s3 = std::sin(T(0.5) * roll);
 
     // calculate the quaternion values
     m_X = (s1 * s2 * c3) + (c1 * c2 * s3);
