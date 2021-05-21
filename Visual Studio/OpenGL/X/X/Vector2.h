@@ -373,7 +373,7 @@ bool Vector2<T>::operator !=(const Vector2& value) const
 template <class T>
 T Vector2<T>::Length() const
 {
-    return sqrt((m_X * m_X) + (m_Y * m_Y));
+    return (T)sqrt((m_X * m_X) + (m_Y * m_Y));
 }
 //---------------------------------------------------------------------------
 template <class T>

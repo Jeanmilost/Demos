@@ -475,11 +475,11 @@ Model* XModel::GetModel(int animSetIndex, int frameCount, int frameIndex) const
                 if (m_pModel->m_PoseOnly)
                     m_pModel->GetBoneMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
                 else
-                    m_pModel->GetBoneAnimMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
-                                                m_pModel->m_AnimationSet[animSetIndex],
-                                                frameIndex,
-                                                Matrix4x4F::Identity(),
-                                                boneMatrix);
+                    GetBoneAnimMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
+                                      m_pModel->m_AnimationSet[animSetIndex],
+                                      frameIndex,
+                                      Matrix4x4F::Identity(),
+                                      boneMatrix);
 
                 // get the final matrix after bones transform
                 const Matrix4x4F finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
@@ -513,6 +513,49 @@ Model* XModel::GetModel(int animSetIndex, int frameCount, int frameIndex) const
     }
 
     return m_pModel;
+}
+//---------------------------------------------------------------------------
+void XModel::GetBoneAnimMatrix(const Model::IBone*         pBone,
+                               const Model::IAnimationSet* pAnimSet,
+                                     std::size_t           frameIndex,
+                               const Matrix4x4F&           initialMatrix,
+                                     Matrix4x4F&           matrix) const
+{
+    // no bone?
+    if (!pBone)
+        return;
+
+    // set the output matrix as identity
+    matrix = Matrix4x4F::Identity();
+
+    Matrix4x4F animMatrix;
+
+    // iterate through bones
+    while (pBone)
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        const Matrix4x4F localMatrix = matrix;
+
+        // get the animated bone matrix matching with frame. If not found use the identity one
+        if (!GetAnimationMatrix(pAnimSet, pBone, frameIndex, animMatrix))
+            animMatrix = Matrix4x4F::Identity();
+
+        // stack the previously calculated matrix with the current bone one
+        matrix = localMatrix.Multiply(animMatrix);
+
+        // go to parent bone
+        pBone = pBone->m_pParent;
+    }
+
+    // initial matrix provided?
+    if (!initialMatrix.IsIdentity())
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        const Matrix4x4F localMatrix = matrix;
+
+        // stack the previously calculated matrix with the initial one
+        matrix = localMatrix.Multiply(initialMatrix);
+    }
 }
 //---------------------------------------------------------------------------
 void XModel::SetVertFormatTemplate(const VertexFormat& vertFormatTemplate)
@@ -2368,7 +2411,7 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
 
                     // load the texture
                     if (fOnLoadTexture)
-                        pVB->m_Material.m_pTexture = fOnLoadTexture(pTextureDataset->m_FileName);
+                        pVB->m_Material.m_pTexture = fOnLoadTexture(pTextureDataset->m_FileName, false);
 
                     // normally each material should contain only one texture
                     hasTexture = true;
@@ -2873,10 +2916,20 @@ bool XModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
             }
         }
 
+        // calculate the frame delta, the frame length and the interpolation for the position
+        float frameDelta    = (float)(frame        - posFrame);
+        float frameLength   = (float)(nextPosFrame - posFrame);
+        float interpolation =         frameDelta   / frameLength;
+
+        // interpolate the position
+        finalPosition.m_X = position.m_X + ((nextPosition.m_X - position.m_X) * interpolation);
+        finalPosition.m_Y = position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation);
+        finalPosition.m_Z = position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation);
+
         // calculate the frame delta, the frame length and the interpolation for the rotation
-        float frameDelta    = (float)(frame        - rotFrame);
-        float frameLength   = (float)(nextRotFrame - rotFrame);
-        float interpolation = frameDelta / frameLength;
+        frameDelta    = (float)(frame        - rotFrame);
+        frameLength   = (float)(nextRotFrame - rotFrame);
+        interpolation =         frameDelta   / frameLength;
 
         bool error = false;
 
@@ -2886,37 +2939,24 @@ bool XModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         // calculate the frame delta, the frame length and the interpolation for the scaling
         frameDelta    = (float)(frame          - scaleFrame);
         frameLength   = (float)(nextScaleFrame - scaleFrame);
-        interpolation = frameDelta / frameLength;
+        interpolation =         frameDelta     / frameLength;
 
         // interpolate the scaling
         finalScaling.m_X = scaling.m_X + ((nextScaling.m_X - scaling.m_X) * interpolation);
         finalScaling.m_Y = scaling.m_Y + ((nextScaling.m_Y - scaling.m_Y) * interpolation);
         finalScaling.m_Z = scaling.m_Z + ((nextScaling.m_Z - scaling.m_Z) * interpolation);
 
-        // calculate the frame delta, the frame length and the interpolation for the rotation
-        frameDelta    = (float)(frame        - posFrame);
-        frameLength   = (float)(nextPosFrame - posFrame);
-        interpolation = frameDelta / frameLength;
+        Matrix4x4F translateMatrix = Matrix4x4F::Identity();
+        Matrix4x4F rotateMatrix;
+        Matrix4x4F scaleMatrix     = Matrix4x4F::Identity();
 
-        // interpolate the position
-        finalPosition.m_X = position.m_X + ((nextPosition.m_X - position.m_X) * interpolation);
-        finalPosition.m_Y = position.m_Y + ((nextPosition.m_Y - position.m_Y) * interpolation);
-        finalPosition.m_Z = position.m_Z + ((nextPosition.m_Z - position.m_Z) * interpolation);
-
-        Matrix4x4F  scaleMatrix     = Matrix4x4F::Identity();
-        Matrix4x4F  rotateMatrix;
-        Matrix4x4F  translateMatrix = Matrix4x4F::Identity();
-
-        // get the rotation quaternion and the scale and translate vectors
-        scaleMatrix.Scale(finalScaling);
-        rotateMatrix = finalRotation.ToMatrix();
+        // build the translation, rotation and scaling matrices
         translateMatrix.Translate(finalPosition);
-
-        Matrix4x4F buildMatrix;
+        rotateMatrix = finalRotation.ToMatrix();
+        scaleMatrix.Scale(finalScaling);
 
         // build the final matrix
-        buildMatrix = scaleMatrix.Multiply(rotateMatrix);
-        matrix      = buildMatrix.Multiply(translateMatrix);
+        matrix = rotateMatrix.Multiply(translateMatrix).Multiply(scaleMatrix);
 
         return true;
     }

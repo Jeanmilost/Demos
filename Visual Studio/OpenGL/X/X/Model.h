@@ -64,6 +64,7 @@ class Model
             Matrix4x4F  m_Matrix;   // matrix containing the bone transformation to apply
             IBone*      m_pParent;  // bone parent, root bone if nullptr
             IBones      m_Children; // bone children
+            void*       m_pCustom;  // custom data, depends on implementation
 
             IBone();
             virtual ~IBone();
@@ -97,11 +98,13 @@ class Model
         */
         struct ISkinWeights
         {
-            std::string       m_BoneName;         // linked bone name (required to find the bone in skeleton)
-            IBone*            m_pBone;            // linked bone
-            Matrix4x4F        m_Matrix;           // matrix to transform the mesh vertices to the bone space
-            IWeightInfluences m_WeightInfluences; // table allowing to retrieve the vertices influenced by a weight
-            IWeights          m_Weights;          // weights indicating the bone influence on vertices, between 0.0f and 1.0f
+            std::string       m_BoneName;            // linked bone name (required to find the bone in skeleton)
+            IBone*            m_pBone;               // linked bone
+            Matrix4x4F        m_Matrix;              // matrix to transform the mesh vertices to the bone space
+            Matrix4x4F        m_TransformMatrix;     // transform matrix (used in FBX files)
+            Matrix4x4F        m_TransformLinkMatrix; // transform link matrix (used in FBX files)
+            IWeightInfluences m_WeightInfluences;    // table allowing to retrieve the vertices influenced by a weight
+            IWeights          m_Weights;             // weights indicating the bone influence on vertices, between 0.0f and 1.0f
 
             ISkinWeights();
             virtual ~ISkinWeights();
@@ -128,6 +131,7 @@ class Model
             typedef std::vector<float> IValues;
 
             std::size_t m_Frame;
+            long long   m_TimeStamp;
             IValues     m_Values;
 
             IAnimationKey();
@@ -170,7 +174,8 @@ class Model
         {
             typedef std::vector<IAnimation*> IAnimations;
 
-            IAnimations m_Animations;
+            IAnimations m_Animations; // animations belonging to this set
+            long long   m_MaxValue;   // maximum value the animation may reach before looping or stopping
 
             IAnimationSet();
             virtual ~IAnimationSet();
@@ -201,31 +206,4 @@ class Model
         *@param[out] matrix - animation matrix
         */
         virtual void GetBoneMatrix(const IBone* pBone, const Matrix4x4F& initialMatrix, Matrix4x4F& matrix) const;
-
-        /**
-        * Gets the bone animation matrix
-        *@param pBone - skeleton root bone
-        *@param pAnimSet - animation set containing the animation to get
-        *@param frameIndex - animation frame index
-        *@param initialMatrix - the initial matrix
-        *@param[out] matrix - animation matrix
-        */
-        virtual void GetBoneAnimMatrix(const IBone*         pBone,
-                                       const IAnimationSet* pAnimSet,
-                                             std::size_t    frameIndex,
-                                       const Matrix4x4F&    initialMatrix,
-                                             Matrix4x4F&    matrix) const;
-
-        /**
-        * Gets the animation matrix
-        *@param pAnimSet - animation set containing the animation to search
-        *@param pBone - skeleton root bone
-        *@param frame - animation frame
-        *@param[out] matrix - animation matrix
-        *@return true on success, otherwise false
-        */
-        virtual bool GetAnimationMatrix(const IAnimationSet* pAnimSet,
-                                        const IBone*         pBone,
-                                              std::size_t    frame,
-                                              Matrix4x4F&    matrix) const;
 };

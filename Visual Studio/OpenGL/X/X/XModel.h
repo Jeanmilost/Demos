@@ -70,6 +70,20 @@ class XModel
         virtual Model* GetModel(int animSetIndex, int frameCount, int frameIndex) const;
 
         /**
+        * Gets the bone animation matrix
+        *@param pBone - skeleton root bone
+        *@param pAnimSet - animation set containing the animation to get
+        *@param frameIndex - animation frame index
+        *@param initialMatrix - the initial matrix
+        *@param[out] matrix - animation matrix
+        */
+        virtual void GetBoneAnimMatrix(const Model::IBone*         pBone,
+                                       const Model::IAnimationSet* pAnimSet,
+                                             std::size_t           frameIndex,
+                                       const Matrix4x4F&           initialMatrix,
+                                             Matrix4x4F&           matrix) const;
+
+        /**
         * Changes the vertex format template
         *@param vertFormatTemplate - new vertex format template
         */

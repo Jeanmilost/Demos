@@ -43,6 +43,10 @@
 #include <GL/glew.h>
 
 //------------------------------------------------------------------------------
+bool g_ShowSkeleton   = false;
+bool g_PauseAnim      = false;
+int  g_LastKnownFrame = 0;
+//------------------------------------------------------------------------------
 const char vertexShader[] = "precision mediump float;"
                             "attribute    vec3 aVertices;"
                             "attribute    vec4 aColor;"
@@ -59,6 +63,19 @@ const char vertexShader[] = "precision mediump float;"
                             "    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
                             "}";
 //------------------------------------------------------------------------------
+const char lineVertShader[] = "precision mediump float;"
+                              "attribute    vec3 aVertices;"
+                              "attribute    vec4 aColor;"
+                              "uniform      mat4 uProjection;"
+                              "uniform      mat4 uView;"
+                              "uniform      mat4 uModel;"
+                              "varying lowp vec4 vColor;"
+                              "void main(void)"
+                              "{"
+                              "    vColor      = aColor;"
+                              "    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
+                              "}";
+//------------------------------------------------------------------------------
 const char fragmentShader[] = "precision mediump float;"
                               "uniform      sampler2D sTexture;"
                               "varying lowp vec4      vColor;"
@@ -66,6 +83,13 @@ const char fragmentShader[] = "precision mediump float;"
                               "void main(void)"
                               "{"
                               "    gl_FragColor = vColor * texture2D(sTexture, vTexCoord);"
+                              "}";
+//------------------------------------------------------------------------------
+const char lineFragShader[] = "precision mediump float;"
+                              "varying lowp vec4 vColor;"
+                              "void main(void)"
+                              "{"
+                              "    gl_FragColor = vColor;"
                               "}";
 //------------------------------------------------------------------------------
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -82,6 +106,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_KEYDOWN:
             switch (wParam)
             {
+                case '1':
+                    g_ShowSkeleton = !g_ShowSkeleton;
+                    break;
+
+                case VK_SPACE:
+                    g_PauseAnim = !g_PauseAnim;
+                    break;
+
                 case VK_ESCAPE:
                     ::PostQuitMessage(0);
                     break;
@@ -95,37 +127,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     return 0;
 }
-//---------------------------------------------------------------------------
-void DrawX(const XModel&          xModel,
-           const Matrix4x4F&      modelMatrix,
-           const Shader_OpenGL*   pShader,
-           const Renderer_OpenGL* pRenderer,
-                 int              animSetIndex,
-                 int              frameCount)
-{
-    // no renderer?
-    if (!pRenderer)
-        return;
-
-    // no shader?
-    if (!pShader)
-        return;
-
-    Model* pModel = xModel.GetModel(animSetIndex, frameCount, (::GetTickCount64() * 5) % frameCount);
-
-    // no model to draw?
-    if (!pModel)
-        return;
-
-    const std::size_t meshCount = pModel->m_Mesh.size();
-
-    // iterate through the meshes to draw
-    for (std::size_t i = 0; i < meshCount; ++i)
-        // draw the model mesh
-        pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
-}
 //------------------------------------------------------------------------------
-Texture* OnLoadTexture(const std::string& textureName)
+Texture* OnLoadTexture(const std::string& textureName, bool is32bit)
 {
     std::size_t width   = 0;
     std::size_t height  = 0;
@@ -149,6 +152,120 @@ Texture* OnLoadTexture(const std::string& textureName)
     pTexture->Create(pPixels);
 
     return pTexture.release();
+}
+//---------------------------------------------------------------------------
+int DrawX(const XModel&          xModel,
+           const Matrix4x4F&      modelMatrix,
+           const Shader_OpenGL*   pShader,
+           const Renderer_OpenGL* pRenderer,
+                 int              animSetIndex,
+                 int              frameCount)
+{
+    // no renderer?
+    if (!pRenderer)
+        return 0;
+
+    // no shader?
+    if (!pShader)
+        return 0;
+
+    const int frameIndex       = g_PauseAnim ? g_LastKnownFrame : (::GetTickCount64() * 5) % frameCount;
+              g_LastKnownFrame = frameIndex;
+
+    Model* pModel = xModel.GetModel(animSetIndex, frameCount, frameIndex);
+
+    // no model to draw?
+    if (!pModel)
+        return 0;
+
+    const std::size_t meshCount = pModel->m_Mesh.size();
+
+    // iterate through the meshes to draw
+    for (std::size_t i = 0; i < meshCount; ++i)
+        // draw the model mesh
+        pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
+
+    return frameIndex;
+}
+//---------------------------------------------------------------------------
+void DrawBone(const XModel&          xModel,
+              const Model*           pModel,
+              const Model::IBone*    pBone,
+              const Matrix4x4F&      modelMatrix,
+              const Shader_OpenGL*   pShader,
+              const Renderer_OpenGL* pRenderer,
+              int                    animSetIndex,
+              int                    frameCount,
+              int                    frameIndex)
+{
+    if (!pModel)
+        return;
+
+    if (!pBone)
+        return;
+
+    if (!pRenderer)
+        return;
+
+    if (!pShader)
+        return;
+
+    for (std::size_t i = 0; i < pBone->m_Children.size(); ++i)
+    {
+        Model::IBone* pChild = pBone->m_Children[i];
+
+        Matrix4x4F topMatrix;
+
+        if (pModel->m_PoseOnly)
+            pModel->GetBoneMatrix(pBone, Matrix4x4F::Identity(), topMatrix);
+        else
+            xModel.GetBoneAnimMatrix(pBone,
+                                     pModel->m_AnimationSet[animSetIndex],
+                                     frameIndex,
+                                     Matrix4x4F::Identity(),
+                                     topMatrix);
+
+        Matrix4x4F bottomMatrix;
+
+        if (pModel->m_PoseOnly)
+            pModel->GetBoneMatrix(pChild, Matrix4x4F::Identity(), bottomMatrix);
+        else
+            xModel.GetBoneAnimMatrix(pChild,
+                                     pModel->m_AnimationSet[animSetIndex],
+                                     frameIndex,
+                                     Matrix4x4F::Identity(),
+                                     bottomMatrix);
+
+        glDisable(GL_DEPTH_TEST);
+        pRenderer->DrawLine(Vector3F(topMatrix.m_Table[3][0],    topMatrix.m_Table[3][1],    topMatrix.m_Table[3][2]),
+                            Vector3F(bottomMatrix.m_Table[3][0], bottomMatrix.m_Table[3][1], bottomMatrix.m_Table[3][2]),
+                            ColorF(0.25f, 0.12f, 0.1f, 1.0f),
+                            ColorF(0.95f, 0.06f, 0.15f, 1.0f),
+                            modelMatrix,
+                            pShader);
+        glEnable(GL_DEPTH_TEST);
+
+        DrawBone(xModel, pModel, pChild, modelMatrix, pShader, pRenderer, animSetIndex, frameCount, frameIndex);
+    }
+}
+//---------------------------------------------------------------------------
+void DrawSkeleton(const XModel&          xModel,
+                  const Matrix4x4F&      modelMatrix,
+                  const Shader_OpenGL*   pShader,
+                  const Renderer_OpenGL* pRenderer,
+                  int                    animSetIndex,
+                  int                    frameCount,
+                  int                    frameIndex)
+{
+    if (!pRenderer)
+        return;
+
+    if (!pShader)
+        return;
+
+    Model* pModel = xModel.GetModel(animSetIndex, frameCount, frameIndex);
+
+    DrawBone(xModel, pModel, pModel->m_pSkeleton, modelMatrix, pShader, pRenderer, animSetIndex, frameCount, frameIndex);
 }
 //------------------------------------------------------------------------------
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
@@ -239,6 +356,12 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     shader.Attach(fragmentShader, Shader::IEType::IE_ST_Fragment);
     shader.Link(true);
 
+    Shader_OpenGL lineShader;
+    lineShader.CreateProgram();
+    lineShader.Attach(lineVertShader, Shader::IEType::IE_ST_Vertex);
+    lineShader.Attach(lineFragShader, Shader::IEType::IE_ST_Fragment);
+    lineShader.Link(true);
+
     XModel x;
     x.Set_OnLoadTexture(OnLoadTexture);
     x.Open("Resources\\Models\\Tiny\\tiny_4anim.x");
@@ -253,8 +376,13 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                             &shader,
                             projMatrix);
 
+    // connect the projection matrix to the line shader
+    renderer.ConnectProjectionMatrixToShader(&lineShader, projMatrix);
+
+    // connect the view matrix to the both model and line shaders
     Matrix4x4F viewMatrix = Matrix4x4F::Identity();
-    renderer.ConnectViewMatrixToShader(&shader, viewMatrix);
+    renderer.ConnectViewMatrixToShader(&shader,     viewMatrix);
+    renderer.ConnectViewMatrixToShader(&lineShader, viewMatrix);
 
     ColorF bgColor;
     bgColor.m_R = 0.08f;
@@ -314,8 +442,16 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             modelMatrix.m_Table[3][2] = -50.0f;
 
             // draw the scene
-            renderer.BeginScene(bgColor, (Renderer::IESceneFlags)((unsigned)Renderer::IESceneFlags::IE_SF_ClearColor | (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
-            DrawX(x, modelMatrix, &shader, &renderer, 1, 4800);
+            renderer.BeginScene(bgColor, (Renderer::IESceneFlags)((unsigned)Renderer::IESceneFlags::IE_SF_ClearColor |
+                                                                  (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
+
+            // draw the model
+            const int frameIndex = DrawX(x, modelMatrix, &shader, &renderer, 1, 4800);
+
+            // draw the skeleton
+            if (g_ShowSkeleton)
+                DrawSkeleton(x, modelMatrix, &lineShader, &renderer, 1, 4800, frameIndex);
+
             renderer.EndScene();
 
             // calculate the elapsed time
