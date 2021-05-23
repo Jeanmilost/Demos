@@ -82,12 +82,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>glew\lib\Release\x64\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>glew\lib\Release\x64\;libpng\lib\x64\;$(LibraryPath)</LibraryPath>
     <IncludePath>glew\include\;libpng\include\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>glew\lib\Release\x64\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>glew\lib\Release\x64\;libpng\lib\x64\;$(LibraryPath)</LibraryPath>
     <IncludePath>glew\include\;libpng\include\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

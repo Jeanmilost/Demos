@@ -1507,33 +1507,12 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
         if (!weightCount)
             return nullptr;
 
-        // iterate through mesh skin weights
-        for (std::size_t j = 0; j < weightCount; ++j)
+        // clear the previous vertex buffer vertices in order to rebuild them
+        for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
         {
-            // get the weight influence count
-            const std::size_t weightInfluenceCount = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size();
-
-            // iterate through weights influences
-            for (std::size_t k = 0; k < weightInfluenceCount; ++k)
-            {
-                // get the vertex index count
-                const std::size_t vertexIndexCount =
-                        m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size();
-
-                // iterate through weights influences vertex indices
-                for (std::size_t l = 0; l < vertexIndexCount; ++l)
-                {
-                    // get the next vertex to which the next skin weight should be applied
-                    const std::size_t iX = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
-                    const std::size_t iY = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
-                    const std::size_t iZ = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
-
-                    // clear it
-                    pMesh->m_VB[0]->m_Data[iX] = 0.0f;
-                    pMesh->m_VB[0]->m_Data[iY] = 0.0f;
-                    pMesh->m_VB[0]->m_Data[iZ] = 0.0f;
-                }
-            }
+            pMesh->m_VB[0]->m_Data[j]     = 0.0f;
+            pMesh->m_VB[0]->m_Data[j + 1] = 0.0f;
+            pMesh->m_VB[0]->m_Data[j + 2] = 0.0f;
         }
 
         // iterate through mesh skin weights
