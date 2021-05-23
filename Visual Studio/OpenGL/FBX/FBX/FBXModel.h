@@ -962,14 +962,29 @@ class FBXModel
         typedef std::vector<IMeshTemplate*> IMeshTemplates;
 
         /**
+        * Used properties set
+        */
+        typedef std::set<IFBXProperty*> IUsedProps;
+
+        /**
+        * Index to weight influence dictionary
+        */
+        typedef std::map<std::size_t, Model::IWeightInfluences> IIndexToInflDict;
+
+        /**
         * Bone dictionary
         */
         typedef std::map<IFBXNode*, Model::IBone*> IBoneDictionary;
 
         /**
-        * Used properties set
+        * Animated bone cache dictionary
         */
-        typedef std::set<IFBXProperty*> IUsedProps;
+        typedef std::map<const Model::IBone*, Matrix4x4F> IAnimBoneCacheDict;
+
+        /**
+        * Source vertex buffer cache
+        */
+        typedef std::vector<VertexBuffer::IData*> IVBCache;
 
         IFBXNodes                         m_Nodes;
         IFBXLinks                         m_Links;
@@ -977,6 +992,8 @@ class FBXModel
         IUsedProps                        m_UsedProps;
         IItemDictionary                   m_ItemDict;
         IBoneDictionary                   m_BoneDict;
+        IAnimBoneCacheDict                m_AnimBoneCacheDict;
+        IVBCache                          m_VBCache;
         Model*                            m_pModel;
         std::string                       m_Data;
         bool                              m_PoseOnly;
@@ -1116,9 +1133,12 @@ class FBXModel
         * Populates the vertex buffer
         *@param pMeshTemplate - mesh templates to use to populate the vertex buffer
         *@param pModelVB - model vertex buffer to populate
+        *@param pIndexToInfl - index to influence dictionary, ignored if nullptr
         *@return true on success, otherwise false
         */
-        bool PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBuffer* pModelVB) const;
+        bool PopulateVertexBuffer(const IMeshTemplate*    pMeshTemplate,
+                                        VertexBuffer*     pModelVB,
+                                  const IIndexToInflDict* pIndexToInfl) const;
 
         /**
         * Gets the animation matrix
@@ -1132,6 +1152,14 @@ class FBXModel
                                 const Model::IBone*         pBone,
                                       double                elapsedTime,
                                       Matrix4x4F&           matrix) const;
+
+        /**
+        * Add a weight influence for a vertex buffer
+        *@param pIndexToInfl - index to influence dictionary
+        *@param indice - vertex indice in the source buffer
+        *@param pModelVB - model vertex buffer in which the weight influence index should be added
+        */
+        void AddWeightInfluence(const IIndexToInflDict* pIndexToInfl, std::size_t indice, VertexBuffer* pModelVB) const;
 };
 
 //---------------------------------------------------------------------------

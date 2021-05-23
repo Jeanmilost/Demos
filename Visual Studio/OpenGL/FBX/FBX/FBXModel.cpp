@@ -1199,6 +1199,9 @@ FBXModel::~FBXModel()
 
     for (IFBXLinks::iterator it = m_Links.begin(); it != m_Links.end(); ++it)
         delete (*it);
+
+    for (IVBCache::iterator it = m_VBCache.begin(); it != m_VBCache.end(); ++it)
+        delete (*it);
 }
 //---------------------------------------------------------------------------
 void FBXModel::Clear()
@@ -1222,6 +1225,11 @@ void FBXModel::Clear()
         delete (*it);
 
     m_Links.clear();
+
+    for (IVBCache::iterator it = m_VBCache.begin(); it != m_VBCache.end(); ++it)
+        delete (*it);
+
+    m_VBCache.clear();
     m_ItemDict.clear();
     m_Data.clear();
 }
@@ -1464,32 +1472,14 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
     if (!m_pModel)
         return nullptr;
 
-    const std::size_t templateCount = m_Templates.size();
-    const std::size_t meshCount     = m_pModel->m_Mesh.size();
-
-    if (templateCount != meshCount)
-        return nullptr;
-
-    // if mesh has no skeleton, perform a simple draw
-    if (!m_pModel->m_pSkeleton)
-    {
-        for (std::size_t i = 0; i < templateCount; ++i)
-        {
-            // mesh should only contain 1 vertex buffer, unsupported otherwise
-            if (m_pModel->m_Mesh[i]->m_VB.size() != 1)
-                return nullptr;
-
-            // vertex buffer was already built?
-            if (m_pModel->m_Mesh[i]->m_VB[0]->m_Data.size())
-                continue;
-
-            // populate the vertex buffer
-            if (!PopulateVertexBuffer(m_Templates[i], m_pModel->m_Mesh[i]->m_VB[0]))
-                return nullptr;
-        }
-
+    // if mesh has no skeleton, or if only the pose is required, perform a simple draw
+    if (!m_pModel->m_pSkeleton || m_pModel->m_PoseOnly)
         return m_pModel;
-    }
+
+    // clear the animation matrix cache
+    const_cast<IAnimBoneCacheDict&>(m_AnimBoneCacheDict).clear();
+
+    const std::size_t meshCount = m_pModel->m_Mesh.size();
 
     // iterate through model meshes
     for (std::size_t i = 0; i < meshCount; ++i)
@@ -1507,12 +1497,6 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
             // exists, a custom version of this function should also be written for it)
             continue;
 
-        // vertex buffer was already built?
-        if (m_pModel->m_PoseOnly && pMesh->m_VB[0]->m_Data.size())
-            continue;
-        else
-            m_pModel->m_Mesh[i]->m_VB[0]->m_Data.clear();
-
         // malformed deformers?
         if (meshCount != m_pModel->m_Deformers.size())
             return nullptr;
@@ -1522,8 +1506,6 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
         // mesh contains skin weights?
         if (!weightCount)
             return nullptr;
-
-        std::vector<double> skinVertices = *m_Templates[i]->m_pVertices;
 
         // iterate through mesh skin weights
         for (std::size_t j = 0; j < weightCount; ++j)
@@ -1542,14 +1524,14 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
                 for (std::size_t l = 0; l < vertexIndexCount; ++l)
                 {
                     // get the next vertex to which the next skin weight should be applied
-                    const std::size_t iX = (m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] * 3);
-                    const std::size_t iY = (m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] * 3) + 1;
-                    const std::size_t iZ = (m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] * 3) + 2;
+                    const std::size_t iX = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
+                    const std::size_t iY = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
+                    const std::size_t iZ = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
 
                     // clear it
-                    skinVertices[iX] = 0.0f;
-                    skinVertices[iY] = 0.0f;
-                    skinVertices[iZ] = 0.0f;
+                    pMesh->m_VB[0]->m_Data[iX] = 0.0f;
+                    pMesh->m_VB[0]->m_Data[iY] = 0.0f;
+                    pMesh->m_VB[0]->m_Data[iZ] = 0.0f;
                 }
             }
         }
@@ -1586,40 +1568,27 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
                 for (std::size_t l = 0; l < vertexIndexCount; ++l)
                 {
                     // get the next vertex to which the next skin weight should be applied
-                    const std::size_t iX = (m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] * 3);
-                    const std::size_t iY = (m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] * 3) + 1;
-                    const std::size_t iZ = (m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] * 3) + 2;
+                    const std::size_t iX = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
+                    const std::size_t iY = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
+                    const std::size_t iZ = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
 
                     Vector3F inputVertex;
 
                     // get input vertex
-                    inputVertex.m_X = (float)(*m_Templates[i]->m_pVertices)[iX];
-                    inputVertex.m_Y = (float)(*m_Templates[i]->m_pVertices)[iY];
-                    inputVertex.m_Z = (float)(*m_Templates[i]->m_pVertices)[iZ];
+                    inputVertex.m_X = (*m_VBCache[i])[iX];
+                    inputVertex.m_Y = (*m_VBCache[i])[iY];
+                    inputVertex.m_Z = (*m_VBCache[i])[iZ];
 
                     // apply bone transformation to vertex
                     const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
 
                     // apply the skin weights and calculate the final output vertex
-                    skinVertices[iX] += (outputVertex.m_X * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    skinVertices[iY] += (outputVertex.m_Y * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    skinVertices[iZ] += (outputVertex.m_Z * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                    pMesh->m_VB[0]->m_Data[iX] += (outputVertex.m_X * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                    pMesh->m_VB[0]->m_Data[iY] += (outputVertex.m_Y * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                    pMesh->m_VB[0]->m_Data[iZ] += (outputVertex.m_Z * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
                 }
             }
         }
-
-        // get the mesh template to use to generate the final vertex buffer
-        IMeshTemplate meshTemplate;
-        meshTemplate.m_pVertices      = &skinVertices;
-        meshTemplate.m_pIndices       = m_Templates[i]->m_pIndices;
-        meshTemplate.m_pNormals       = m_Templates[i]->m_pNormals;
-        meshTemplate.m_pNormalIndices = m_Templates[i]->m_pNormalIndices;
-        meshTemplate.m_pUVs           = m_Templates[i]->m_pUVs;
-        meshTemplate.m_pUVIndices     = m_Templates[i]->m_pUVIndices;
-
-        // populate the vertex buffer
-        if (!PopulateVertexBuffer(&meshTemplate, m_pModel->m_Mesh[i]->m_VB[0]))
-            return nullptr;
     }
 
     return m_pModel;
@@ -1648,7 +1617,12 @@ void FBXModel::GetBoneAnimMatrix(const Model::IBone*         pBone,
 
         // get the animated bone matrix matching with frame. If not found use the identity one
         if (!GetAnimationMatrix(pAnimSet, pBone, elapsedTime, animMatrix))
+        {
             animMatrix = pBone->m_Matrix;
+
+            // cache the matrix
+            const_cast<IAnimBoneCacheDict&>(m_AnimBoneCacheDict)[pBone] = animMatrix;
+        }
 
         // stack the previously calculated matrix with the current bone one
         matrix = localMatrix.Multiply(animMatrix);
@@ -2567,7 +2541,7 @@ bool FBXModel::BuildModel()
                                                 for (std::size_t n = 0; n < indexCount; ++n)
                                                 {
                                                     std::unique_ptr<Model::IWeightInfluence> pInfluence(new Model::IWeightInfluence());
-                                                    pInfluence->m_VertexIndex.push_back((*pIndexes)[n]);
+                                                    pInfluence->m_Index = (*pIndexes)[n];
 
                                                     pModelSkinWeights->m_WeightInfluences[n] = pInfluence.get();
                                                     pInfluence.release();
@@ -2719,6 +2693,77 @@ bool FBXModel::BuildModel()
 
     // to show only the pose without animation
     m_pModel->m_PoseOnly = m_PoseOnly;
+
+    const std::size_t meshCount = m_pModel->m_Mesh.size();
+
+    if (meshCount != m_Templates.size())
+        return false;
+
+    // should take care of the pose only?
+    if (!m_pModel->m_PoseOnly)
+        m_VBCache.resize(meshCount);
+
+    // iterate through model meshes
+    for (std::size_t i = 0; i < meshCount; ++i)
+    {
+        // get model mesh
+        Mesh* pMesh = m_pModel->m_Mesh[i];
+
+        // found it?
+        if (!pMesh)
+            continue;
+
+        IIndexToInflDict indexToInfl;
+
+        // should take care of the pose only?
+        if (!m_pModel->m_PoseOnly)
+        {
+            const std::size_t weightCount = m_pModel->m_Deformers[i]->m_SkinWeights.size();
+
+            // iterate through mesh skin weights
+            for (std::size_t j = 0; j < weightCount; ++j)
+            {
+                // get the weight influence count
+                const std::size_t weightInfluenceCount = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size();
+
+                // iterate through weights influences
+                for (std::size_t k = 0; k < weightInfluenceCount; ++k)
+                {
+                    // get weight index
+                    const std::size_t weightIndex = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_Index;
+
+                    // search for existing index in the dictionary
+                    IIndexToInflDict::iterator it = indexToInfl.find(weightIndex);
+
+                    // found it?
+                    if (it == indexToInfl.end())
+                    {
+                        // create a new weight influence reference
+                        Model::IWeightInfluences weightInfluences;
+                        weightInfluences.push_back(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]);
+
+                        // add the index to the dictionary
+                        indexToInfl[weightIndex] = weightInfluences;
+                    }
+                    else
+                        // add the weight influence to the index
+                        it->second.push_back(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]);
+                }
+            }
+        }
+
+        // populate the vertex buffer
+        if (!PopulateVertexBuffer(m_Templates[i], pMesh->m_VB[0], &indexToInfl))
+            return false;
+
+        // should take care of the pose only?
+        if (!m_pModel->m_PoseOnly)
+        {
+            // cache the vertex buffer
+             m_VBCache[i] = new VertexBuffer::IData();
+            *m_VBCache[i] = pMesh->m_VB[0]->m_Data;
+        }
+    }
 
     return true;
 }
@@ -3007,7 +3052,9 @@ bool FBXModel::PopulateBone(IFBXNode* pNode, Model::IBone* pBone) const
     return true;
 }
 //---------------------------------------------------------------------------
-bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBuffer* pModelVB) const
+bool FBXModel::PopulateVertexBuffer(const IMeshTemplate*    pMeshTemplate,
+                                          VertexBuffer*     pModelVB,
+                                    const IIndexToInflDict* pIndexToInfl) const
 {
     if (!pMeshTemplate)
         return false;
@@ -3069,6 +3116,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[0] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[0], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[1] * 3];
@@ -3082,6 +3130,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[1] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[1] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[1], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[2] * 3];
@@ -3095,6 +3144,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[2] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[2], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     break;
@@ -3112,6 +3162,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[0] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[0], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[1] * 3];
@@ -3125,6 +3176,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[1] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[1] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[1], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[2] * 3];
@@ -3138,6 +3190,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[2] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[2], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     // ...and the second
@@ -3152,6 +3205,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[0] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[0] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[0], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[2] * 3];
@@ -3165,6 +3219,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[2] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[2] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[2], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     vertex.m_X = (float)(*pMeshTemplate->m_pVertices)[ indices[3] * 3];
@@ -3178,6 +3233,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate* pMeshTemplate, VertexBu
                     uv.m_X     = (float)(*pMeshTemplate->m_pUVs)[ uvIndices[3] * 2];
                     uv.m_Y     = (float)(*pMeshTemplate->m_pUVs)[(uvIndices[3] * 2) + 1];
 
+                    AddWeightInfluence(pIndexToInfl, indices[3], pModelVB);
                     pModelVB->Add(&vertex, &normal, &uv, 0, m_fOnGetVertexColor);
 
                     break;
@@ -3205,6 +3261,17 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
     // no bone?
     if (!pBone)
         return false;
+
+    // search for matrix in cache
+    IAnimBoneCacheDict::const_iterator it = m_AnimBoneCacheDict.find(pBone);
+
+    // found it?
+    if (it != m_AnimBoneCacheDict.end())
+    {
+        // reuse it
+        matrix = it->second;
+        return true;
+    }
 
     // iterate through animations
     for (std::size_t i = 0; i < pAnimSet->m_Animations.size(); ++i)
@@ -3499,9 +3566,28 @@ bool FBXModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
         // build the final matrix
         matrix = rotateMatrix.Multiply(translateMatrix).Multiply(scaleMatrix);
 
+        // cache the matrix
+        const_cast<IAnimBoneCacheDict&>(m_AnimBoneCacheDict)[pBone] = matrix;
+
         return true;
     }
 
     return false;
+}
+//---------------------------------------------------------------------------
+void FBXModel::AddWeightInfluence(const IIndexToInflDict* pIndexToInfl, std::size_t indice, VertexBuffer* pModelVB) const
+{
+    if (!pIndexToInfl)
+        return;
+
+    IIndexToInflDict::const_iterator it = pIndexToInfl->find(indice);
+
+    if (it != pIndexToInfl->end())
+    {
+        const std::size_t weightInflCount = it->second.size();
+
+        for (std::size_t j = 0; j < weightInflCount; ++j)
+            it->second[j]->m_VertexIndex.push_back(pModelVB->m_Data.size());
+    }
 }
 //---------------------------------------------------------------------------

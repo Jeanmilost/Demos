@@ -82,7 +82,8 @@ class Model
         {
             typedef std::vector<std::size_t> IVertexIndex;
 
-            IVertexIndex m_VertexIndex;
+            std::size_t  m_Index;       // index in the indexed vertex buffer
+            IVertexIndex m_VertexIndex; // index in the vertex buffer
 
             IWeightInfluence();
             virtual ~IWeightInfluence();

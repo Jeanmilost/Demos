@@ -240,8 +240,8 @@ void DrawBone(const FBXModel&        fbxModel,
         glDisable(GL_DEPTH_TEST);
         pRenderer->DrawLine(Vector3F(topMatrix.m_Table[3][0],    topMatrix.m_Table[3][1],    topMatrix.m_Table[3][2]),
                             Vector3F(bottomMatrix.m_Table[3][0], bottomMatrix.m_Table[3][1], bottomMatrix.m_Table[3][2]),
-                            ColorF(1.0f, 0.0f, 0.0f, 1.0f),
-                            ColorF(0.0f, 1.0f, 0.0f, 1.0f),
+                            ColorF(0.25f, 0.12f, 0.1f, 1.0f),
+                            ColorF(0.95f, 0.06f, 0.15f, 1.0f),
                             modelMatrix,
                             pShader);
         glEnable(GL_DEPTH_TEST);
