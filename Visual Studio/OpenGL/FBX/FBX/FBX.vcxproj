@@ -210,10 +210,36 @@
     <Image Include="Resources\Models\Laure\Textures\teeth.png" />
     <Image Include="Resources\Models\Laure\Textures\tongue01_diffuse.png" />
     <Image Include="Resources\Models\Laure\Textures\young_lightskinned_female_diffuse2.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\brown_eye.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\diff3.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\eyebrow001.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\eyelashes04.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\heelsandal.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\shortjeans.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\shortjeans_normals.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\sleeveless.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\sleeveless_normals.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\teeth.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\tongue01_diffuse.png" />
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\young_lightskinned_female_diffuse2.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\brown_eye.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\diff3.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\eyebrow001.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\eyelashes04.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\heelsandal.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\sleeveless.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\sleeveless_normals.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\teeth.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\tightjeans.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\tightjeans_normals.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\tongue01_diffuse.png" />
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\young_lightskinned_female_diffuse2.png" />
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Models\Laure\Angry.fbx" />
+    <None Include="Resources\Models\Laure_LowPoly\Laure.fbx" />
+    <None Include="Resources\Models\Laure_VeryLowPoly\Laure.fbx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

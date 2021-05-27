@@ -13,8 +13,26 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files\Textures">
+    <Filter Include="Resource Files\Models">
+      <UniqueIdentifier>{cfcea65f-f83b-4af5-90da-844b41181260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models\Laure">
+      <UniqueIdentifier>{a9da22ca-0443-43f9-b728-0f7ca41c0ff5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models\Laure\Textures">
       <UniqueIdentifier>{065042c6-e0b2-4822-bfca-d0b17fa1c920}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models\Laure_LowPoly">
+      <UniqueIdentifier>{d0b8808b-b862-49b1-a8f1-02f641c5d18f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models\Laure_VeryLowPoly">
+      <UniqueIdentifier>{5bd74726-b58e-464f-a811-e19c0e75adce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models\Laure_LowPoly\Textures">
+      <UniqueIdentifier>{1d498431-d3cb-41fc-815b-83d614fc4145}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Models\Laure_VeryLowPoly\Textures">
+      <UniqueIdentifier>{5ed6b793-fb32-4c57-b167-57a829270910}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -139,45 +157,123 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\brown_eye.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\diff3.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\eyebrow001.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\eyelashes04.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\heelsandal.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\shortjeans.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\shortjeans_normals.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\sleeveless.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\sleeveless_normals.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\teeth.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\tongue01_diffuse.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
     </Image>
     <Image Include="Resources\Models\Laure\Textures\young_lightskinned_female_diffuse2.png">
-      <Filter>Resource Files\Textures</Filter>
+      <Filter>Resource Files\Models\Laure\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\brown_eye.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\diff3.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\eyebrow001.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\eyelashes04.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\heelsandal.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\shortjeans.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\shortjeans_normals.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\sleeveless.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\sleeveless_normals.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\teeth.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\tongue01_diffuse.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_LowPoly\Textures\young_lightskinned_female_diffuse2.png">
+      <Filter>Resource Files\Models\Laure_LowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\brown_eye.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\diff3.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\eyebrow001.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\eyelashes04.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\heelsandal.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\sleeveless.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\sleeveless_normals.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\teeth.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\tightjeans.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\tightjeans_normals.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\tongue01_diffuse.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
+    </Image>
+    <Image Include="Resources\Models\Laure_VeryLowPoly\textures\young_lightskinned_female_diffuse2.png">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly\Textures</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Models\Laure\Angry.fbx">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\Models\Laure</Filter>
+    </None>
+    <None Include="Resources\Models\Laure_LowPoly\Laure.fbx">
+      <Filter>Resource Files\Models\Laure_LowPoly</Filter>
+    </None>
+    <None Include="Resources\Models\Laure_VeryLowPoly\Laure.fbx">
+      <Filter>Resource Files\Models\Laure_VeryLowPoly</Filter>
     </None>
   </ItemGroup>
 </Project>
