@@ -34,6 +34,10 @@
 // libraries
 #include <png.h>
 
+/**
+* Png texture helper
+*@author Jean-Milost Reymond
+*/
 class PngTextureHelper
 {
     public:

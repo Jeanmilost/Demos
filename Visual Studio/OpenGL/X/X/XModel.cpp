@@ -262,8 +262,8 @@ bool XModel::Open(const std::string& fileName)
         return false;
 
     IFileHeader header;
-    char*       pBuffer    = NULL;
-    std::FILE*  pStream    = NULL;
+    char*       pBuffer    = nullptr;
+    std::FILE*  pStream    = nullptr;
     std::size_t fileSize   = 0;
     std::size_t headerSize = 0;
     std::size_t bufferSize = 0;
@@ -455,10 +455,10 @@ Model* XModel::GetModel(int animSetIndex, int frameCount, int frameIndex) const
             // exists, a custom version of this function should also be written for it)
             continue;
 
-        // mesh contains deformers?
+        // mesh contains deformer?
         if (m_pModel->m_Deformers[i]->m_SkinWeights.size())
         {
-            // clear the previous print vertices (needs to be cleared to properly apply the weights)
+            // clear the previous print vertice (needs to be cleared to properly apply the weights)
             for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
             {
                 pMesh->m_VB[0]->m_Data[j]     = 0.0f;
@@ -484,7 +484,7 @@ Model* XModel::GetModel(int animSetIndex, int frameCount, int frameIndex) const
                 // get the final matrix after bones transform
                 const Matrix4x4F finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
 
-                // apply the bone and its skin weights to each vertices
+                // apply the bone and its skin weights to each vertice
                 for (std::size_t k = 0; k < m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size(); ++k)
                     for (std::size_t l = 0; l < m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size(); ++l)
                     {
@@ -1427,7 +1427,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         if (!pDataset)
                             return false;
 
-                        // do read the vertices or indices count, or a new index?
+                        // do read the vertice or indice count, or a new index?
                         if (!pDataset->m_VerticeTotal)
                         {
                             // get the value to convert
@@ -1488,7 +1488,7 @@ bool XModel::ParseWord(const std::string& data, std::size_t startOffset, std::si
                         if (!pDataset)
                             return false;
 
-                        // do read the material count, the material indices count, or a new index?
+                        // do read the material count, the material indice count, or a new index?
                         if (!pDataset->m_MaterialCount)
                         {
                             // get the value to convert
@@ -2248,10 +2248,10 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
     // is model supporting animations?
     if (!pModel->m_MeshOnly)
     {
-        // add a new mesh deformers to the model
+        // add a new mesh deformer to the model
         std::unique_ptr<Model::IDeformers> pDeformers(new Model::IDeformers());
 
-        // keep the deformers index
+        // keep the deformer index
         deformersIndex = pModel->m_Deformers.size();
 
         // update the model
@@ -2348,7 +2348,7 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
                 for (std::size_t j = 0; j < indiceCount; ++j)
                     pSkinWeights->m_WeightInfluences[j] = new Model::IWeightInfluence();
 
-                // update the model mesh deformers list
+                // update the model mesh deformer list
                 pModel->m_Deformers[deformersIndex]->m_SkinWeights.push_back(pSkinWeights.get());
                 pSkinWeights.release();
 
@@ -2430,7 +2430,7 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
     pVB.release();
 
     // also create an extra vertex buffer to keep the original vertex buffer,
-    // which may be used later to calculate the final vertices after their
+    // which may be used later to calculate the final vertice after their
     // transformation by the bones and weights
     std::unique_ptr<VertexBuffer> pSourceVB(pMesh->m_VB[0]->Clone());
     const_cast<IVertexBuffers&>(m_SourceVB).push_back(pSourceVB.get());
@@ -2440,10 +2440,10 @@ bool XModel::BuildMesh(const IFileItem*                        pItem,
     ColorF      prevColor     = pMesh->m_VB[pMesh->m_VB.size() - 1]->m_Material.m_Color;
     std::size_t materialIndex = 0;
 
-    // iterate through indices table
+    // iterate through indice table
     for (std::size_t i = 0; i < pMeshDataset->m_Indices.size(); i += pMeshDataset->m_Indices[i] + 1)
     {
-        // iterate through source vertices
+        // iterate through source vertice
         for (std::size_t j = 0; j < pMeshDataset->m_Indices[i] - 1; ++j)
         {
             // calculate the next polygon index
@@ -2504,7 +2504,7 @@ bool XModel::BuildVertex(const IFileItem*                        pItem,
                          const IMaterialListDataset*             pMatListDataset,
                          const VertexBuffer::ITfOnGetVertexColor fOnGetVertexColor) const
 {
-    // calculate the vertex index from the indices table
+    // calculate the vertex index from the indice table
     const std::size_t indiceIndex = pMeshDataset->m_Indices[vertexIndex] * 3;
 
     // is index out of bounds?
@@ -2524,7 +2524,7 @@ bool XModel::BuildVertex(const IFileItem*                        pItem,
     // mesh contains normals?
     if (((unsigned)pMesh->m_VB[0]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_Normals) && pNormalsDataset)
     {
-        // calculate the normal index from the indices table
+        // calculate the normal index from the indice table
         const std::size_t nIndiceIndex = pNormalsDataset->m_Indices[vertexIndex] * 3;
 
         // is index out of bounds?
@@ -2545,7 +2545,7 @@ bool XModel::BuildVertex(const IFileItem*                        pItem,
     // mesh contains texture coordinates?
     if (((unsigned)pMesh->m_VB[0]->m_Format.m_Format & (unsigned)VertexFormat::IEFormat::IE_VF_TexCoords) && pUVDataset)
     {
-        // calculate the uv index from the indices table
+        // calculate the uv index from the indice table
         const std::size_t uvIndex = pMeshDataset->m_Indices[vertexIndex] * 2;
 
         // is index out of bounds?
@@ -2618,7 +2618,7 @@ bool XModel::BuildVertex(const IFileItem*                        pItem,
 
     std::size_t weightIndex = 0;
 
-    // link the newly added vertices to the mesh skin weights
+    // link the newly added vertice to the mesh skin weights
     for (std::size_t i = 0; i < pItem->m_Children.size(); ++i)
         switch (pItem->m_Children[i]->m_ID)
         {
@@ -2658,9 +2658,6 @@ bool XModel::BuildAnimationSet(const IFileItem* pItem, Model* pModel) const
 {
     // allocate memory for a new animation set
     std::unique_ptr<Model::IAnimationSet> pAnimationSet(new Model::IAnimationSet());
-
-    // keep the animation set index
-    const std::size_t index = pModel->m_AnimationSet.size();
 
     // iterate through source animations
     for (std::size_t i = 0; i < pItem->m_Children.size(); ++i)

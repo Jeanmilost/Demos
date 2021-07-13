@@ -40,7 +40,7 @@ Shader_OpenGL::Shader_OpenGL() :
     m_ProgramID(0),
     m_VertexID(0),
     m_FragmentID(0),
-    m_fOnBindAttribute(NULL)
+    m_fOnBindAttribute(nullptr)
 {}
 //---------------------------------------------------------------------------
 Shader_OpenGL::~Shader_OpenGL()
@@ -220,7 +220,7 @@ GLuint Shader_OpenGL::Compile(const std::string& source, GLenum type) const
     const char* pSource = source.c_str();
 
     // compile shader
-    glShaderSource(shader, 1, &pSource, NULL);
+    glShaderSource(shader, 1, &pSource, nullptr);
     glCompileShader(shader);
 
     // failed?

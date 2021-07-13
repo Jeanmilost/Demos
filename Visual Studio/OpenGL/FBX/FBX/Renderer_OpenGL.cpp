@@ -80,16 +80,16 @@ void Renderer_OpenGL::DisableOpenGL(HWND hWnd)
     // disable and delete OpenGL context
     if (m_hRC)
     {
-        wglMakeCurrent(NULL, NULL);
+        wglMakeCurrent(nullptr, nullptr);
         wglDeleteContext(m_hRC);
-        m_hRC = NULL;
+        m_hRC = nullptr;
     }
 
     // delete device context
     if (hWnd && m_hDC)
     {
         ::ReleaseDC(hWnd, m_hDC);
-        m_hDC = NULL;
+        m_hDC = nullptr;
     }
 }
 //---------------------------------------------------------------------------

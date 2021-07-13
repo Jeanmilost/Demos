@@ -40,8 +40,8 @@ bool TextureHelper::OpenBitmapData(const std::string& fileName,
     if (fileName.empty())
         return false;
 
-    unsigned char* pBuffer    = NULL;
-    std::FILE*     pStream    = NULL;
+    unsigned char* pBuffer    = nullptr;
+    std::FILE*     pStream    = nullptr;
     std::size_t    fileSize   = 0;
     std::size_t    bufferSize = 0;
     bool           success    = true;
@@ -98,7 +98,7 @@ bool TextureHelper::LoadBitmapData(const unsigned char* pBuffer,
                                          std::size_t&   length,
                                          void*&         pPixels)
 {
-    pPixels = NULL;
+    pPixels = nullptr;
 
     char intBuffer[4];
     char shortBuffer[2];
@@ -257,7 +257,7 @@ bool TextureHelper::LoadBitmapData(const unsigned char* pBuffer,
             throw new std::exception("Unsupported bitmap format");
     }
 
-    unsigned char* pBitmapData = NULL;
+    unsigned char* pBitmapData = nullptr;
 
     try
     {

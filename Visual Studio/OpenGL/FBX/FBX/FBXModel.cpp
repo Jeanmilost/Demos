@@ -1536,14 +1536,14 @@ Model* FBXModel::GetModel(int animSetIndex, double elapsedTime) const
             // get the weight influence count
             const std::size_t weightInfluenceCount = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size();
 
-            // apply the bone and its skin weights to each vertices
+            // apply the bone and its skin weights to each vertice
             for (std::size_t k = 0; k < weightInfluenceCount; ++k)
             {
                 // get the vertex index count
                 const std::size_t vertexIndexCount =
                         m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size();
 
-                // iterate through weights influences vertex indices
+                // iterate through weights influences vertex indice
                 for (std::size_t l = 0; l < vertexIndexCount; ++l)
                 {
                     // get the next vertex to which the next skin weight should be applied
@@ -2434,7 +2434,7 @@ bool FBXModel::BuildModel()
                 pModelVB->m_Material.m_Color.m_B = 1.0f;
                 pModelVB->m_Material.m_Color.m_A = 1.0f;
 
-                // get the vertices and indices count
+                // get the vertice and indice count
                 const std::size_t indicesCount = pTemplate->m_pIndices->size();
 
                 // reserve the vertex buffer data size (will be built later)
@@ -2516,7 +2516,7 @@ bool FBXModel::BuildModel()
                                                 // resize the destination array
                                                 pModelSkinWeights->m_WeightInfluences.resize(indexCount);
 
-                                                // copy the indices
+                                                // copy the indice
                                                 for (std::size_t n = 0; n < indexCount; ++n)
                                                 {
                                                     std::unique_ptr<Model::IWeightInfluence> pInfluence(new Model::IWeightInfluence());
@@ -3045,9 +3045,8 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate*    pMeshTemplate,
     Vector3F normal;
     Vector2F uv;
 
-    // get the vertices and indices count
-    const std::size_t verticesCount = pMeshTemplate->m_pVertices->size();
-    const std::size_t indicesCount  = pMeshTemplate->m_pIndices->size();
+    // get the index count
+    const std::size_t indicesCount = pMeshTemplate->m_pIndices->size();
 
     std::vector<int> indices;
     indices.reserve(4);
@@ -3058,13 +3057,13 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate*    pMeshTemplate,
     std::vector<int> uvIndices;
     uvIndices.reserve(4);
 
-    // iterate through indices
+    // iterate through indice
     for (std::size_t i = 0; i < indicesCount; ++i)
     {
-        // get indice
+        // get index
         const int indice = (int)(*pMeshTemplate->m_pIndices)[i];
 
-        // is the last indice of a group?
+        // is the last index of a group?
         if (indice >= 0)
         {
             // no, keep it
@@ -3074,7 +3073,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate*    pMeshTemplate,
         }
         else
         {
-            // yes, calculate and keep the last indice
+            // yes, calculate and keep the last index
             indices.push_back(std::abs(indice) - 1);
             normalIndices.push_back(std::abs((int)(*pMeshTemplate->m_pNormalIndices)[i]));
             uvIndices.push_back(std::abs((int)(*pMeshTemplate->m_pUVIndices)[i]));
@@ -3218,7 +3217,7 @@ bool FBXModel::PopulateVertexBuffer(const IMeshTemplate*    pMeshTemplate,
                     break;
             }
 
-            // clear the indice tables for the next round
+            // clear the index table for the next round
             indices.clear();
             normalIndices.clear();
             uvIndices.clear();

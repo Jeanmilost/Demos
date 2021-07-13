@@ -57,7 +57,7 @@ bool PngTextureHelper::OpenImage(const std::string& fileName,
         // allocate enough memory to hold the image in this format
         png_bytep pBuffer = (png_bytep)std::malloc(PNG_IMAGE_SIZE(image));
 
-        if (pBuffer && png_image_finish_read(&image, NULL, pBuffer, 0, NULL) != 0)
+        if (pBuffer && png_image_finish_read(&image, nullptr, pBuffer, 0, nullptr) != 0)
             return LoadImage(image, pBuffer, is32bit, width, height, format, length, pPixels);
         else
         if (!pBuffer)
@@ -82,7 +82,7 @@ bool PngTextureHelper::LoadImage(const png_image&   image,
     height  = image.height;
     format  = is32bit ? 32 : 24;
     length  = PNG_IMAGE_SIZE(image);
-    pPixels = NULL;
+    pPixels = nullptr;
 
     unsigned char* pPixelArray = new unsigned char[length];
 
