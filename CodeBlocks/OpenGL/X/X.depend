@@ -1,0 +1,491 @@
+# depslib dependency file v1.0
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\color.cpp
+	"Color.h"
+
+1604687828 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\color.h
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\matrix4x4.cpp
+	"Matrix4x4.h"
+
+1625754744 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\matrix4x4.h
+	<memory>
+	<cmath>
+	<string.h>
+	"Vector3.h"
+
+1625754131 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\vector3.h
+	<algorithm>
+	<math.h>
+	<stdexcept>
+
+1605731382 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\quaternion.cpp
+	"Quaternion.h"
+
+1621466992 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\quaternion.h
+	<algorithm>
+	"Vector3.h"
+	"Matrix4x4.h"
+
+1625754374 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\shader.cpp
+	"Shader.h"
+
+1625754297 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\shader.h
+	<map>
+	<string>
+
+1625754388 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\texture.cpp
+	"Texture.h"
+	<string>
+
+1625754357 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\texture.h
+	<vector>
+	<map>
+	"Shader.h"
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\vector3.cpp
+	"Vector3.h"
+
+1620316758 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\vector2.cpp
+	"Vector2.h"
+
+1625756603 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\vector2.h
+	<algorithm>
+	<math.h>
+	<stdexcept>
+
+1625754725 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\model.cpp
+	"Model.h"
+	"Quaternion.h"
+
+1625754667 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\model.h
+	"Color.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Vertex.h"
+
+1625754959 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\vertex.h
+	<vector>
+	<string>
+	"Color.h"
+	"Texture.h"
+	"Vector2.h"
+	"Vector3.h"
+
+1625754874 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\texturehelper.cpp
+	"TextureHelper.h"
+	<cstdio>
+	<string.h>
+	<stdexcept>
+
+1605559426 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\texturehelper.h
+	<string>
+
+1625755091 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\vertex.cpp
+	"Vertex.h"
+	<memory>
+
+1625755316 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\shader_opengl.cpp
+	"Shader_OpenGL.h"
+	<fstream>
+	<sstream>
+
+1625754282 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\shader_opengl.h
+	<string>
+	"Shader.h"
+	<GL/glew.h>
+
+1501501581 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\glew\include\\gl\glew.h
+	<stddef.h>
+	<inttypes.h>
+	<stdint.h>
+	<inttypes.h>
+	<Availability.h>
+	<OpenGL/glu.h>
+	<GL/glu.h>
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\renderer.cpp
+	"Renderer.h"
+
+1625756796 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\renderer.h
+	<math.h>
+	<string>
+	<vector>
+	"Color.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Shader.h"
+	"Texture.h"
+	"Vertex.h"
+	<Windows.h>
+
+1625756516 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\xmodel.cpp
+	"XModel.h"
+	<cstdio>
+	<stdlib.h>
+	<math.h>
+	<string.h>
+	"Quaternion.h"
+
+1625755146 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\xmodel.h
+	"Color.h"
+	"Vector2.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Vertex.h"
+	"Model.h"
+
+1625756738 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\texture_opengl.cpp
+	"Texture_OpenGL.h"
+	<stdexcept>
+	<Windows.h>
+
+1620317098 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\texture_opengl.h
+	"Texture.h"
+	<GL/glew.h>
+	<gl/gl.h>
+
+1625756930 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\renderer_opengl.cpp
+	"Renderer_OpenGL.h"
+	"Texture_OpenGL.h"
+	"Shader_OpenGL.h"
+
+1621467009 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x\renderer_opengl.h
+	"Renderer.h"
+	<Windows.h>
+	<GL/glew.h>
+	<gl/gl.h>
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\color.cpp
+	"Color.h"
+
+1604687828 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\color.h
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\matrix4x4.cpp
+	"Matrix4x4.h"
+
+1625754744 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\matrix4x4.h
+	<memory>
+	<cmath>
+	<string.h>
+	"Vector3.h"
+
+1625754131 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\vector3.h
+	<algorithm>
+	<math.h>
+	<stdexcept>
+
+1625754725 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\model.cpp
+	"Model.h"
+	"Quaternion.h"
+
+1625754667 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\model.h
+	"Color.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Vertex.h"
+
+1625754959 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\vertex.h
+	<vector>
+	<string>
+	"Color.h"
+	"Texture.h"
+	"Vector2.h"
+	"Vector3.h"
+
+1625754357 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\texture.h
+	<vector>
+	<map>
+	"Shader.h"
+
+1625754297 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\shader.h
+	<map>
+	<string>
+
+1625756603 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\vector2.h
+	<algorithm>
+	<math.h>
+	<stdexcept>
+
+1621466992 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\quaternion.h
+	<algorithm>
+	"Vector3.h"
+	"Matrix4x4.h"
+
+1605731382 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\quaternion.cpp
+	"Quaternion.h"
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\renderer.cpp
+	"Renderer.h"
+
+1625756796 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\renderer.h
+	<math.h>
+	<string>
+	<vector>
+	"Color.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Shader.h"
+	"Texture.h"
+	"Vertex.h"
+	<Windows.h>
+
+1625756930 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\renderer_opengl.cpp
+	"Renderer_OpenGL.h"
+	"Texture_OpenGL.h"
+	"Shader_OpenGL.h"
+
+1621467009 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\renderer_opengl.h
+	"Renderer.h"
+	<Windows.h>
+	<GL/glew.h>
+	<gl/gl.h>
+
+1501501581 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\glew\include\\gl\glew.h
+	<stddef.h>
+	<inttypes.h>
+	<stdint.h>
+	<inttypes.h>
+	<Availability.h>
+	<OpenGL/glu.h>
+	<GL/glu.h>
+
+1620317098 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\texture_opengl.h
+	"Texture.h"
+	<GL/glew.h>
+	<gl/gl.h>
+
+1625754282 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\shader_opengl.h
+	<string>
+	"Shader.h"
+	<GL/glew.h>
+
+1625754374 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\shader.cpp
+	"Shader.h"
+
+1625755316 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\shader_opengl.cpp
+	"Shader_OpenGL.h"
+	<fstream>
+	<sstream>
+
+1625754388 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\texture.cpp
+	"Texture.h"
+	<string>
+
+1625756738 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\texture_opengl.cpp
+	"Texture_OpenGL.h"
+	<stdexcept>
+	<Windows.h>
+
+1620316758 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\vector2.cpp
+	"Vector2.h"
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\vector3.cpp
+	"Vector3.h"
+
+1625755091 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\vertex.cpp
+	"Vertex.h"
+	<memory>
+
+1625757152 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\x.cpp
+	"XModel.h"
+	"TextureHelper.h"
+	"Texture_OpenGL.h"
+	"Shader_OpenGL.h"
+	"Renderer_OpenGL.h"
+	"Model.h"
+	<windows.h>
+	<gl/gl.h>
+	<GL/glew.h>
+
+1625755146 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\xmodel.h
+	"Color.h"
+	"Vector2.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Vertex.h"
+	"Model.h"
+
+1605559426 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\texturehelper.h
+	<string>
+
+1625757349 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\texturehelper.cpp
+	"TextureHelper.h"
+	<cstdio>
+	<string.h>
+	<stdexcept>
+
+1625757446 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\xmodel.cpp
+	"XModel.h"
+	<cstdio>
+	<stdlib.h>
+	<math.h>
+	<string.h>
+	"Quaternion.h"
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\color.cpp
+	"Color.h"
+
+1625759613 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\color.h
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\matrix4x4.cpp
+	"Matrix4x4.h"
+
+1625754744 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\matrix4x4.h
+	<memory>
+	<cmath>
+	<string.h>
+	"Vector3.h"
+
+1625754131 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\vector3.h
+	<algorithm>
+	<math.h>
+	<stdexcept>
+
+1625773555 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\model.cpp
+	"Model.h"
+	"Quaternion.h"
+
+1625754667 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\model.h
+	"Color.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Vertex.h"
+
+1625754959 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\vertex.h
+	<vector>
+	<string>
+	"Color.h"
+	"Texture.h"
+	"Vector2.h"
+	"Vector3.h"
+
+1625754357 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\texture.h
+	<vector>
+	<map>
+	"Shader.h"
+
+1625773618 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\shader.h
+	<map>
+	<string>
+
+1625756603 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\vector2.h
+	<algorithm>
+	<math.h>
+	<stdexcept>
+
+1621466992 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\quaternion.h
+	<algorithm>
+	"Vector3.h"
+	"Matrix4x4.h"
+
+1605731382 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\quaternion.cpp
+	"Quaternion.h"
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\renderer.cpp
+	"Renderer.h"
+
+1625774538 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\renderer.h
+	<math.h>
+	<string>
+	<vector>
+	"Color.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Shader.h"
+	"Texture.h"
+	"Vertex.h"
+	<Windows.h>
+
+1625754374 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\shader.cpp
+	"Shader.h"
+
+1625754388 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\texture.cpp
+	"Texture.h"
+	<string>
+
+1625774704 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\renderer_opengl.cpp
+	"Renderer_OpenGL.h"
+	"Texture_OpenGL.h"
+	"Shader_OpenGL.h"
+
+1621467009 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\renderer_opengl.h
+	"Renderer.h"
+	<Windows.h>
+	<GL/glew.h>
+	<gl/gl.h>
+
+1501501581 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\glew\include\gl\glew.h
+	<stddef.h>
+	<inttypes.h>
+	<stdint.h>
+	<inttypes.h>
+	<Availability.h>
+	<OpenGL/glu.h>
+	<GL/glu.h>
+
+1620317098 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\texture_opengl.h
+	"Texture.h"
+	<GL/glew.h>
+	<gl/gl.h>
+
+1625773634 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\shader_opengl.h
+	<string>
+	"Shader.h"
+	<GL/glew.h>
+
+1625774704 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\shader_opengl.cpp
+	"Shader_OpenGL.h"
+	<fstream>
+	<sstream>
+
+1625756738 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\texture_opengl.cpp
+	"Texture_OpenGL.h"
+	<stdexcept>
+	<Windows.h>
+
+1625774704 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\texturehelper.cpp
+	"TextureHelper.h"
+	<cstdio>
+	<string.h>
+	<stdexcept>
+
+1605559426 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\texturehelper.h
+	<string>
+
+1620316758 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\vector2.cpp
+	"Vector2.h"
+
+1604687828 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\vector3.cpp
+	"Vector3.h"
+
+1625773692 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\vertex.cpp
+	"Vertex.h"
+	<memory>
+
+1625774704 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\xmodel.cpp
+	"XModel.h"
+	<cstdio>
+	<stdlib.h>
+	<math.h>
+	<string.h>
+	"Quaternion.h"
+
+1625755146 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\classes\xmodel.h
+	"Color.h"
+	"Vector2.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Vertex.h"
+	"Model.h"
+
+1625774756 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\x\main.cpp
+	"XModel.h"
+	"TextureHelper.h"
+	"Texture_OpenGL.h"
+	"Shader_OpenGL.h"
+	"Renderer_OpenGL.h"
+	"Model.h"
+	<windows.h>
+	<gl/gl.h>
+	<GL/glew.h>
+

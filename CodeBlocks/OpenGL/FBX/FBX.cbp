@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="FBX" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/FBX" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/FBX" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add directory="Classes" />
+			<Add directory="glew/include" />
+			<Add directory="libpng/include" />
+		</Compiler>
+		<Linker>
+			<Add library="glew/lib/Release/Win32/glew32s.lib" />
+			<Add library="opengl32" />
+			<Add library="glu32" />
+			<Add library="gdi32" />
+			<Add library="libpng/lib/x86/libpng16.lib" />
+			<Add directory="glew/lib/Release/Win32" />
+			<Add directory="libpng/lib/x86" />
+		</Linker>
+		<Unit filename="Classes/Color.cpp" />
+		<Unit filename="Classes/Color.h" />
+		<Unit filename="Classes/FBXModel.cpp" />
+		<Unit filename="Classes/FBXModel.h" />
+		<Unit filename="Classes/Matrix4x4.cpp" />
+		<Unit filename="Classes/Matrix4x4.h" />
+		<Unit filename="Classes/Model.cpp" />
+		<Unit filename="Classes/Model.h" />
+		<Unit filename="Classes/PngTextureHelper.cpp" />
+		<Unit filename="Classes/PngTextureHelper.h" />
+		<Unit filename="Classes/Quaternion.cpp" />
+		<Unit filename="Classes/Quaternion.h" />
+		<Unit filename="Classes/Renderer.cpp" />
+		<Unit filename="Classes/Renderer.h" />
+		<Unit filename="Classes/Renderer_OpenGL.cpp" />
+		<Unit filename="Classes/Renderer_OpenGL.h" />
+		<Unit filename="Classes/Shader.cpp" />
+		<Unit filename="Classes/Shader.h" />
+		<Unit filename="Classes/Shader_OpenGL.cpp" />
+		<Unit filename="Classes/Shader_OpenGL.h" />
+		<Unit filename="Classes/Texture.cpp" />
+		<Unit filename="Classes/Texture.h" />
+		<Unit filename="Classes/TextureHelper.cpp" />
+		<Unit filename="Classes/TextureHelper.h" />
+		<Unit filename="Classes/Texture_OpenGL.cpp" />
+		<Unit filename="Classes/Texture_OpenGL.h" />
+		<Unit filename="Classes/Vector2.cpp" />
+		<Unit filename="Classes/Vector2.h" />
+		<Unit filename="Classes/Vector3.cpp" />
+		<Unit filename="Classes/Vector3.h" />
+		<Unit filename="Classes/Vertex.cpp" />
+		<Unit filename="Classes/Vertex.h" />
+		<Unit filename="main.cpp" />
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>

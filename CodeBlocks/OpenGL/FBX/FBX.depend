@@ -1,0 +1,190 @@
+# depslib dependency file v1.0
+1616463948 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\color.cpp
+	"Color.h"
+
+1616464103 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\color.h
+
+1625776914 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\fbxmodel.cpp
+	"FBXModel.h"
+	<stdlib.h>
+	<math.h>
+	<string.h>
+	<sstream>
+
+1625776571 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\fbxmodel.h
+	"Color.h"
+	"Vector3.h"
+	"Quaternion.h"
+	"Matrix4x4.h"
+	"Vertex.h"
+	"Model.h"
+	<set>
+	<sstream>
+
+1625775669 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\vector3.h
+	<algorithm>
+	<math.h>
+	<stdexcept>
+
+1621456282 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\quaternion.h
+	<algorithm>
+	"Vector3.h"
+	"Matrix4x4.h"
+
+1625775504 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\matrix4x4.h
+	<memory>
+	<cmath>
+	<string.h>
+	"Vector3.h"
+
+1625775682 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\vertex.h
+	<vector>
+	<string>
+	"Color.h"
+	"Texture.h"
+	"Vector2.h"
+	"Vector3.h"
+
+1625775613 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\texture.h
+	<vector>
+	<map>
+	"Shader.h"
+
+1625775580 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\shader.h
+	<map>
+	<string>
+
+1625775659 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\vector2.h
+	<algorithm>
+	<math.h>
+	<stdexcept>
+
+1625775530 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\model.h
+	"Color.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Vertex.h"
+
+1616464117 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\matrix4x4.cpp
+	"Matrix4x4.h"
+
+1625775509 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\model.cpp
+	"Model.h"
+	"Quaternion.h"
+
+1625777042 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\pngtexturehelper.cpp
+	"PngTextureHelper.h"
+	<memory>
+	<string.h>
+
+1625776353 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\pngtexturehelper.h
+	<string>
+	<png.h>
+
+1548670572 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\libpng\include\png.h
+	"pnglibconf.h"
+	"pngconf.h"
+
+1548670572 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\libpng\include\pnglibconf.h
+
+1548670572 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\libpng\include\pngconf.h
+	<limits.h>
+	<stddef.h>
+	<stdio.h>
+	<setjmp.h>
+	<time.h>
+
+1616464129 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\quaternion.cpp
+	"Quaternion.h"
+
+1616464139 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\renderer.cpp
+	"Renderer.h"
+
+1625775548 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\renderer.h
+	<math.h>
+	<string>
+	<vector>
+	"Color.h"
+	"Vector3.h"
+	"Matrix4x4.h"
+	"Shader.h"
+	"Texture.h"
+	"Vertex.h"
+	<Windows.h>
+
+1625775568 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\renderer_opengl.cpp
+	"Renderer_OpenGL.h"
+	"Texture_OpenGL.h"
+	"Shader_OpenGL.h"
+
+1621279599 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\renderer_opengl.h
+	"Renderer.h"
+	<Windows.h>
+	<GL/glew.h>
+	<gl/gl.h>
+
+1501501581 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\glew\include\gl\glew.h
+	<stddef.h>
+	<inttypes.h>
+	<stdint.h>
+	<inttypes.h>
+	<Availability.h>
+	<OpenGL/glu.h>
+	<GL/glu.h>
+
+1616464386 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\texture_opengl.h
+	"Texture.h"
+	<GL/glew.h>
+	<gl/gl.h>
+
+1616464241 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\shader_opengl.h
+	<string>
+	"Shader.h"
+	<GL/glew.h>
+
+1625775575 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\shader.cpp
+	"Shader.h"
+
+1625775593 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\shader_opengl.cpp
+	"Shader_OpenGL.h"
+	<fstream>
+	<sstream>
+
+1625775608 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\texture.cpp
+	"Texture.h"
+	<string>
+
+1625775623 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\texture_opengl.cpp
+	"Texture_OpenGL.h"
+	<stdexcept>
+	<Windows.h>
+
+1625775646 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\texturehelper.cpp
+	"TextureHelper.h"
+	<cstdio>
+	<string.h>
+	<stdexcept>
+
+1616464278 n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\texturehelper.h
+	<string>
+
+1619031819 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\vector2.cpp
+	"Vector2.h"
+
+1616464295 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\vector3.cpp
+	"Vector3.h"
+
+1625775676 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\classes\vertex.cpp
+	"Vertex.h"
+	<memory>
+
+1625777146 source:n:\jeanmilost\devel\projects\demos\codeblocks\opengl\fbx\main.cpp
+	"FBXModel.h"
+	"PngTextureHelper.h"
+	"Texture_OpenGL.h"
+	"Shader_OpenGL.h"
+	"Renderer_OpenGL.h"
+	<windows.h>
+	<gl/gl.h>
+	<GL/glew.h>
+
