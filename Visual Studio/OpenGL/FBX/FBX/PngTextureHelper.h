@@ -4,7 +4,7 @@
  * Description : PNG texture helper                                         *
  * Developer   : Jean-Milost Reymond                                        *
  ****************************************************************************
- * MIT License - x model reader                                             *
+ * MIT License - FBX model reader                                           *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -41,8 +41,6 @@
 class PngTextureHelper
 {
     public:
-        void Open();
-
         /**
         * Opens image from file and convert to pixel array
         *@param fileName - bitmap file name to load

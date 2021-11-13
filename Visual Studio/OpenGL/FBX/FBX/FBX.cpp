@@ -273,9 +273,9 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                       _In_     LPWSTR    lpCmdLine,
                       _In_     int       nCmdShow)
 {
-    WNDCLASSEX wcex;
-    HWND       hWnd;
-    MSG        msg;
+    WNDCLASSEX wcex  = {};
+    HWND       hWnd  = 0;
+    MSG        msg   = {};
     BOOL       bQuit = FALSE;
 
     // register window class

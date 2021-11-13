@@ -4,7 +4,7 @@
  * Description : PNG texture helper                                         *
  * Developer   : Jean-Milost Reymond                                        *
  ****************************************************************************
- * MIT License - x model reader                                             *
+ * MIT License - FBX model reader                                           *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *

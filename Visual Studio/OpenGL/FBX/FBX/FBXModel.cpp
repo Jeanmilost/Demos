@@ -2434,7 +2434,7 @@ bool FBXModel::BuildModel()
                 pModelVB->m_Material.m_Color.m_B = 1.0f;
                 pModelVB->m_Material.m_Color.m_A = 1.0f;
 
-                // get the vertice and indice count
+                // get the vertices and indices count
                 const std::size_t indicesCount = pTemplate->m_pIndices->size();
 
                 // reserve the vertex buffer data size (will be built later)
