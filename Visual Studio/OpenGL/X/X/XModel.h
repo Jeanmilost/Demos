@@ -43,7 +43,13 @@
 class XModel
 {
     public:
-        XModel();
+        /**
+        * Constructor
+        *@param meshOnly - if true, only the model meshes will be generated
+        *@param meshOnly - if true, only the model pose will be generated
+        */
+        XModel(bool meshOnly = false, bool poseOnly = false);
+
         virtual ~XModel();
 
         /**

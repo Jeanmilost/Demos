@@ -219,6 +219,7 @@ void DrawBone(const XModel&          xModel,
         if (pModel->m_PoseOnly)
             pModel->GetBoneMatrix(pBone, Matrix4x4F::Identity(), topMatrix);
         else
+        if (pModel->m_AnimationSet.size())
             xModel.GetBoneAnimMatrix(pBone,
                                      pModel->m_AnimationSet[animSetIndex],
                                      frameIndex,
@@ -230,6 +231,7 @@ void DrawBone(const XModel&          xModel,
         if (pModel->m_PoseOnly)
             pModel->GetBoneMatrix(pChild, Matrix4x4F::Identity(), bottomMatrix);
         else
+        if (pModel->m_AnimationSet.size())
             xModel.GetBoneAnimMatrix(pChild,
                                      pModel->m_AnimationSet[animSetIndex],
                                      frameIndex,
