@@ -155,11 +155,11 @@ Texture* OnLoadTexture(const std::string& textureName, bool is32bit)
 }
 //---------------------------------------------------------------------------
 int DrawX(const XModel&          xModel,
-           const Matrix4x4F&      modelMatrix,
-           const Shader_OpenGL*   pShader,
-           const Renderer_OpenGL* pRenderer,
-                 int              animSetIndex,
-                 int              frameCount)
+          const Matrix4x4F&      modelMatrix,
+          const Shader_OpenGL*   pShader,
+          const Renderer_OpenGL* pRenderer,
+                int              animSetIndex,
+                int              frameCount)
 {
     // no renderer?
     if (!pRenderer)
@@ -275,7 +275,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                       _In_     LPWSTR    lpCmdLine,
                       _In_     int       nCmdShow)
 {
-    WNDCLASSEX wcex;
+    WNDCLASSEX wcex = {0};
     HWND       hWnd;
     MSG        msg;
     BOOL       bQuit = FALSE;
