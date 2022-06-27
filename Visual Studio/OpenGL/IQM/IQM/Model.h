@@ -162,6 +162,7 @@ class Model
             std::string m_BoneName;
             IBone*      m_pBone;
             IKeys       m_Keys;
+            bool        m_ColOverRow;
 
             IAnimation();
             virtual ~IAnimation();

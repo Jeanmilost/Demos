@@ -33,6 +33,7 @@
 #include "Color.h"
 #include "Vector2.h"
 #include "Vector3.h"
+#include "Quaternion.h"
 #include "Matrix4x4.h"
 #include "Vertex.h"
 #include "Model.h"
@@ -458,24 +459,27 @@ class IQMModel
         typedef std::vector<IBounds*> IBoundsArray;
 
         /**
-        * Inter-Quake Model comments
+        * Inter-Quake Model comment
         */
-        struct IComments
+        struct IComment
         {
-            char**  m_pComments = nullptr;
-            size_t* m_pOffsets  = nullptr;
-            size_t  m_Count     = 0;
+            std::string m_Text;
+            std::size_t m_Offset = 0;
 
-            IComments();
-            ~IComments();
+            IComment();
+            ~IComment();
 
             /**
             * Reads the structure content
-            *@param buffer - buffer to read from
+            *@param header - IQM header
+            *@param[in, out] start - start offset in buffer, new start position on function ends
+            *@param count - total text count, as read from
             *@return true on success, otherwise false
             */
-            bool Read(Buffer& buffer);
+            bool Read(const IHeader& header, std::size_t& start, Buffer& buffer);
         };
+
+        typedef std::vector<IComment*> IComments;
 
         /**
         * Inter-Quake Model extension
@@ -498,24 +502,7 @@ class IQMModel
             bool Read(Buffer& buffer);
         };
 
-        /**
-        * Inter-Quake Model extensions
-        */
-        struct IExtensions
-        {
-            IExtension* m_pExtension = nullptr;
-            size_t      m_Count      = 0;
-
-            IExtensions();
-            ~IExtensions();
-
-            /**
-            * Reads the structure content
-            *@param buffer - buffer to read from
-            *@return true on success, otherwise false
-            */
-            bool Read(Buffer& buffer);
-        };
+        typedef std::vector<IExtension*> IExtensions;
 
         /**
         * Inter-Quake Model vertex
@@ -532,33 +519,9 @@ class IQMModel
 
             IVertex();
             ~IVertex();
-
-            /**
-            * Reads the structure content
-            *@param buffer - buffer to read from
-            *@return true on success, otherwise false
-            */
-            bool Read(Buffer& buffer);
         };
 
-        /**
-        * Inter-Quake Model vertices
-        */
-        struct IVertices
-        {
-            IVertex* m_pVertex = nullptr;
-            size_t   m_Count   = 0;
-
-            IVertices();
-            ~IVertices();
-
-            /**
-            * Reads the structure content
-            *@param buffer - buffer to read from
-            *@return true on success, otherwise false
-            */
-            bool Read(Buffer& buffer);
-        };
+        typedef std::vector<IVertex*> IVertices;
 
         Model*                            m_pModel            = nullptr;
         VertexFormat                      m_VertFormatTemplate;
@@ -575,6 +538,67 @@ class IQMModel
         *@return true on success, otherwise false
         */
         bool Read(Buffer& buffer);
+
+        /**
+        * Populates the model
+        *@param buffer - buffer from which model data may be read
+        *@param header - header
+        *@param texts - texts
+        *@param meshes - meshes
+        *@param vertexArrays - vertex arrays
+        *@param triangles - triangles
+        *@param adjacencies - adjacencies
+        *@param joints - joints
+        *@param poses - poses
+        *@param anims - anims
+        *@param boundsArray - bounds array
+        *@param comments - comments
+        *@param extensions - extensions
+        *@return true on success, otherwise false
+        */
+        bool PopulateModel(      Buffer&        buffer,
+                           const IHeader&       header,
+                           const ITexts&        texts,
+                           const IMeshes&       meshes,
+                           const IVertexArrays& vertexArrays,
+                           const ITriangles&    triangles,
+                           const IAdjacencies&  adjacencies,
+                           const IJoints&       joints,
+                           const IPoses&        poses,
+                           const IAnims&        anims,
+                           const IBoundsArray&  boundsArray,
+                           const IComments&     comments,
+                           const IExtensions&   extensions);
+
+        bool PopulateSkeleton(const ITexts&       texts,
+                              const IJoints&      joints,
+                                    int           parentIndex,
+                                    Model::IBone* pRoot) const;
+
+        bool PopulateBone(const ITexts&       texts,
+                          const IJoint*       pJoint,
+                                std::size_t   jointIndex,
+                                Model::IBone* pBone) const;
+
+        bool PopulateAnims(      Buffer&                             buffer,
+                           const IHeader&                            header,
+                           const ITexts&                             texts,
+                           const IAnims&                             anims,
+                           const IPoses&                             poses,
+                                 Model::IBone*                       pRootBone,
+                                 std::vector<Model::IAnimationSet*>& animSet);
+
+        /**
+        * Finds a bone in the skeleton
+        *@param pBone - parent bone to search from
+        *@param index - bone index to find
+        *@return bone matching with index, nullptr if not found or on error
+        */
+        Model::IBone* FindBone(Model::IBone* pBone, std::size_t index) const;
+
+        void QuatToRotMat(const QuaternionF& quat, Matrix4x4F& mat) const;
+
+        int GetTextIndex(const ITexts& texts, std::size_t offset) const;
 
         /**
         * Gets the animation matrix

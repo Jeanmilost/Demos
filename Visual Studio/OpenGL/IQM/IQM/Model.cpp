@@ -111,7 +111,8 @@ Model::IAnimationKeys::~IAnimationKeys()
 // Model::IAnimation
 //---------------------------------------------------------------------------
 Model::IAnimation::IAnimation() :
-    m_pBone(nullptr)
+    m_pBone(nullptr),
+    m_ColOverRow(false)
 {}
 //---------------------------------------------------------------------------
 Model::IAnimation::~IAnimation()
