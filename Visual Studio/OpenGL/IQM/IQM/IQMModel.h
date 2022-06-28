@@ -532,6 +532,11 @@ class IQMModel
         VertexBuffer::ITfOnGetVertexColor m_fOnGetVertexColor = nullptr;
         Texture::ITfOnLoadTexture         m_fOnLoadTexture    = nullptr;
 
+        /*REM*/
+        typedef std::vector<VertexBuffer*> IVertexBuffers;
+        IVertexBuffers m_SourceVB;
+        /**/
+
         /**
         * Reads the buffer content
         *@param buffer - buffer to read
@@ -580,13 +585,22 @@ class IQMModel
                                 std::size_t   jointIndex,
                                 Model::IBone* pBone) const;
 
-        bool PopulateAnims(      Buffer&                             buffer,
-                           const IHeader&                            header,
-                           const ITexts&                             texts,
-                           const IAnims&                             anims,
-                           const IPoses&                             poses,
-                                 Model::IBone*                       pRootBone,
-                                 std::vector<Model::IAnimationSet*>& animSet);
+        bool PopulateAnims(      Buffer&               buffer,
+                           const IHeader&              header,
+                           const ITexts&               texts,
+                           const IAnims&               anims,
+                           const IPoses&               poses,
+                                 Model::IBone*         pRootBone,
+                                 Model::IAnimationSet* pAnimSet);
+
+        bool BuildSrcVertices(const IHeader&       header,
+                              const IVertexArrays& vertexArrays,
+                                    Buffer&        buffer,
+                                    IVertices&     srcVertices);
+
+        bool BuildWeightsFromSkeleton(Model::IBone*      pBone,
+                                      std::size_t        meshIndex,
+                                      Model::IDeformers* pDeformers);
 
         /**
         * Finds a bone in the skeleton
@@ -596,9 +610,13 @@ class IQMModel
         */
         Model::IBone* FindBone(Model::IBone* pBone, std::size_t index) const;
 
+        IVertex* GetOrAddVertex(std::size_t index, IVertices& srcVertices) const;
+
         void QuatToRotMat(const QuaternionF& quat, Matrix4x4F& mat) const;
 
         int GetTextIndex(const ITexts& texts, std::size_t offset) const;
+
+        void GetInverseBindMatrix(const Model::IBone* pBone, Matrix4x4F& outMatrix) const;
 
         /**
         * Gets the animation matrix

@@ -718,7 +718,6 @@ bool IQMModel::Open(Buffer& buffer)
 //---------------------------------------------------------------------------
 Model* IQMModel::GetModel(int animSetIndex, int frameCount, int frameIndex) const
 {
-    /*FIXME
     if (!m_pModel)
         return nullptr;
 
@@ -730,6 +729,7 @@ Model* IQMModel::GetModel(int animSetIndex, int frameCount, int frameIndex) cons
     if (!m_pModel->m_pSkeleton)
         return m_pModel;
 
+    /*REM
     const std::size_t meshCount = m_pModel->m_Mesh.size();
 
     // iterate through the meshes to get
@@ -804,17 +804,16 @@ Model* IQMModel::GetModel(int animSetIndex, int frameCount, int frameIndex) cons
             }
         }
     }
+    */
 
     return m_pModel;
-    */
-    return nullptr;
 }
 //---------------------------------------------------------------------------
-void IQMModel::GetBoneAnimMatrix(const Model::IBone* pBone,
-                               const Model::IAnimationSet* pAnimSet,
-                               std::size_t           frameIndex,
-                               const Matrix4x4F& initialMatrix,
-                               Matrix4x4F& matrix) const
+void IQMModel::GetBoneAnimMatrix(const Model::IBone*         pBone,
+                                 const Model::IAnimationSet* pAnimSet,
+                                       std::size_t           frameIndex,
+                                 const Matrix4x4F&           initialMatrix,
+                                       Matrix4x4F&           matrix) const
 {
     // no bone?
     if (!pBone)
@@ -915,7 +914,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through text chars to read
             while (start < header.m_TextCount)
             {
-                std::unique_ptr<IText> pText(new IText());
+                std::unique_ptr<IText> pText = std::make_unique<IText>();
 
                 // read next text
                 if (!pText->Read(header, start, buffer))
@@ -938,7 +937,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through meshes to read
             for (std::size_t i = 0; i < header.m_MeshCount; ++i)
             {
-                std::unique_ptr<IMesh> pMesh(new IMesh());
+                std::unique_ptr<IMesh> pMesh = std::make_unique<IMesh>();
 
                 // read next mesh
                 if (!pMesh->Read(buffer))
@@ -961,7 +960,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through vertex arrays to read
             for (std::size_t i = 0; i < header.m_VertexArrayCount; ++i)
             {
-                std::unique_ptr<IVertexArray> pVertexArray(new IVertexArray());
+                std::unique_ptr<IVertexArray> pVertexArray = std::make_unique<IVertexArray>();
 
                 // read next vertex array
                 if (!pVertexArray->Read(buffer))
@@ -984,7 +983,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through triangles to read
             for (std::size_t i = 0; i < header.m_TriangleCount; ++i)
             {
-                std::unique_ptr<ITriangle> pTriangle(new ITriangle());
+                std::unique_ptr<ITriangle> pTriangle = std::make_unique<ITriangle>();
 
                 // read next triangle
                 if (!pTriangle->Read(buffer))
@@ -1003,7 +1002,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through adjacencies to read
             for (std::size_t i = 0; i < header.m_TriangleCount; ++i)
             {
-                std::unique_ptr<IAdjacency> pAdjacency(new IAdjacency());
+                std::unique_ptr<IAdjacency> pAdjacency = std::make_unique<IAdjacency>();
 
                 // read next adjacency
                 if (!pAdjacency->Read(buffer))
@@ -1026,7 +1025,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through joints to read
             for (std::size_t i = 0; i < header.m_JointCount; ++i)
             {
-                std::unique_ptr<IJoint> pJoint(new IJoint());
+                std::unique_ptr<IJoint> pJoint = std::make_unique<IJoint>();
 
                 // read next joint
                 if (!pJoint->Read(buffer))
@@ -1049,7 +1048,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through poses to read
             for (std::size_t i = 0; i < header.m_PoseCount; ++i)
             {
-                std::unique_ptr<IPose> pPose(new IPose());
+                std::unique_ptr<IPose> pPose = std::make_unique<IPose>();
 
                 // read next pose
                 if (!pPose->Read(buffer))
@@ -1072,7 +1071,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through animations to read
             for (std::size_t i = 0; i < header.m_AnimCount; ++i)
             {
-                std::unique_ptr<IAnim> pAnim(new IAnim());
+                std::unique_ptr<IAnim> pAnim = std::make_unique<IAnim>();
 
                 // read next animation
                 if (!pAnim->Read(buffer))
@@ -1095,7 +1094,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through bounds arrays to read
             for (std::size_t i = 0; i < header.m_FrameCount; ++i)
             {
-                std::unique_ptr<IBounds> pBounds(new IBounds());
+                std::unique_ptr<IBounds> pBounds = std::make_unique<IBounds>();
 
                 // read next bounds
                 if (!pBounds->Read(buffer))
@@ -1117,7 +1116,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through comment chars to read
             while (start < header.m_CommentCount)
             {
-                std::unique_ptr<IComment> pComment(new IComment());
+                std::unique_ptr<IComment> pComment = std::make_unique<IComment>();
 
                 // read next comment
                 if (!pComment->Read(header, start, buffer))
@@ -1140,7 +1139,7 @@ bool IQMModel::Read(Buffer& buffer)
             // iterate through extensions to read
             for (std::size_t i = 0; i < header.m_ExtensionCount; ++i)
             {
-                std::unique_ptr<IExtension> pExtension(new IExtension());
+                std::unique_ptr<IExtension> pExtension = std::make_unique<IExtension>();
 
                 // read next extension
                 if (!pExtension->Read(buffer))
@@ -1230,20 +1229,16 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
 
     // create the model
     m_pModel = new Model();
+    m_pModel->m_MeshOnly = m_MeshOnly;
+    m_pModel->m_PoseOnly = m_PoseOnly;
 
     // do create mesh only?
     if (!m_MeshOnly)
     {
-        /*REM
-        size_t                 boneIndex;
-        CSR_Bone* pRootBone;
-        CSR_AnimationSet_Bone* pAnimSet;
-        */
-
         // create the root bone
-        std::unique_ptr<Model::IBone> pRootBone(new Model::IBone());
+        std::unique_ptr<Model::IBone> pRootBone = std::make_unique<Model::IBone>();
         pRootBone->m_Name = "RootBone";
-        
+
         // populate the skeleton
         if (!PopulateSkeleton(texts, joints, -1, pRootBone.get()))
             return false;
@@ -1261,7 +1256,7 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
             for (std::size_t i = 0; i < anims.size(); ++i)
             {
                 // create a new animation set
-                std::unique_ptr<Model::IAnimationSet> pAnimSet(new Model::IAnimationSet());
+                std::unique_ptr<Model::IAnimationSet> pAnimSet = std::make_unique<Model::IAnimationSet>();
 
                 // reserve memory for animations
                 pAnimSet->m_Animations.reserve(joints.size());
@@ -1270,47 +1265,49 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                 for (std::size_t j = 0; j < joints.size(); ++j)
                 {
                     // create bone animation
-                    std::unique_ptr<Model::IAnimation> pAnim(new Model::IAnimation());
+                    std::unique_ptr<Model::IAnimation> pAnim = std::make_unique<Model::IAnimation>();
 
+                    // add it to animation set. NOTE the animation will be populated by PopulateAnims() below
                     pAnimSet->m_Animations.push_back(pAnim.get());
                     pAnim.release();
                 }
 
+                // populate the animations
+                if (!PopulateAnims(buffer, header, texts, anims, poses, m_pModel->m_pSkeleton, pAnimSet.get()))
+                    return false;
+
+                // add animation set to model
                 m_pModel->m_AnimationSet.push_back(pAnimSet.get());
                 pAnimSet.release();
             }
-
-            // populate the animations
-            if (!PopulateAnims(buffer, header, texts, anims, poses, m_pModel->m_pSkeleton, m_pModel->m_AnimationSet))
-                return false;
         }
     }
 
-    /*
     // create a source vertices container
-    pSrcVertices = (CSR_IQMVertices*)malloc(sizeof(CSR_IQMVertices));
+    //REM pSrcVertices = (CSR_IQMVertices*)malloc(sizeof(CSR_IQMVertices));
+    IVertices srcVertices;
 
+    /*REM
     // succeeded?
     if (!pSrcVertices)
         return 0;
+    */
 
+    /*REM
     // initialize it
     pSrcVertices->m_pVertex = 0;
     pSrcVertices->m_Count = 0;
+    */
 
     // read the source vertices
-    if (!csrIQMBuildSrcVertices(pHeader,
-                                pVertexArrays,
-                                pBuffer,
-                                pSrcVertices))
-    {
-        free(pSrcVertices);
-        return 0;
-    }
+    if (!BuildSrcVertices(header, vertexArrays, buffer, srcVertices))
+        return false;
 
-    // create the meshes
-    pModel->m_pMesh = (CSR_Mesh*)malloc(pMeshes->m_Count * sizeof(CSR_Mesh));
+    // reserve memory for the meshes
+    //REM m_pModel->m_pMesh = (CSR_Mesh*)malloc(pMeshes->m_Count * sizeof(CSR_Mesh));
+    m_pModel->m_Mesh.reserve(meshes.size());
 
+    /*REM
     // succeeded?
     if (!pModel->m_pMesh)
     {
@@ -1318,20 +1315,25 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
         free(pSrcVertices);
         return 0;
     }
+    */
 
+    /*REM
     // iterate through the created meshes and initialize them
-    for (i = 0; i < pMeshes->m_Count; ++i)
+    for (std::size_t i = 0; i < meshes.size(); ++i)
         csrMeshInit(&pModel->m_pMesh[i]);
 
     // set the mesh count
     pModel->m_MeshCount = pMeshes->m_Count;
+    */
 
     // do build the weights?
-    if (!pModel->m_MeshOnly && !pModel->m_PoseOnly)
+    if (!m_MeshOnly)
     {
-        // create the mesh weights groups
-        pModel->m_pMeshWeights = (CSR_Skin_Weights_Group*)malloc(pMeshes->m_Count * sizeof(CSR_Skin_Weights_Group));
+        // reserve memory for the mesh deformers
+        //REM m_pModel->m_pMeshWeights = (CSR_Skin_Weights_Group*)malloc(pMeshes->m_Count * sizeof(CSR_Skin_Weights_Group));
+        m_pModel->m_Deformers.reserve(meshes.size());
 
+        /*REM
         // succeeded?
         if (!pModel->m_pMeshWeights)
         {
@@ -1339,148 +1341,150 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
             free(pSrcVertices);
             return 0;
         }
+        */
 
+        /*REM
         // iterate through the created weights groups and initialize them
-        for (i = 0; i < pMeshes->m_Count; ++i)
+        for (std::size_t i = 0; i < meshes.size(); ++i)
         {
             pModel->m_pMeshWeights[i].m_pSkinWeights = 0;
             pModel->m_pMeshWeights[i].m_Count = 0;
         }
+        */
 
         // set the weights groups count
-        pModel->m_MeshWeightsCount = pMeshes->m_Count;
+        //REM m_pModel->m_MeshWeightsCount = pMeshes->m_Count;
     }
 
     // iterate through the source meshes
-    for (i = 0; i < pMeshes->m_Count; ++i)
+    for (std::size_t i = 0; i < meshes.size(); ++i)
     {
+        /*REM
         int                     canRelease;
         CSR_Mesh* pMesh;
         CSR_Skin_Weights_Group* pWeightsGroup = 0;
 
         // get the next mesh
         pMesh = &pModel->m_pMesh[i];
+        */
+        std::unique_ptr<Mesh> pMesh = std::make_unique<Mesh>();
 
+        // reserve memory for the vertex buffer
+        //REM pMesh->m_VB.reserve();
+
+        /*REM
         // create the mesh vertex buffer
         pMesh->m_Count = 1;
         pMesh->m_pVB = (CSR_VertexBuffer*)malloc(sizeof(CSR_VertexBuffer));
 
         // prepare the vertex buffer format
         csrVertexBufferInit(pMesh->m_pVB);
-
-        // apply the user wished vertex format
-        if (pVertFormat)
-            pMesh->m_pVB->m_Format = *pVertFormat;
-        else
-        {
-            // otherwise configure the default vertex format
-            pMesh->m_pVB->m_Format.m_HasNormal = 1;
-            pMesh->m_pVB->m_Format.m_HasTexCoords = 1;
-        }
-
-        // apply the user wished vertex culling
-        if (pVertCulling)
-            pMesh->m_pVB->m_Culling = *pVertCulling;
-        else
-            // otherwise configure the default culling
-            pMesh->m_pVB->m_Culling.m_Face = CSR_CF_CW;
-
-        // apply the user wished material
-        if (pMaterial)
-            pMesh->m_pVB->m_Material = *pMaterial;
-
-        // set the vertex format type
-        pMesh->m_pVB->m_Format.m_Type = CSR_VT_Triangles;
-
-        // calculate the vertex stride
-        csrVertexFormatCalculateStride(&pMesh->m_pVB->m_Format);
+        */
 
         // create the vertex buffer
-        pMesh->m_pVB->m_pData = (float*)malloc(pMesh->m_pVB->m_Format.m_Stride * sizeof(float));
+        std::unique_ptr<VertexBuffer> pVB = std::make_unique<VertexBuffer>();
+
+        // apply the user wished vertex format
+        pVB->m_Format = m_VertFormatTemplate;
+
+        // apply the user wished vertex culling
+        pVB->m_Culling = m_VertCullingTemplate;
+
+        // apply the user wished material
+        pVB->m_Material = m_MaterialTemplate;
+
+        // set the vertex format type
+        pVB->m_Format.m_Type = VertexFormat::IEType::IE_VT_Triangles;
+
+        // calculate the vertex stride
+        pVB->m_Format.CalculateStride();
+
+        // reserve memory for the vertex buffer
+        //REM pVB->m_Data = (float*)malloc(pMesh->m_pVB->m_Format.m_Stride * sizeof(float));
+        //REM pVB->m_Data.reserve((std::size_t)meshes[i]->m_TriangleCount * 3 * pVB->m_Format.m_Stride);
+
+        Model::IDeformers* pCurDeformers = nullptr;
 
         // do build the weights?
-        if (!pModel->m_MeshOnly && !pModel->m_PoseOnly)
+        if (!m_MeshOnly)
         {
+            std::unique_ptr<Model::IDeformers> pDeformers = std::make_unique<Model::IDeformers>();
+
             // get the next weights group
-            pWeightsGroup = &pModel->m_pMeshWeights[i];
+            //REM pWeightsGroup = &pModel->m_pMeshWeights[i];
 
             // populate the skin weights group
-            if (!csrIQMBuildWeightsFromSkeleton(pModel->m_pSkeleton, i, pWeightsGroup))
-            {
-                free(pSrcVertices->m_pVertex);
-                free(pSrcVertices);
-                return 0;
-            }
+            if (!BuildWeightsFromSkeleton(m_pModel->m_pSkeleton, i, pDeformers.get()))
+                return false;
+
+            // add the deformers to the model
+            m_pModel->m_Deformers.push_back(pDeformers.get());
+            pCurDeformers = pDeformers.release();
         }
 
         // iterate through source mesh triangles
-        for (j = 0; j < pMeshes->m_pMesh[i].m_TriangleCount; ++j)
+        for (std::size_t j = 0; j < meshes[i]->m_TriangleCount; ++j)
         {
             // get triangle index
-            const size_t index = pMeshes->m_pMesh[i].m_FirstTriangle + j;
+            const size_t index = meshes[i]->m_FirstTriangle + j;
 
             // iterate through vertices to create
-            for (k = 0; k < 3; ++k)
+            for (std::size_t k = 0; k < 3; ++k)
             {
                 // get vertex index
-                const size_t vertIndex = pTriangles->m_pTriangle[index].m_Vertex[k];
+                const size_t vertIndex = triangles[index]->m_Vertex[k];
 
                 // add next vertex to vertex buffer
-                csrVertexBufferAdd(&pSrcVertices->m_pVertex[vertIndex].m_Position,
-                                   &pSrcVertices->m_pVertex[vertIndex].m_Normal,
-                                   &pSrcVertices->m_pVertex[vertIndex].m_TexCoord,
-                                   0,
-                                   fOnGetVertexColor,
-                                   pMesh->m_pVB);
+                pVB->Add(&srcVertices[vertIndex]->m_Position,
+                         &srcVertices[vertIndex]->m_Normal,
+                         &srcVertices[vertIndex]->m_TexCoord,
+                          0,
+                          m_fOnGetVertexColor);
 
                 // do build the weights?
-                if (!pModel->m_MeshOnly && !pModel->m_PoseOnly)
+                if (!m_MeshOnly)
                 {
+                    if (!pCurDeformers)
+                        return false;
+
                     // iterate through vertex weights
-                    for (l = 0; l < 4 && pSrcVertices->m_pVertex[vertIndex].m_BlendWeights[l]; ++l)
+                    for (std::size_t l = 0; l < 4 && srcVertices[vertIndex]->m_BlendWeights[l]; ++l)
                     {
+                        /*REM
                         size_t                       weightIndex;
                         CSR_Skin_Weights* pWeights = 0;
                         CSR_Bone* pBone = 0;
                         float* pWeightsArray = 0;
                         CSR_Skin_Weight_Index_Table* pIndexTable = 0;
+                        */
 
                         // get the bone matching with weight to animate
-                        pBone = csrIQMFindBone(pModel->m_pSkeleton,
-                                               pSrcVertices->m_pVertex[vertIndex].m_BlendIndices[l]);
+                        Model::IBone* pBone = FindBone(m_pModel->m_pSkeleton,
+                                                       srcVertices[vertIndex]->m_BlendIndices[l]);
 
                         // found it?
                         if (!pBone)
-                        {
-                            free(pSrcVertices->m_pVertex);
-                            free(pSrcVertices);
-                            return 0;
-                        }
+                            return false;
+
+                        Model::ISkinWeights* pWeights = nullptr;
 
                         // get the skin weights to populate
-                        for (m = 0; m < pWeightsGroup->m_Count; ++m)
-                            if (strcmp(pWeightsGroup->m_pSkinWeights[m].m_pBoneName, pBone->m_pName) == 0)
+                        for (std::size_t m = 0; m < pCurDeformers->m_SkinWeights.size(); ++m)
+                            if (pCurDeformers->m_SkinWeights[m]->m_BoneName == pBone->m_Name)
                             {
-                                pWeights = &pWeightsGroup->m_pSkinWeights[m];
+                                pWeights = pCurDeformers->m_SkinWeights[m];
                                 break;
                             }
 
                         // found it?
                         if (!pWeights)
-                        {
-                            free(pSrcVertices->m_pVertex);
-                            free(pSrcVertices);
-                            return 0;
-                        }
+                            return false;
 
                         // number of weights should always equals the index table one
-                        if (pWeights->m_WeightCount != pWeights->m_IndexTableCount)
-                        {
-                            free(pSrcVertices->m_pVertex);
-                            free(pSrcVertices);
-                            return 0;
-                        }
+                        if (pWeights->m_Weights.size() != pWeights->m_WeightInfluences.size())
+                            return false;
 
+                        /*REM
                         weightIndex = pWeights->m_WeightCount;
 
                         // add a new weights in the array
@@ -1503,7 +1507,12 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                         // write the weight value
                         pWeights->m_pWeights[weightIndex] =
                             (float)pSrcVertices->m_pVertex[vertIndex].m_BlendWeights[l] / 255.0f;
+                        */
 
+                        // write the weight value
+                        pWeights->m_Weights.push_back((float)srcVertices[vertIndex]->m_BlendWeights[l] / 255.0f);
+
+                        /*REM
                         // add a new index table in the array
                         pIndexTable =
                             (CSR_Skin_Weight_Index_Table*)csrMemoryAlloc(pWeights->m_pIndexTable,
@@ -1521,7 +1530,9 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                         // set new index table in the skin weights
                         pWeights->m_pIndexTable = pIndexTable;
                         ++pWeights->m_IndexTableCount;
+                        */
 
+                        /*REM
                         // initialize the skin weights table
                         pWeights->m_pIndexTable[weightIndex].m_Count = 0;
                         pWeights->m_pIndexTable[weightIndex].m_pData = (size_t*)malloc(sizeof(size_t));
@@ -1537,11 +1548,21 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                         // populate the index
                         *(pWeights->m_pIndexTable[weightIndex].m_pData) = (size_t)((j * 3) + k) * pModel->m_pMesh[i].m_pVB[0].m_Format.m_Stride;
                         pWeights->m_pIndexTable[weightIndex].m_Count = 1;
+                        */
+
+                        std::unique_ptr<Model::IWeightInfluence> pWeightInfluence = std::make_unique<Model::IWeightInfluence>();
+
+                        // populate the index
+                        pWeightInfluence->m_VertexIndex.push_back((std::size_t)((j * 3) + k) * pVB->m_Format.m_Stride);
+
+                        pWeights->m_WeightInfluences.push_back(pWeightInfluence.get());
+                        pWeightInfluence.release();
                     }
                 }
             }
         }
 
+        /*
         // do load the texture?
         if (pMesh->m_pVB->m_Format.m_HasTexCoords && pMeshes->m_pMesh[i].m_Material)
         {
@@ -1572,8 +1593,18 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                 pMesh->m_Skin.m_Texture.m_pBuffer = 0;
             }
         }
+        */
+
+        // set the vertex buffer in the mesh
+        pMesh->m_VB.push_back(pVB.get());
+        pVB.release();
+
+        // add mesh to model meshes
+        m_pModel->m_Mesh.push_back(pMesh.get());
+        pMesh.release();
     }
 
+    /*REM
     // release the memory
     free(pSrcVertices->m_pVertex);
     free(pSrcVertices);
@@ -1591,7 +1622,7 @@ bool IQMModel::PopulateSkeleton(const ITexts&       texts,
     for (std::size_t i = 0; i < joints.size(); ++i)
     {
         // create new child bone
-        std::unique_ptr<Model::IBone> pBone(new Model::IBone());
+        std::unique_ptr<Model::IBone> pBone = std::make_unique<Model::IBone>();
 
         // is root?
         if (joints[i]->m_Parent >= 0)
@@ -1677,13 +1708,13 @@ bool IQMModel::PopulateBone(const ITexts&       texts,
     Matrix4x4F translateMatrix;
 
     // get the rotation quaternion and the scale and translate vectors
-    scaleMatrix.Scale(scaling);
+    scaleMatrix     = Matrix4x4F::Identity().Scale(scaling);
     QuatToRotMat(rotation, rotateMatrix);
-    translateMatrix.Translate(position);
+    translateMatrix = Matrix4x4F::Identity().Translate(position);
 
     // build the final matrix
-    Matrix4x4F buildMatrix = scaleMatrix.Multiply(rotateMatrix);
-    pBone->m_Matrix        = buildMatrix.Multiply(translateMatrix);
+    const Matrix4x4F buildMatrix     = scaleMatrix.Multiply(rotateMatrix);
+                     pBone->m_Matrix = buildMatrix.Multiply(translateMatrix);
 
     // allocate memory for the joint index
     pBone->m_pCustom = new std::size_t();
@@ -1698,20 +1729,14 @@ bool IQMModel::PopulateBone(const ITexts&       texts,
     return true;
 }
 //---------------------------------------------------------------------------
-bool IQMModel::PopulateAnims(      Buffer&                             buffer,
-                             const IHeader&                            header,
-                             const ITexts&                             texts,
-                             const IAnims&                             anims,
-                             const IPoses&                             poses,
-                                   Model::IBone*                       pRootBone,
-                                   std::vector<Model::IAnimationSet*>& animSet)
+bool IQMModel::PopulateAnims(      Buffer&               buffer,
+                             const IHeader&              header,
+                             const ITexts&               texts,
+                             const IAnims&               anims,
+                             const IPoses&               poses,
+                                   Model::IBone*         pRootBone,
+                                   Model::IAnimationSet* pAnimSet)
 {
-    //REM size_t j;
-    //REM size_t k;
-
-    // set buffer offset to frame data start position
-    //REM std::size_t offset = header.m_FrameOffset;
-
     // seek to buffer data start position
     buffer.Seek(0, header.m_FrameOffset);
 
@@ -1725,37 +1750,15 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
             // iterate through frames to create
             for (std::size_t k = 0; k < poses.size(); ++k)
             {
-                /*REM
-                unsigned short      value;
-                size_t              len;
-            #ifdef _MSC_VER
-                CSR_Quaternion  rotation = {0};
-                CSR_Vector3     position = {0};
-                CSR_Vector3     scaling = {0};
-            #else
-                CSR_Quaternion  rotation;
-                CSR_Vector3     position;
-                CSR_Vector3     scaling;
-            #endif
-                CSR_Matrix4         scaleMatrix;
-                CSR_Matrix4         rotateMatrix;
-                CSR_Matrix4         translateMatrix;
-                CSR_Matrix4         buildMatrix;
-                CSR_Matrix4         matrix;
-                CSR_Animation_Bone* pDstAnim;
-                */
-
                 // get next pose
                 const IPose* pPose = poses[k];
 
                 // get destination animation to populate
-                Model::IAnimation* pDstAnim = animSet[i]->m_Animations[k];
+                Model::IAnimation* pDstAnim = pAnimSet->m_Animations[k];
 
-                // do initialize the bone animations?
+                // do initialize the animation set?
                 if (!j)
                 {
-                    //REM size_t l;
-
                     // find the bone to link with animation
                     pDstAnim->m_pBone = FindBone(pRootBone, k);
 
@@ -1763,81 +1766,18 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
                     if (!pDstAnim->m_pBone)
                         return false;
 
-                    /*
-                    // measure the animation bone name
-                    len = strlen(pDstAnim->m_pBone->m_pName);
-
-                    if (len)
-                    {
-                        // allocate memory for new bone name string
-                        pDstAnim->m_pBoneName = (char*)malloc(len + 1);
-
-                        // succeeded?
-                        if (!pDstAnim->m_pBoneName)
-                            return 0;
-
-                        // copy the bone name
-                        memcpy(pDstAnim->m_pBoneName, pDstAnim->m_pBone->m_pName, len);
-                        pDstAnim->m_pBoneName[len] = 0x0;
-                    }
-                    */
                     // copy the bone name
                     pDstAnim->m_BoneName = pDstAnim->m_pBone->m_Name;
 
                     // create the animation keys
-                    std::unique_ptr<Model::IAnimationKeys> pKeys(new Model::IAnimationKeys());
-                    //REM pDstAnim->m_pKeys = (CSR_AnimationKeys*)malloc(sizeof(CSR_AnimationKeys));
-
-                    /*REM
-                    // succeeded?
-                    if (!pDstAnim->m_pKeys)
-                        return 0;
-
-                    // set the key count
-                    pDstAnim->m_Count = 1;
-                    */
+                    std::unique_ptr<Model::IAnimationKeys> pKeys = std::make_unique<Model::IAnimationKeys>();
 
                     // initialize the keys container
-                    /*REM
-                    pDstAnim->m_pKeys->m_Type = CSR_KT_Matrix;
-                    pDstAnim->m_pKeys->m_Count = 0;
-                    pDstAnim->m_pKeys->m_ColOverRow = 0;
-                    pDstAnim->m_pKeys->m_pKey = (CSR_AnimationKey*)malloc(pSrcAnim->m_FrameCount * sizeof(CSR_AnimationKey));
-                    */
                     pKeys->m_Type = Model::IEAnimKeyType::IE_KT_MatrixKeys;
-
-                    //REM std::unique_ptr<Model::IAnimationKey> pKey(new Model::IAnimationKey());
-                    //REM pKeys->m_Key = (CSR_AnimationKey*)malloc(pSrcAnim->m_FrameCount * sizeof(CSR_AnimationKey));
-
-                    /*REM
-                    // succeeded?
-                    if (!pDstAnim->m_pKeys->m_pKey)
-                        return 0;
-
-                    // set the keys container count
-                    pDstAnim->m_pKeys->m_Count = pSrcAnim->m_FrameCount;
-                    */
 
                     // reserve memory for the key list
                     pKeys->m_Keys.reserve(pSrcAnim->m_FrameCount);
 
-                    /*REM
-                    // initialize the keys
-                    for (std::size_t l = 0; l < pSrcAnim->m_FrameCount; ++l)
-                    {
-                        // initialize the key
-                        pDstAnim->m_pKeys->m_pKey[l].m_Frame = l;
-                        pDstAnim->m_pKeys->m_pKey[l].m_Count = 0;
-                        pDstAnim->m_pKeys->m_pKey[l].m_pValues = (float*)malloc(16 * sizeof(float));
-
-                        // succeeded?
-                        if (!pDstAnim->m_pKeys->m_pKey[l].m_pValues)
-                            return 0;
-
-                        // set the matrix data count
-                        pDstAnim->m_pKeys->m_pKey[l].m_Count = 16;
-                    }
-                    */
                     pDstAnim->m_Keys.push_back(pKeys.get());
                     pKeys.release();
                 }
@@ -1847,9 +1787,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
                 Vector3F position;
                 position.m_X = pPose->m_ChannelOffset[0];
 
+                // is position x value animated?
                 if (pPose->m_ChannelMask & 0x01)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1858,9 +1799,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
 
                 position.m_Y = pPose->m_ChannelOffset[1];
 
+                // is position y value animated?
                 if (pPose->m_ChannelMask & 0x02)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1869,9 +1811,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
 
                 position.m_Z = pPose->m_ChannelOffset[2];
 
+                // is position z value animated?
                 if (pPose->m_ChannelMask & 0x04)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1881,9 +1824,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
                 QuaternionF rotation;
                 rotation.m_X = pPose->m_ChannelOffset[3];
 
+                // is rotation x value animated?
                 if (pPose->m_ChannelMask & 0x08)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1892,9 +1836,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
 
                 rotation.m_Y = pPose->m_ChannelOffset[4];
 
+                // is rotation y value animated?
                 if (pPose->m_ChannelMask & 0x10)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1903,6 +1848,7 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
 
                 rotation.m_Z = pPose->m_ChannelOffset[5];
 
+                // is rotation z animation animated?
                 if (pPose->m_ChannelMask & 0x20)
                 {
                     // read the frame data
@@ -1914,9 +1860,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
 
                 rotation.m_W = pPose->m_ChannelOffset[6];
 
+                // is rotation w value animated?
                 if (pPose->m_ChannelMask & 0x40)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1926,9 +1873,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
                 Vector3F scaling;
                 scaling.m_X = pPose->m_ChannelOffset[7];
 
+                // is scaling x value animated?
                 if (pPose->m_ChannelMask & 0x80)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1937,9 +1885,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
 
                 scaling.m_Y = pPose->m_ChannelOffset[8];
 
+                // is scaling y value animated?
                 if (pPose->m_ChannelMask & 0x100)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1948,9 +1897,10 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
 
                 scaling.m_Z = pPose->m_ChannelOffset[9];
 
+                // is scaling z value animated?
                 if (pPose->m_ChannelMask & 0x200)
                 {
-                    // read the frame data
+                    // read the animation data
                     if (!buffer.Read(&value, sizeof(unsigned short)))
                         return false;
 
@@ -1964,25 +1914,305 @@ bool IQMModel::PopulateAnims(      Buffer&                             buffer,
                 Matrix4x4F matrix;
 
                 // get the rotation quaternion and the scale and translate vectors
-                scaleMatrix.Scale(scaling);
+                scaleMatrix     = Matrix4x4F::Identity().Scale(scaling);
                 QuatToRotMat(rotation, rotateMatrix);
-                translateMatrix.Translate(position);
+                translateMatrix = Matrix4x4F::Identity().Translate(position);
 
                 // build the final matrix
                 buildMatrix = scaleMatrix.Multiply(rotateMatrix);
                 matrix      = buildMatrix.Multiply(translateMatrix);
 
-                // create the animation keys
-                std::unique_ptr<Model::IAnimationKey> pKey(new Model::IAnimationKey());
+                // create the animation key
+                std::unique_ptr<Model::IAnimationKey> pKey = std::make_unique<Model::IAnimationKey>();
+
+                // reserve memory for the matrix
+                pKey->m_Values.reserve(16);
 
                 // set the matrix content in the animation key
-                //pKey->m_Values.push_back
-                //memcpy(pDstAnim->m_pKeys->m_pKey[j].m_pValues, &matrix.m_Table, 16 * sizeof(float));
-                //pDstAnim
+                for (std::size_t x = 0; x < 4; ++x)
+                    for (std::size_t y = 0; y < 4; ++y)
+                        pKey->m_Values.push_back(matrix.m_Table[x][y]);
+
+                // set the frame number
+                pKey->m_Frame = pDstAnim->m_Keys[0]->m_Keys.size();
+
+                // add the new animation key to the key set
+                pDstAnim->m_Keys[0]->m_Keys.push_back(pKey.get());
+                pKey.release();
             }
     }
 
     return true;
+}
+//---------------------------------------------------------------------------
+bool IQMModel::BuildSrcVertices(const IHeader&       header,
+                                const IVertexArrays& vertexArrays,
+                                      Buffer&        buffer,
+                                      IVertices&     srcVertices)
+{
+    // reserve memory for the vertex array
+    srcVertices.reserve(header.m_VertexCount);
+
+    // iterate through vertex arrays
+    for (std::size_t i = 0; i < vertexArrays.size(); ++i)
+    {
+        // get source vertex array
+        IVertexArray* pVertexArray = vertexArrays[i];
+
+        // seek to buffer data start position
+        buffer.Seek(0, pVertexArray->m_Offset);
+
+        // search for vertex data type to read
+        switch ((IQMModel::IEVertexArrayType)pVertexArray->m_Type)
+        {
+            case IQMModel::IEVertexArrayType::IE_VT_Position:
+                // is vertex format valid?
+                if (pVertexArray->m_Format != (int)IQMModel::IEVertexArrayFormat::IE_VF_Float || pVertexArray->m_Size != 3)
+                    return false;
+
+                // iterate through vertices to read
+                for (std::size_t j = 0; j < (std::size_t)header.m_VertexCount; ++j)
+                {
+                    IVertex* pSrcVertex = GetOrAddVertex(j, srcVertices);
+
+                    // iterate through vertex data size
+                    for (std::size_t k = 0; k < (std::size_t)pVertexArray->m_Size; ++k)
+                    {
+                        float value;
+
+                        // read vertex data from buffer
+                        if (!buffer.Read(&value, sizeof(float)))
+                            return false;
+
+                        #ifdef CONVERT_ENDIANNESS
+                            // the read bytes are inverted and should be swapped if the target system is big endian
+                            if (GetEndianness() == IQMModel::IEEndianness::IE_E_BigEndian)
+                                // swap the read values in the memory (thus 0xAABBCCDD will become 0xDDCCBBAA)
+                                SwapMemory(&value, sizeof(float));
+                        #endif
+
+                        switch (k)
+                        {
+                            case 0: pSrcVertex->m_Position.m_X = value; break;
+                            case 1: pSrcVertex->m_Position.m_Y = value; break;
+                            case 2: pSrcVertex->m_Position.m_Z = value; break;
+                        }
+                    }
+                }
+
+                break;
+
+            case IQMModel::IEVertexArrayType::IE_VT_TexCoord:
+                // is vertex format valid?
+                if (pVertexArray->m_Format != (int)IQMModel::IEVertexArrayFormat::IE_VF_Float || pVertexArray->m_Size != 2)
+                    return false;
+
+                // iterate through vertices to read
+                for (std::size_t j = 0; j < (std::size_t)header.m_VertexCount; ++j)
+                {
+                    IVertex* pSrcVertex = GetOrAddVertex(j, srcVertices);
+
+                    // iterate through vertex data size
+                    for (std::size_t k = 0; k < (std::size_t)pVertexArray->m_Size; ++k)
+                    {
+                        float value;
+
+                        // read vertex data from buffer
+                        if (!buffer.Read(&value, sizeof(float)))
+                            return false;
+
+                        #ifdef CONVERT_ENDIANNESS
+                            // the read bytes are inverted and should be swapped if the target system is big endian
+                            if (GetEndianness() == IQMModel::IEEndianness::IE_E_BigEndian)
+                                // swap the read values in the memory (thus 0xAABBCCDD will become 0xDDCCBBAA)
+                                SwapMemory(&value, sizeof(float));
+                        #endif
+
+                        switch (k)
+                        {
+                            case 0: pSrcVertex->m_TexCoord.m_X = value; break;
+                            case 1: pSrcVertex->m_TexCoord.m_Y = value; break;
+                        }
+                    }
+                }
+
+                break;
+
+            case IQMModel::IEVertexArrayType::IE_VT_Normal:
+                // is vertex format valid?
+                if (pVertexArray->m_Format != (int)IQMModel::IEVertexArrayFormat::IE_VF_Float || pVertexArray->m_Size != 3)
+                    return false;
+
+                // iterate through vertices to read
+                for (std::size_t j = 0; j < (std::size_t)header.m_VertexCount; ++j)
+                {
+                    IVertex* pSrcVertex = GetOrAddVertex(j, srcVertices);
+
+                    // iterate through vertex data size
+                    for (std::size_t k = 0; k < (std::size_t)pVertexArray->m_Size; ++k)
+                    {
+                        float value;
+
+                        // read vertex data from buffer
+                        if (!buffer.Read(&value, sizeof(float)))
+                            return false;
+
+                        #ifdef CONVERT_ENDIANNESS
+                            // the read bytes are inverted and should be swapped if the target system is big endian
+                            if (GetEndianness() == IQMModel::IEEndianness::IE_E_BigEndian)
+                                // swap the read values in the memory (thus 0xAABBCCDD will become 0xDDCCBBAA)
+                                SwapMemory(&value, sizeof(float));
+                        #endif
+
+                        switch (k)
+                        {
+                            case 0: pSrcVertex->m_Normal.m_X = value; break;
+                            case 1: pSrcVertex->m_Normal.m_Y = value; break;
+                            case 2: pSrcVertex->m_Normal.m_Z = value; break;
+                        }
+                    }
+                }
+
+                break;
+
+            case IQMModel::IEVertexArrayType::IE_VT_Color:
+                // is vertex format valid?
+                if (pVertexArray->m_Format != (int)IQMModel::IEVertexArrayFormat::IE_VF_UByte || pVertexArray->m_Size != 4)
+                    return false;
+
+                // iterate through vertices to read
+                for (std::size_t j = 0; j < (std::size_t)header.m_VertexCount; ++j)
+                {
+                    IVertex* pSrcVertex = GetOrAddVertex(j, srcVertices);
+
+                    // iterate through vertex data size
+                    for (std::size_t k = 0; k < (std::size_t)pVertexArray->m_Size; ++k)
+                        // read vertex data from buffer
+                        if (!buffer.Read(&pSrcVertex->m_Color[k], sizeof(unsigned char)))
+                            return false;
+                }
+
+                break;
+
+            case IQMModel::IEVertexArrayType::IE_VT_Tangent:
+                // is vertex format valid?
+                if (pVertexArray->m_Format != (int)IQMModel::IEVertexArrayFormat::IE_VF_Float || pVertexArray->m_Size != 4)
+                    return false;
+
+                // iterate through vertices to read
+                for (std::size_t j = 0; j < (std::size_t)header.m_VertexCount; ++j)
+                {
+                    IVertex* pSrcVertex = GetOrAddVertex(j, srcVertices);
+
+                    // iterate through vertex data size
+                    for (std::size_t k = 0; k < (std::size_t)pVertexArray->m_Size; ++k)
+                    {
+                        // read vertex data from buffer
+                        if (!buffer.Read(&pSrcVertex->m_Tangent[k], sizeof(float)))
+                            return false;
+
+                        #ifdef CONVERT_ENDIANNESS
+                            // the read bytes are inverted and should be swapped if the target system is big endian
+                            if (GetEndianness() == IQMModel::IEEndianness::IE_E_BigEndian)
+                                // swap the read values in the memory (thus 0xAABBCCDD will become 0xDDCCBBAA)
+                                SwapMemory(&pSrcVertex->m_Tangent[k], sizeof(float));
+                        #endif
+                    }
+                }
+
+                break;
+
+            case IQMModel::IEVertexArrayType::IE_VT_BlendIndexes:
+                // is vertex format valid?
+                if (pVertexArray->m_Format != (int)IQMModel::IEVertexArrayFormat::IE_VF_UByte || pVertexArray->m_Size != 4)
+                    return false;
+
+                // iterate through vertices to read
+                for (std::size_t j = 0; j < (std::size_t)header.m_VertexCount; ++j)
+                {
+                    IVertex* pSrcVertex = GetOrAddVertex(j, srcVertices);
+
+                    // iterate through vertex data size
+                    for (std::size_t k = 0; k < (size_t)pVertexArray->m_Size; ++k)
+                        // read vertex data from buffer
+                        if (!buffer.Read(&pSrcVertex->m_BlendIndices[k], sizeof(unsigned char)))
+                            return false;
+                }
+
+                break;
+
+            case IQMModel::IEVertexArrayType::IE_VT_BlendWeights:
+                // is vertex format valid?
+                if (pVertexArray->m_Format != (int)IQMModel::IEVertexArrayFormat::IE_VF_UByte || pVertexArray->m_Size != 4)
+                    return false;
+
+                // iterate through vertices to read
+                for (std::size_t j = 0; j < (std::size_t)header.m_VertexCount; ++j)
+                {
+                    IVertex* pSrcVertex = GetOrAddVertex(j, srcVertices);
+
+                    // iterate through vertex data size
+                    for (std::size_t k = 0; k < (size_t)pVertexArray->m_Size; ++k)
+                        // read vertex data from buffer
+                        if (!buffer.Read(&pSrcVertex->m_BlendWeights[k], sizeof(unsigned char)))
+                            return false;
+                }
+
+                break;
+        }
+    }
+
+    return true;
+}
+//---------------------------------------------------------------------------
+bool IQMModel::BuildWeightsFromSkeleton(Model::IBone*      pBone,
+                                        std::size_t        meshIndex,
+                                        Model::IDeformers* pDeformers)
+{
+    if (!pBone)
+        return false;
+
+    if (!pDeformers)
+        return false;
+
+    std::unique_ptr<Model::ISkinWeights> pSkinWeights = std::make_unique<Model::ISkinWeights>();
+
+    // populate the bone infos
+    pSkinWeights->m_pBone = pBone;
+
+    if (pBone->m_Name.empty())
+        return false;
+
+    // copy the bone name
+    pSkinWeights->m_BoneName = pBone->m_Name;
+
+    // get the inverse bind matrix
+    GetInverseBindMatrix(pBone, pSkinWeights->m_Matrix);
+
+    // iterate through children bones to create
+    for (std::size_t i = 0; i < pBone->m_Children.size(); ++i)
+        // build from next child bone
+        if (!BuildWeightsFromSkeleton(pBone->m_Children[i], meshIndex, pDeformers))
+            return false;
+
+    // add the skin weights in the deformers
+    pDeformers->m_SkinWeights.push_back(pSkinWeights.get());
+    pSkinWeights.release();
+
+    return true;
+}
+//---------------------------------------------------------------------------
+IQMModel::IVertex* IQMModel::GetOrAddVertex(std::size_t index, IVertices& vertices) const
+{
+    // vertex exists in vertices table?
+    if (index < vertices.size())
+        return vertices[index];
+
+    // add it
+    std::unique_ptr<IVertex> pVertex = std::make_unique<IVertex>();
+    vertices.push_back(pVertex.get());
+
+    return pVertex.release();
 }
 //---------------------------------------------------------------------------
 Model::IBone* IQMModel::FindBone(Model::IBone* pBone, std::size_t index) const
@@ -2044,6 +2274,35 @@ int IQMModel::GetTextIndex(const ITexts& texts, std::size_t offset) const
             return (int)i;
 
     return -1;
+}
+//---------------------------------------------------------------------------
+void IQMModel::GetInverseBindMatrix(const Model::IBone* pBone, Matrix4x4F& outMatrix) const
+{
+    // no bone?
+    if (!pBone)
+        return;
+
+    // set the intermediate matrix as identity
+    Matrix4x4F matrix = Matrix4x4F::Identity();
+    Matrix4x4F localMatrix;
+
+    // iterate through bones
+    while (pBone)
+    {
+        // get the previously stacked matrix as base to calculate the new one
+        localMatrix = matrix;
+
+        // stack the previously calculated matrix with the current bone one
+        matrix = localMatrix.Multiply(pBone->m_Matrix);
+
+        // go to parent bone
+        pBone = pBone->m_pParent;
+    }
+
+    float determinant;
+
+    // get the inverse bind matrix
+    outMatrix = matrix.Inverse(determinant);
 }
 //---------------------------------------------------------------------------
 bool IQMModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
@@ -2190,7 +2449,12 @@ bool IQMModel::GetAnimationMatrix(const Model::IAnimationSet* pAnimSet,
 
                     // get the key matrix
                     for (std::size_t k = 0; k < 16; ++k)
-                        matrix.m_Table[k / 4][k % 4] = pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[k];
+                        if (pAnimSet->m_Animations[i]->m_Keys[j]->m_ColOverRow)
+                            matrix.m_Table[k % 4][k / 4] =
+                                    pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[k];
+                        else
+                            matrix.m_Table[k / 4][k % 4] =
+                                    pAnimSet->m_Animations[i]->m_Keys[j]->m_Keys[keyIndex]->m_Values[k];
 
                     return true;
 

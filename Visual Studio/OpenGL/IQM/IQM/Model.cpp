@@ -97,7 +97,8 @@ Model::IAnimationKey::~IAnimationKey()
 // Model::IAnimationKeys
 //---------------------------------------------------------------------------
 Model::IAnimationKeys::IAnimationKeys() :
-    m_Type(Model::IEAnimKeyType::IE_KT_Unknown)
+    m_Type(Model::IEAnimKeyType::IE_KT_Unknown),
+    m_ColOverRow(false)
 {}
 //---------------------------------------------------------------------------
 Model::IAnimationKeys::~IAnimationKeys()
@@ -111,8 +112,7 @@ Model::IAnimationKeys::~IAnimationKeys()
 // Model::IAnimation
 //---------------------------------------------------------------------------
 Model::IAnimation::IAnimation() :
-    m_pBone(nullptr),
-    m_ColOverRow(false)
+    m_pBone(nullptr)
 {}
 //---------------------------------------------------------------------------
 Model::IAnimation::~IAnimation()

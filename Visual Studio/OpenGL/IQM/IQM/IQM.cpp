@@ -121,6 +121,41 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             break;
 
+        /*REM
+        case WM_SIZE:
+        {
+            if (!g_Initialized)
+                break;
+
+            const int width = ((int)(short)LOWORD(lParam));
+            const int height = ((int)(short)HIWORD(lParam));
+
+            // update the viewport
+            CSR_OpenGLHelper::CreateViewport((float)width,
+                                             (float)height,
+                                             0.1f,
+                                             100.0f,
+                                             g_pShader,
+                                             g_pScene->m_ProjectionMatrix);
+
+        #ifdef SHOW_SKELETON
+            // create the line shader viewport
+            CSR_OpenGLHelper::CreateViewport((float)width,
+                                             (float)height,
+                                             0.1f,
+                                             1000.0f,
+                                             g_pLineShader,
+                                             g_pScene->m_ProjectionMatrix);
+        #endif
+
+            UpdateScene(0.0f);
+            DrawScene();
+
+            ::SwapBuffers(g_hDC);
+            break;
+        }
+        */
+
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
@@ -161,7 +196,6 @@ int DrawIQM(const IQMModel&        iqmModel,
                   int              animSetIndex,
                   int              frameCount)
 {
-    /*FIXME
     // no renderer?
     if (!pRenderer)
         return 0;
@@ -170,7 +204,7 @@ int DrawIQM(const IQMModel&        iqmModel,
     if (!pShader)
         return 0;
 
-    const int frameIndex       = g_PauseAnim ? g_LastKnownFrame : (::GetTickCount64() * 5) % frameCount;
+    const int frameIndex       = g_PauseAnim ? g_LastKnownFrame : (int)(::GetTickCount64() * 0.025f) % frameCount;
               g_LastKnownFrame = frameIndex;
 
     Model* pModel = iqmModel.GetModel(animSetIndex, frameCount, frameIndex);
@@ -187,8 +221,6 @@ int DrawIQM(const IQMModel&        iqmModel,
         pRenderer->Draw(*pModel->m_Mesh[i], modelMatrix, pShader);
 
     return frameIndex;
-    */
-    return 0;
 }
 //---------------------------------------------------------------------------
 void DrawBone(const IQMModel&        iqmModel,
@@ -201,7 +233,6 @@ void DrawBone(const IQMModel&        iqmModel,
               int                    frameCount,
               int                    frameIndex)
 {
-    /*FIXME
     if (!pModel)
         return;
 
@@ -253,7 +284,6 @@ void DrawBone(const IQMModel&        iqmModel,
 
         DrawBone(iqmModel, pModel, pChild, modelMatrix, pShader, pRenderer, animSetIndex, frameCount, frameIndex);
     }
-    */
 }
 //---------------------------------------------------------------------------
 void DrawSkeleton(const IQMModel&        iqmModel,
@@ -270,11 +300,68 @@ void DrawSkeleton(const IQMModel&        iqmModel,
     if (!pShader)
         return;
 
-    /*FIXME
     Model* pModel = iqmModel.GetModel(animSetIndex, frameCount, frameIndex);
 
     DrawBone(iqmModel, pModel, pModel->m_pSkeleton, modelMatrix, pShader, pRenderer, animSetIndex, frameCount, frameIndex);
+}
+//---------------------------------------------------------------------------
+void BuildModelMatrix(float angle, Matrix4x4F& matrix)
+{
+    /*REM
+    CSR_Vector3 axis = {};
+    CSR_Vector3 factor = {};
+    CSR_Matrix4 rotateXMatrix;
+    CSR_Matrix4 rotateYMatrix;
+    CSR_Matrix4 scaleMatrix;
+    CSR_Matrix4 intermediateMatrix;
+
+    csrMat4Identity(pMatrix);
     */
+    Matrix4x4F defMatrix = Matrix4x4F::Identity();
+    Vector3F   axis;
+
+    // set rotation axis
+    axis.m_X = 1.0f;
+    axis.m_Y = 0.0f;
+    axis.m_Z = 0.0f;
+
+    // create the rotation matrix
+    Matrix4x4F rotateXMatrix = defMatrix.Rotate(-((float)M_PI / 2.0), axis);
+
+    defMatrix = Matrix4x4F::Identity();
+
+    // set rotation axis
+    axis.m_X = 0.0f;
+    axis.m_Y = 1.0f;
+    axis.m_Z = 0.0f;
+
+    // create the rotation matrix
+    Matrix4x4F rotateYMatrix = defMatrix.Rotate((float)(-M_PI / 4.0) + angle, axis);
+
+    defMatrix = Matrix4x4F::Identity();
+
+    Vector3F factor;
+
+    // set scale factor
+    //factor.m_X = 0.15f;
+    //factor.m_Y = 0.15f;
+    //factor.m_Z = 0.15f;
+    factor.m_X = 0.005f;
+    factor.m_Y = 0.005f;
+    factor.m_Z = 0.005f;
+
+    // create the scale matrix
+    Matrix4x4F scaleMatrix = defMatrix.Scale(factor);
+
+    // build the model matrix
+    Matrix4x4F intermediateMatrix = scaleMatrix.Multiply(rotateXMatrix);
+               matrix             = intermediateMatrix.Multiply(rotateYMatrix);
+
+    // place it in the world
+    matrix.m_Table[3][0] = 0.0f;
+    //pMatrix->m_Table[3][1] = -0.55f;
+    matrix.m_Table[3][1] = -0.35f;
+    matrix.m_Table[3][2] = -2.0f;
 }
 //------------------------------------------------------------------------------
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
@@ -312,7 +399,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                             CW_USEDEFAULT,
                             CW_USEDEFAULT,
                             800,
-                            600,
+                            650,
                             nullptr,
                             nullptr,
                             hInstance,
@@ -381,7 +468,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     renderer.CreateViewport(float(clientRect.right  - clientRect.left),
                             float(clientRect.bottom - clientRect.top),
                             0.1f,
-                            1000.0f,
+                            100.0f,
                             &shader,
                             projMatrix);
 
@@ -419,47 +506,19 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         }
         else
         {
-            Matrix4x4F matrix = Matrix4x4F::Identity();
-            Vector3F   axis;
-
-            // create the X rotation matrix
-            Matrix4x4F rotMatX;
-            axis.m_X = 1.0f;
-            axis.m_Y = 0.0f;
-            axis.m_Z = 0.0f;
-            rotMatX  = matrix.Rotate(float(-M_PI) / 2.0f, axis);
-
-            // create the Y rotation matrix
-            Matrix4x4F rotMatZ;
-            axis.m_X = 0.0f;
-            axis.m_Y = 0.0f;
-            axis.m_Z = 1.0f;
-            rotMatZ  = matrix.Rotate(angle, axis);
-
-            // create the scale matrix
-            Matrix4x4F scaleMat    = Matrix4x4F::Identity();
-            scaleMat.m_Table[0][0] = 0.075f;
-            scaleMat.m_Table[1][1] = 0.075f;
-            scaleMat.m_Table[2][2] = 0.075f;
-
-            // combine the rotation matrices
-            rotMatZ.Multiply(rotMatX);
-
-            // place the model in the 3d world (update the matrix directly)
-            Matrix4x4F modelMatrix    =  rotMatZ.Multiply(scaleMat);
-            modelMatrix.m_Table[3][1] = -18.0f;
-            modelMatrix.m_Table[3][2] = -50.0f;
+            Matrix4x4F modelMatrix;
+            BuildModelMatrix(angle, modelMatrix);
 
             // draw the scene
             renderer.BeginScene(bgColor, (Renderer::IESceneFlags)((unsigned)Renderer::IESceneFlags::IE_SF_ClearColor |
                                                                   (unsigned)Renderer::IESceneFlags::IE_SF_ClearDepth));
 
             // draw the model
-            const int frameIndex = DrawIQM(iqm, modelMatrix, &shader, &renderer, 1, 4800);
+            const int frameIndex = DrawIQM(iqm, modelMatrix, &shader, &renderer, 0, 30);
 
             // draw the skeleton
             if (g_ShowSkeleton)
-                DrawSkeleton(iqm, modelMatrix, &lineShader, &renderer, 1, 4800, frameIndex);
+                DrawSkeleton(iqm, modelMatrix, &lineShader, &renderer, 0, 30, frameIndex);
 
             renderer.EndScene();
 
@@ -468,7 +527,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             lastTime           = (double)::GetTickCount64();
             angle              = std::fmodf(angle + ((float)elapsedTime * 0.001f), 2.0f * (float)M_PI);
 
-            Sleep(1);
+            //REM Sleep(1);
         }
     }
 
