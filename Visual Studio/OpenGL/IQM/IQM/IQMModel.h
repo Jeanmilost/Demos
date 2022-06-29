@@ -57,6 +57,11 @@ class IQMModel
         virtual ~IQMModel();
 
         /**
+        * Clears the model
+        */
+        virtual void Clear();
+
+        /**
         * Opens an .iqm model from file
         *@param fileName - iqm file to open
         *@return true on success, otherwise false
@@ -523,19 +528,26 @@ class IQMModel
 
         typedef std::vector<IVertex*> IVertices;
 
+        /**
+        * Animated bone cache dictionary
+        */
+        typedef std::map<const Model::IBone*, Matrix4x4F> IAnimBoneCacheDict;
+
+        /**
+        * Source vertex buffer cache
+        */
+        typedef std::vector<VertexBuffer::IData*> IVBCache;
+
         Model*                            m_pModel            = nullptr;
         VertexFormat                      m_VertFormatTemplate;
         VertexCulling                     m_VertCullingTemplate;
         Material                          m_MaterialTemplate;
+        IAnimBoneCacheDict                m_AnimBoneCacheDict;
+        IVBCache                          m_VBCache;
         bool                              m_MeshOnly          = false;
         bool                              m_PoseOnly          = false;
         VertexBuffer::ITfOnGetVertexColor m_fOnGetVertexColor = nullptr;
         Texture::ITfOnLoadTexture         m_fOnLoadTexture    = nullptr;
-
-        /*REM*/
-        typedef std::vector<VertexBuffer*> IVertexBuffers;
-        IVertexBuffers m_SourceVB;
-        /**/
 
         /**
         * Reads the buffer content
@@ -575,16 +587,43 @@ class IQMModel
                            const IComments&     comments,
                            const IExtensions&   extensions);
 
+        /**
+        * Populates the skeleton
+        *@param texts - texts
+        *@param joints - joints
+        *@param parentIndex - parent index
+        *@param pRoot - root bone
+        *@return true on success, otherwise false
+        */
         bool PopulateSkeleton(const ITexts&       texts,
                               const IJoints&      joints,
                                     int           parentIndex,
                                     Model::IBone* pRoot) const;
 
+        /**
+        * Populates a bone
+        *@param texts - texts
+        *@param joints - joints
+        *@param jointIndex - joint index
+        *@param pBone - bone to populate
+        *@return true on success, otherwise false
+        */
         bool PopulateBone(const ITexts&       texts,
                           const IJoint*       pJoint,
                                 std::size_t   jointIndex,
                                 Model::IBone* pBone) const;
 
+        /**
+        * Populates the animations
+        *@param buffer - source buffer to read from
+        *@param header - header
+        *@param texts - texts
+        *@param anims - animations
+        *@param poses - poses
+        *@param pRootBone - root bone
+        *@param pAnimSet - animation set to populate
+        *@return true on success, otherwise false
+        */
         bool PopulateAnims(      Buffer&               buffer,
                            const IHeader&              header,
                            const ITexts&               texts,
@@ -593,11 +632,26 @@ class IQMModel
                                  Model::IBone*         pRootBone,
                                  Model::IAnimationSet* pAnimSet);
 
+        /**
+        * Builds the source vertices
+        *@param header - header
+        *@param vertexArrays - vertex arrays
+        *@param buffer - source buffer to read from
+        *@param srcVertices - source vertices to populate
+        *@return true on success, otherwise false
+        */
         bool BuildSrcVertices(const IHeader&       header,
                               const IVertexArrays& vertexArrays,
                                     Buffer&        buffer,
                                     IVertices&     srcVertices);
 
+        /**
+        * Builds the weights from the skeleton
+        *@param pBone - parent bone
+        *@param meshIndex - mesh index
+        *@param pDeformers - deformers (i.e. weights groups) to populate
+        *@return true on success, otherwise false
+        */
         bool BuildWeightsFromSkeleton(Model::IBone*      pBone,
                                       std::size_t        meshIndex,
                                       Model::IDeformers* pDeformers);
@@ -610,12 +664,34 @@ class IQMModel
         */
         Model::IBone* FindBone(Model::IBone* pBone, std::size_t index) const;
 
+        /**
+        * Gets an existing vertex at index, or adds it if still not exists
+        *@param index - index
+        *@param[in, out] srcVertices - source vertices, vertices in which the vertex will be added on function ends
+        *@return get or newly added vertex
+        */
         IVertex* GetOrAddVertex(std::size_t index, IVertices& srcVertices) const;
 
+        /**
+        * Converts a quaternion to a matrix
+        *@param quat - quaternion to convert
+        *@param[out] mat - matrix
+        */
         void QuatToRotMat(const QuaternionF& quat, Matrix4x4F& mat) const;
 
+        /**
+        * Gets the text index
+        *@param texts - texts
+        *@param offset - text offset to find
+        *@return text index
+        */
         int GetTextIndex(const ITexts& texts, std::size_t offset) const;
 
+        /**
+        * Gets the inverse bind matrix
+        *@param pBone - bone from which the inverse bind matrix should be get
+        *@param[out] outMatrix - resulting inverse matrix
+        */
         void GetInverseBindMatrix(const Model::IBone* pBone, Matrix4x4F& outMatrix) const;
 
         /**

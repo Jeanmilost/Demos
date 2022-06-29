@@ -649,16 +649,28 @@ IQMModel::~IQMModel()
 {
     if (m_pModel)
         delete m_pModel;
+
+    for (IVBCache::iterator it = m_VBCache.begin(); it != m_VBCache.end(); ++it)
+        delete (*it);
+}
+//---------------------------------------------------------------------------
+void IQMModel::Clear()
+{
+    if (m_pModel)
+        delete m_pModel;
+
+    m_pModel = nullptr;
+
+    for (IVBCache::iterator it = m_VBCache.begin(); it != m_VBCache.end(); ++it)
+        delete (*it);
+
+    m_VBCache.clear();
 }
 //---------------------------------------------------------------------------
 bool IQMModel::Open(const std::string& fileName)
 {
-    // delete the previous model, if exists
-    if (m_pModel)
-    {
-        delete m_pModel;
-        m_pModel = nullptr;
-    }
+    // clear the previous model, if exists
+    Clear();
 
     // no file name?
     if (fileName.empty())
@@ -718,24 +730,23 @@ bool IQMModel::Open(Buffer& buffer)
 //---------------------------------------------------------------------------
 Model* IQMModel::GetModel(int animSetIndex, int frameCount, int frameIndex) const
 {
+    // no model?
     if (!m_pModel)
         return nullptr;
 
-    // only get the mesh and ignore all other data like bones?
-    if (m_pModel->m_MeshOnly)
+    // if mesh has no skeleton, or if only the pose is required, perform a simple draw
+    if (!m_pModel->m_pSkeleton || m_pModel->m_PoseOnly)
         return m_pModel;
 
-    // if mesh has no skeleton, just get it
-    if (!m_pModel->m_pSkeleton)
-        return m_pModel;
+    // clear the animation matrix cache
+    const_cast<IAnimBoneCacheDict&>(m_AnimBoneCacheDict).clear();
 
-    /*REM
     const std::size_t meshCount = m_pModel->m_Mesh.size();
 
-    // iterate through the meshes to get
+    // iterate through model meshes
     for (std::size_t i = 0; i < meshCount; ++i)
     {
-        // get the current model mesh to draw
+        // get model mesh
         Mesh* pMesh = m_pModel->m_Mesh[i];
 
         // found it?
@@ -748,63 +759,78 @@ Model* IQMModel::GetModel(int animSetIndex, int frameCount, int frameIndex) cons
             // exists, a custom version of this function should also be written for it)
             continue;
 
-        // mesh contains deformers?
-        if (m_pModel->m_Deformers[i]->m_SkinWeights.size())
+        // malformed deformers?
+        if (meshCount != m_pModel->m_Deformers.size())
+            return nullptr;
+
+        const std::size_t weightCount = m_pModel->m_Deformers[i]->m_SkinWeights.size();
+
+        // mesh contains skin weights?
+        if (!weightCount)
+            return nullptr;
+
+        // clear the previous vertex buffer vertices in order to rebuild them
+        for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
         {
-            // clear the previous print vertices (needs to be cleared to properly apply the weights)
-            for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
+            pMesh->m_VB[0]->m_Data[j] = 0.0f;
+            pMesh->m_VB[0]->m_Data[j + 1] = 0.0f;
+            pMesh->m_VB[0]->m_Data[j + 2] = 0.0f;
+        }
+
+        // iterate through mesh skin weights
+        for (std::size_t j = 0; j < weightCount; ++j)
+        {
+            Matrix4x4F boneMatrix;
+
+            // get the bone matrix
+            if (m_pModel->m_PoseOnly)
+                m_pModel->GetBoneMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
+            else
+                GetBoneAnimMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
+                                  m_pModel->m_AnimationSet[animSetIndex],
+                                  frameIndex,
+                                  Matrix4x4F::Identity(),
+                                  boneMatrix);
+
+            // get the final matrix after bones transform
+            const Matrix4x4F finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
+
+            // get the weight influence count
+            const std::size_t weightInfluenceCount = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size();
+
+            // apply the bone and its skin weights to each vertices
+            for (std::size_t k = 0; k < weightInfluenceCount; ++k)
             {
-                pMesh->m_VB[0]->m_Data[j]     = 0.0f;
-                pMesh->m_VB[0]->m_Data[j + 1] = 0.0f;
-                pMesh->m_VB[0]->m_Data[j + 2] = 0.0f;
-            }
+                // get the vertex index count
+                const std::size_t vertexIndexCount =
+                    m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size();
 
-            // iterate through mesh skin weights
-            for (std::size_t j = 0; j < m_pModel->m_Deformers[i]->m_SkinWeights.size(); ++j)
-            {
-                Matrix4x4F boneMatrix;
+                // iterate through weights influences vertex indices
+                for (std::size_t l = 0; l < vertexIndexCount; ++l)
+                {
+                    // get the next vertex to which the next skin weight should be applied
+                    const std::size_t iX = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
+                    const std::size_t iY = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
+                    const std::size_t iZ = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
 
-                // get the bone matrix
-                if (m_pModel->m_PoseOnly)
-                    m_pModel->GetBoneMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone, Matrix4x4F::Identity(), boneMatrix);
-                else
-                    GetBoneAnimMatrix(m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_pBone,
-                                      m_pModel->m_AnimationSet[animSetIndex],
-                                      frameIndex,
-                                      Matrix4x4F::Identity(),
-                                      boneMatrix);
+                    Vector3F inputVertex;
 
-                // get the final matrix after bones transform
-                const Matrix4x4F finalMatrix = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Matrix.Multiply(boneMatrix);
+                    // get input vertex
+                    inputVertex.m_X = (*m_VBCache[i])[iX];
+                    inputVertex.m_Y = (*m_VBCache[i])[iY];
+                    inputVertex.m_Z = (*m_VBCache[i])[iZ];
 
-                // apply the bone and its skin weights to each vertices
-                for (std::size_t k = 0; k < m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences.size(); ++k)
-                    for (std::size_t l = 0; l < m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex.size(); ++l)
-                    {
-                        // get the next vertex to which the next skin weight should be applied
-                        const std::size_t iX = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l];
-                        const std::size_t iY = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 1;
-                        const std::size_t iZ = m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_WeightInfluences[k]->m_VertexIndex[l] + 2;
+                    // apply bone transformation to vertex
+                    const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
 
-                        Vector3F inputVertex;
-
-                        // get input vertex
-                        inputVertex.m_X = m_SourceVB[i]->m_Data[iX];
-                        inputVertex.m_Y = m_SourceVB[i]->m_Data[iY];
-                        inputVertex.m_Z = m_SourceVB[i]->m_Data[iZ];
-
-                        // apply bone transformation to vertex
-                        const Vector3F outputVertex = finalMatrix.Transform(inputVertex);
-
-                        // apply the skin weights and calculate the final output vertex
-                        pMesh->m_VB[0]->m_Data[iX] += (outputVertex.m_X * m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                        pMesh->m_VB[0]->m_Data[iY] += (outputVertex.m_Y * m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                        pMesh->m_VB[0]->m_Data[iZ] += (outputVertex.m_Z * m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
-                    }
+                    // apply the skin weights and calculate the final output vertex
+                    pMesh->m_VB[0]->m_Data[iX] += (outputVertex.m_X * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                    pMesh->m_VB[0]->m_Data[iY] += (outputVertex.m_Y * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                    pMesh->m_VB[0]->m_Data[iZ] += (outputVertex.m_Z * (float)m_pModel->m_Deformers[i]->m_SkinWeights[j]->m_Weights[k]);
+                }
             }
         }
     }
-    */
 
     return m_pModel;
 }
@@ -1218,15 +1244,6 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                              const IComments&     comments,
                              const IExtensions&   extensions)
 {
-    /*REM
-    size_t           i;
-    size_t           j;
-    size_t           k;
-    size_t           l;
-    size_t           m;
-    CSR_IQMVertices* pSrcVertices;
-    */
-
     // create the model
     m_pModel = new Model();
     m_pModel->m_MeshOnly = m_MeshOnly;
@@ -1284,102 +1301,28 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
     }
 
     // create a source vertices container
-    //REM pSrcVertices = (CSR_IQMVertices*)malloc(sizeof(CSR_IQMVertices));
     IVertices srcVertices;
-
-    /*REM
-    // succeeded?
-    if (!pSrcVertices)
-        return 0;
-    */
-
-    /*REM
-    // initialize it
-    pSrcVertices->m_pVertex = 0;
-    pSrcVertices->m_Count = 0;
-    */
 
     // read the source vertices
     if (!BuildSrcVertices(header, vertexArrays, buffer, srcVertices))
         return false;
 
     // reserve memory for the meshes
-    //REM m_pModel->m_pMesh = (CSR_Mesh*)malloc(pMeshes->m_Count * sizeof(CSR_Mesh));
     m_pModel->m_Mesh.reserve(meshes.size());
-
-    /*REM
-    // succeeded?
-    if (!pModel->m_pMesh)
-    {
-        free(pSrcVertices->m_pVertex);
-        free(pSrcVertices);
-        return 0;
-    }
-    */
-
-    /*REM
-    // iterate through the created meshes and initialize them
-    for (std::size_t i = 0; i < meshes.size(); ++i)
-        csrMeshInit(&pModel->m_pMesh[i]);
-
-    // set the mesh count
-    pModel->m_MeshCount = pMeshes->m_Count;
-    */
 
     // do build the weights?
     if (!m_MeshOnly)
-    {
         // reserve memory for the mesh deformers
-        //REM m_pModel->m_pMeshWeights = (CSR_Skin_Weights_Group*)malloc(pMeshes->m_Count * sizeof(CSR_Skin_Weights_Group));
         m_pModel->m_Deformers.reserve(meshes.size());
 
-        /*REM
-        // succeeded?
-        if (!pModel->m_pMeshWeights)
-        {
-            free(pSrcVertices->m_pVertex);
-            free(pSrcVertices);
-            return 0;
-        }
-        */
-
-        /*REM
-        // iterate through the created weights groups and initialize them
-        for (std::size_t i = 0; i < meshes.size(); ++i)
-        {
-            pModel->m_pMeshWeights[i].m_pSkinWeights = 0;
-            pModel->m_pMeshWeights[i].m_Count = 0;
-        }
-        */
-
-        // set the weights groups count
-        //REM m_pModel->m_MeshWeightsCount = pMeshes->m_Count;
-    }
+    // should take care of the pose only?
+    if (!m_PoseOnly)
+        m_VBCache.resize(meshes.size());
 
     // iterate through the source meshes
     for (std::size_t i = 0; i < meshes.size(); ++i)
     {
-        /*REM
-        int                     canRelease;
-        CSR_Mesh* pMesh;
-        CSR_Skin_Weights_Group* pWeightsGroup = 0;
-
-        // get the next mesh
-        pMesh = &pModel->m_pMesh[i];
-        */
         std::unique_ptr<Mesh> pMesh = std::make_unique<Mesh>();
-
-        // reserve memory for the vertex buffer
-        //REM pMesh->m_VB.reserve();
-
-        /*REM
-        // create the mesh vertex buffer
-        pMesh->m_Count = 1;
-        pMesh->m_pVB = (CSR_VertexBuffer*)malloc(sizeof(CSR_VertexBuffer));
-
-        // prepare the vertex buffer format
-        csrVertexBufferInit(pMesh->m_pVB);
-        */
 
         // create the vertex buffer
         std::unique_ptr<VertexBuffer> pVB = std::make_unique<VertexBuffer>();
@@ -1399,19 +1342,12 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
         // calculate the vertex stride
         pVB->m_Format.CalculateStride();
 
-        // reserve memory for the vertex buffer
-        //REM pVB->m_Data = (float*)malloc(pMesh->m_pVB->m_Format.m_Stride * sizeof(float));
-        //REM pVB->m_Data.reserve((std::size_t)meshes[i]->m_TriangleCount * 3 * pVB->m_Format.m_Stride);
-
         Model::IDeformers* pCurDeformers = nullptr;
 
         // do build the weights?
         if (!m_MeshOnly)
         {
             std::unique_ptr<Model::IDeformers> pDeformers = std::make_unique<Model::IDeformers>();
-
-            // get the next weights group
-            //REM pWeightsGroup = &pModel->m_pMeshWeights[i];
 
             // populate the skin weights group
             if (!BuildWeightsFromSkeleton(m_pModel->m_pSkeleton, i, pDeformers.get()))
@@ -1450,14 +1386,6 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                     // iterate through vertex weights
                     for (std::size_t l = 0; l < 4 && srcVertices[vertIndex]->m_BlendWeights[l]; ++l)
                     {
-                        /*REM
-                        size_t                       weightIndex;
-                        CSR_Skin_Weights* pWeights = 0;
-                        CSR_Bone* pBone = 0;
-                        float* pWeightsArray = 0;
-                        CSR_Skin_Weight_Index_Table* pIndexTable = 0;
-                        */
-
                         // get the bone matching with weight to animate
                         Model::IBone* pBone = FindBone(m_pModel->m_pSkeleton,
                                                        srcVertices[vertIndex]->m_BlendIndices[l]);
@@ -1484,71 +1412,8 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                         if (pWeights->m_Weights.size() != pWeights->m_WeightInfluences.size())
                             return false;
 
-                        /*REM
-                        weightIndex = pWeights->m_WeightCount;
-
-                        // add a new weights in the array
-                        pWeightsArray = (float*)csrMemoryAlloc(pWeights->m_pWeights,
-                                                               sizeof(float),
-                                                               pWeights->m_WeightCount + 1);
-
-                        // succeeded?
-                        if (!pWeightsArray)
-                        {
-                            free(pSrcVertices->m_pVertex);
-                            free(pSrcVertices);
-                            return 0;
-                        }
-
-                        // set new weights array in the skin weights
-                        pWeights->m_pWeights = pWeightsArray;
-                        ++pWeights->m_WeightCount;
-
-                        // write the weight value
-                        pWeights->m_pWeights[weightIndex] =
-                            (float)pSrcVertices->m_pVertex[vertIndex].m_BlendWeights[l] / 255.0f;
-                        */
-
                         // write the weight value
                         pWeights->m_Weights.push_back((float)srcVertices[vertIndex]->m_BlendWeights[l] / 255.0f);
-
-                        /*REM
-                        // add a new index table in the array
-                        pIndexTable =
-                            (CSR_Skin_Weight_Index_Table*)csrMemoryAlloc(pWeights->m_pIndexTable,
-                                                                         sizeof(CSR_Skin_Weight_Index_Table),
-                                                                         pWeights->m_IndexTableCount + 1);
-
-                        // succeeded?
-                        if (!pIndexTable)
-                        {
-                            free(pSrcVertices->m_pVertex);
-                            free(pSrcVertices);
-                            return 0;
-                        }
-
-                        // set new index table in the skin weights
-                        pWeights->m_pIndexTable = pIndexTable;
-                        ++pWeights->m_IndexTableCount;
-                        */
-
-                        /*REM
-                        // initialize the skin weights table
-                        pWeights->m_pIndexTable[weightIndex].m_Count = 0;
-                        pWeights->m_pIndexTable[weightIndex].m_pData = (size_t*)malloc(sizeof(size_t));
-
-                        // succeeded?
-                        if (!pWeights->m_pIndexTable[weightIndex].m_pData)
-                        {
-                            free(pSrcVertices->m_pVertex);
-                            free(pSrcVertices);
-                            return 0;
-                        }
-
-                        // populate the index
-                        *(pWeights->m_pIndexTable[weightIndex].m_pData) = (size_t)((j * 3) + k) * pModel->m_pMesh[i].m_pVB[0].m_Format.m_Stride;
-                        pWeights->m_pIndexTable[weightIndex].m_Count = 1;
-                        */
 
                         std::unique_ptr<Model::IWeightInfluence> pWeightInfluence = std::make_unique<Model::IWeightInfluence>();
 
@@ -1569,6 +1434,14 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
         {
             const size_t materialIndex              = GetTextIndex(texts, meshes[i]->m_Material);
                          pVB->m_Material.m_pTexture = m_fOnLoadTexture(texts[materialIndex]->m_Text, true);
+        }
+
+        // should take care of the pose only?
+        if (!m_PoseOnly)
+        {
+            // cache the vertex buffer
+             m_VBCache[i] = new VertexBuffer::IData();
+            *m_VBCache[i] = pVB->m_Data;
         }
 
         // set the vertex buffer in the mesh
