@@ -639,7 +639,7 @@ IQMModel::IQMModel(bool meshOnly, bool poseOnly) :
 
     // configure the default vertex culling
     m_VertCullingTemplate.m_Type = VertexCulling::IECullingType::IE_CT_Back;
-    m_VertCullingTemplate.m_Face = VertexCulling::IECullingFace::IE_CF_CCW;
+    m_VertCullingTemplate.m_Face = VertexCulling::IECullingFace::IE_CF_CW;
 
     // configure the default material
     m_MaterialTemplate.m_Color = ColorF(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1562,38 +1562,14 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
             }
         }
 
-        /*
         // do load the texture?
-        if (pMesh->m_pVB->m_Format.m_HasTexCoords && pMeshes->m_pMesh[i].m_Material)
+        if ((std::size_t)pVB->m_Format.m_Format & (std::size_t)VertexFormat::IEFormat::IE_VF_TexCoords &&
+            meshes[i]->m_Material                                                                      &&
+            m_fOnLoadTexture)
         {
-            const size_t materialIndex = csrIQMGetTextIndex(pTexts, pMeshes->m_pMesh[i].m_Material);
-
-            // measure the file name length and allocate memory for file name in local mesh
-            const size_t fileNameLen = strlen(pTexts->m_pTexts[materialIndex]);
-            pMesh->m_Skin.m_Texture.m_pFileName = (char*)calloc(fileNameLen + 1, sizeof(char));
-
-            // copy the file name
-            if (pMesh->m_Skin.m_Texture.m_pFileName)
-                memcpy(pMesh->m_Skin.m_Texture.m_pFileName, pTexts->m_pTexts[materialIndex], fileNameLen);
-
-            // load the texture
-            if (fOnLoadTexture)
-                pMesh->m_Skin.m_Texture.m_pBuffer = fOnLoadTexture(pTexts->m_pTexts[materialIndex]);
-
-            canRelease = 0;
-
-            // apply the skin
-            if (fOnApplySkin)
-                fOnApplySkin(0, &pMesh->m_Skin, &canRelease);
-
-            // can release the texture buffer?
-            if (canRelease)
-            {
-                csrPixelBufferRelease(pMesh->m_Skin.m_Texture.m_pBuffer);
-                pMesh->m_Skin.m_Texture.m_pBuffer = 0;
-            }
+            const size_t materialIndex              = GetTextIndex(texts, meshes[i]->m_Material);
+                         pVB->m_Material.m_pTexture = m_fOnLoadTexture(texts[materialIndex]->m_Text, true);
         }
-        */
 
         // set the vertex buffer in the mesh
         pMesh->m_VB.push_back(pVB.get());
@@ -1603,12 +1579,6 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
         m_pModel->m_Mesh.push_back(pMesh.get());
         pMesh.release();
     }
-
-    /*REM
-    // release the memory
-    free(pSrcVertices->m_pVertex);
-    free(pSrcVertices);
-    */
 
     return true;
 }

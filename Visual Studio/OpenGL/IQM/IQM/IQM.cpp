@@ -171,7 +171,7 @@ Texture* OnLoadTexture(const std::string& textureName, bool is32bit)
     std::size_t length  = 0;
     void*       pPixels = nullptr;
 
-    if (!TextureHelper::OpenBitmapData("Resources\\Models\\Tiny\\" + textureName, width, height, format, length, pPixels))
+    if (!TextureHelper::OpenTgaData("Resources\\" + textureName, width, height, format, length, pPixels))
         return nullptr;
 
     if (!pPixels)
@@ -459,7 +459,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     lineShader.Link(true);
 
     IQMModel iqm;
-    //iqm.Set_OnLoadTexture(OnLoadTexture);
+    iqm.Set_OnLoadTexture(OnLoadTexture);
     iqm.Open("Resources\\Deborah.iqm");
 
     Matrix4x4F projMatrix;
