@@ -307,16 +307,6 @@ void DrawSkeleton(const IQMModel&        iqmModel,
 //---------------------------------------------------------------------------
 void BuildModelMatrix(float angle, Matrix4x4F& matrix)
 {
-    /*REM
-    CSR_Vector3 axis = {};
-    CSR_Vector3 factor = {};
-    CSR_Matrix4 rotateXMatrix;
-    CSR_Matrix4 rotateYMatrix;
-    CSR_Matrix4 scaleMatrix;
-    CSR_Matrix4 intermediateMatrix;
-
-    csrMat4Identity(pMatrix);
-    */
     Matrix4x4F defMatrix = Matrix4x4F::Identity();
     Vector3F   axis;
 
@@ -343,9 +333,6 @@ void BuildModelMatrix(float angle, Matrix4x4F& matrix)
     Vector3F factor;
 
     // set scale factor
-    //factor.m_X = 0.15f;
-    //factor.m_Y = 0.15f;
-    //factor.m_Z = 0.15f;
     factor.m_X = 0.005f;
     factor.m_Y = 0.005f;
     factor.m_Z = 0.005f;
@@ -358,8 +345,7 @@ void BuildModelMatrix(float angle, Matrix4x4F& matrix)
                matrix             = intermediateMatrix.Multiply(rotateYMatrix);
 
     // place it in the world
-    matrix.m_Table[3][0] = 0.0f;
-    //pMatrix->m_Table[3][1] = -0.55f;
+    matrix.m_Table[3][0] =  0.0f;
     matrix.m_Table[3][1] = -0.35f;
     matrix.m_Table[3][2] = -2.0f;
 }
@@ -526,8 +512,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             double elapsedTime = (double)::GetTickCount64() - lastTime;
             lastTime           = (double)::GetTickCount64();
             angle              = std::fmodf(angle + ((float)elapsedTime * 0.001f), 2.0f * (float)M_PI);
-
-            //REM Sleep(1);
         }
     }
 

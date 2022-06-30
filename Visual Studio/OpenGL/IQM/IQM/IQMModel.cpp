@@ -772,7 +772,7 @@ Model* IQMModel::GetModel(int animSetIndex, int frameCount, int frameIndex) cons
         // clear the previous vertex buffer vertices in order to rebuild them
         for (std::size_t j = 0; j < pMesh->m_VB[0]->m_Data.size(); j += pMesh->m_VB[0]->m_Format.m_Stride)
         {
-            pMesh->m_VB[0]->m_Data[j] = 0.0f;
+            pMesh->m_VB[0]->m_Data[j]     = 0.0f;
             pMesh->m_VB[0]->m_Data[j + 1] = 0.0f;
             pMesh->m_VB[0]->m_Data[j + 2] = 0.0f;
         }
@@ -1245,7 +1245,7 @@ bool IQMModel::PopulateModel(      Buffer&        buffer,
                              const IExtensions&   extensions)
 {
     // create the model
-    m_pModel = new Model();
+    m_pModel             = new Model();
     m_pModel->m_MeshOnly = m_MeshOnly;
     m_pModel->m_PoseOnly = m_PoseOnly;
 
