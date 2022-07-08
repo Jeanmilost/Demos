@@ -26,7 +26,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
  ****************************************************************************/
 
- // classes
+// classes
 #include "IQMModel.h"
 #include "TextureHelper.h"
 #include "Texture_OpenGL.h"

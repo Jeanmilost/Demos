@@ -28,7 +28,7 @@
 
 #include "Shader_OpenGL.h"
 
- // std
+// std
 #include <fstream>
 #include <sstream>
 

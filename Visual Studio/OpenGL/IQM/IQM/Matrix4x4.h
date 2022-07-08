@@ -32,7 +32,7 @@
 #include <memory>
 #include <cmath>
 
-// retrograde engine
+// classes
 #include "Vector3.h"
 
 /**

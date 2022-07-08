@@ -28,7 +28,7 @@
 
 #pragma once
 
- // std
+// std
 #include <vector>
 #include <map>
 

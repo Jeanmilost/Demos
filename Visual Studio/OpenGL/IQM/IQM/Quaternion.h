@@ -31,7 +31,7 @@
 // std
 #include <algorithm>
 
-// retrograde engine
+// classes
 #include "Vector3.h"
 #include "Matrix4x4.h"
 

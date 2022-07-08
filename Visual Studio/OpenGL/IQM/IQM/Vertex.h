@@ -28,7 +28,7 @@
 
 #pragma once
 
- // std
+// std
 #include <vector>
 #include <string>
 
@@ -40,6 +40,7 @@
 
 /**
 * Material, describes the way a mesh reacts to its environment
+*@author Jean-Milost Reymond
 */
 class Material
 {
@@ -55,6 +56,7 @@ class Material
 
 /**
 * Vertex format
+*@author Jean-Milost Reymond
 */
 class VertexFormat
 {
@@ -106,6 +108,7 @@ class VertexFormat
 
 /**
 * Vertex culling
+*@author Jean-Milost Reymond
 */
 class VertexCulling
 {
@@ -192,6 +195,7 @@ class VertexBuffer
 
 /**
 * Mesh
+*@author Jean-Milost Reymond
 */
 class Mesh
 {

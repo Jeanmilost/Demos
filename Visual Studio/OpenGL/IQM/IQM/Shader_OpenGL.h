@@ -28,7 +28,7 @@
 
 #pragma once
 
- // std
+// std
 #include <string>
 
 // classes
