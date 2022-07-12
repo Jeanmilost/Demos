@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Texture -------------------------------------------------------------*
  ****************************************************************************
- * Description : Texture descriptor                                         *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Texture descriptor                                          *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - iqm model reader                                           *
  *                                                                          *
@@ -132,7 +132,7 @@ class Texture
 
         /**
         * Selects the texture
-        *@param pShader - shader
+        *@param pShader - shader to use for the rendering
         */
         virtual void Select(const Shader* pShader) const = 0;
 

@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> MemoryBuffer --------------------------------------------------------*
  ****************************************************************************
- * Description : Buffer keeping data in memory                              *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Buffer keeping data in memory                               *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - iqm model reader                                           *
  *                                                                          *

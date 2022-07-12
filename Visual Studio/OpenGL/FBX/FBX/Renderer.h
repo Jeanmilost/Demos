@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Renderer ------------------------------------------------------------*
  ****************************************************************************
- * Description : Generic renderer                                           *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Generic renderer                                            *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - fbx model reader                                           *
  *                                                                          *
@@ -28,7 +28,7 @@
 
 #pragma once
 
- // std
+// std
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string>
@@ -317,14 +317,14 @@ Matrix4x4<T> Renderer::GetFrustum(T left, T right, T bottom, T top, T zNear, T z
         throw new std::exception("Incorrect input values - cannot create frustum matrix");
 
     // calculate matrix component values
-    const T x2n = T(2.0) * zNear;
-    const T x2nf = x2n   * zFar;
-    const T pfn = zFar   + zNear;
-    const T mnf = zNear  - zFar;
-    const T prl = right  + left;
-    const T mrl = right  - left;
-    const T ptb = top    + bottom;
-    const T mtb = top    - bottom;
+    const T x2n  = T(2.0) * zNear;
+    const T x2nf = x2n    * zFar;
+    const T pfn  = zFar   + zNear;
+    const T mnf  = zNear  - zFar;
+    const T prl  = right  + left;
+    const T mrl  = right  - left;
+    const T ptb  = top    + bottom;
+    const T mtb  = top    - bottom;
 
     // build matrix
     return Matrix4x4<T>(x2n / mrl, T(0.0),    T(0.0),    T(0.0),
@@ -346,8 +346,8 @@ Matrix4x4<T> Renderer::GetPerspective(T    fov,
     // do use orthogonal perspective?
     if (ortho)
         return GetOrtho(-maxX, maxX, -maxY, maxY, zNear, zFar);
-    else
-        return GetFrustum(-maxX, maxX, -maxY, maxY, zNear, zFar);
+
+    return GetFrustum(-maxX, maxX, -maxY, maxY, zNear, zFar);
 }
 //---------------------------------------------------------------------------
 template <class T>
@@ -390,17 +390,17 @@ void Renderer::Unproject(const Matrix4x4<T>& projectionMatrix,
                                Vector3<T>&   rayPos,
                                Vector3<T>&   rayDir)
 {
-    float determinant;
+    T determinant = T(0.0);
 
     // unproject the ray to make it in the viewport coordinates
     const Matrix4x4<T> invertProj = const_cast<Matrix4x4<T>&>(projectionMatrix).Inverse(determinant);
-    rayPos                        = invertProj.Transform(rayPos);
-    rayDir                        = invertProj.Transform(rayDir);
-    rayDir                        = rayDir.Normalize();
+                       rayPos     = invertProj.Transform(rayPos);
+                       rayDir     = invertProj.Transform(rayDir);
+                       rayDir     = rayDir.Normalize();
 
     const Matrix4x4<T> invertView = const_cast<Matrix4x4<T>&>(viewMatrix).Inverse(determinant);
-    rayPos                        = invertView.Transform(rayPos);
-    rayDir                        = invertView.TransformNormal(rayDir);
-    rayDir                        = rayDir.Normalize();
+                       rayPos     = invertView.Transform(rayPos);
+                       rayDir     = invertView.TransformNormal(rayDir);
+                       rayDir     = rayDir.Normalize();
 }
 //---------------------------------------------------------------------------

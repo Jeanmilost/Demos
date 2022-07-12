@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Renderer_OpenGL -----------------------------------------------------*
  ****************************************************************************
- * Description : Renderer using OpenGL for drawing                          *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: OpenGL renderer                                             *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - iqm model reader                                           *
  *                                                                          *

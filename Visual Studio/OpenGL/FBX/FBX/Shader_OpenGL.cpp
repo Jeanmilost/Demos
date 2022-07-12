@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Shader_OpenGL -------------------------------------------------------*
  ****************************************************************************
- * Description : Shader language implemented for OpenGL                     *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Shader language implemented for OpenGL                      *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - fbx model reader                                           *
  *                                                                          *
@@ -28,7 +28,7 @@
 
 #include "Shader_OpenGL.h"
 
- // std
+// std
 #include <fstream>
 #include <sstream>
 

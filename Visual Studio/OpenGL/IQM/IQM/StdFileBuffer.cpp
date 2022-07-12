@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> StdFileBuffer -------------------------------------------------------*
  ****************************************************************************
- * Description : File buffer based on the std library                       *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: File buffer based on the std library                        *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - iqm model reader                                           *
  *                                                                          *

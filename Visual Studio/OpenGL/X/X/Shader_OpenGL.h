@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Shader_OpenGL -------------------------------------------------------*
  ****************************************************************************
- * Description : Shader language implemented for OpenGL                     *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Shader language implemented for OpenGL                      *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - x model reader                                             *
  *                                                                          *
@@ -28,7 +28,7 @@
 
 #pragma once
 
- // std
+// std
 #include <string>
 
 // classes

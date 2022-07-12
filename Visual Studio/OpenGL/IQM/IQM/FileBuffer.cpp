@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> FileBuffer ----------------------------------------------------------*
  ****************************************************************************
- * Description : Generic file buffer                                        *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Generic file buffer                                         *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - iqm model reader                                           *
  *                                                                          *

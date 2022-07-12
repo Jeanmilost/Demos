@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Matrix4x4 -----------------------------------------------------------*
  ****************************************************************************
- * Description : 4x4 matrix                                                 *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: 4x4 matrix                                                  *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - fbx model reader                                           *
  *                                                                          *
@@ -32,7 +32,7 @@
 #include <memory>
 #include <cmath>
 
-// retrograde engine
+// classes
 #include "Vector3.h"
 
 /**

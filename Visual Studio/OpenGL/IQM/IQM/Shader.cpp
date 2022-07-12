@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Shader --------------------------------------------------------------*
  ****************************************************************************
- * Description : Basic shader language class                                *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Basic shader language class                                 *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - iqm model reader                                           *
  *                                                                          *

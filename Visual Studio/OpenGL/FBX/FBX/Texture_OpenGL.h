@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Texture_OpenGL ------------------------------------------------------*
  ****************************************************************************
- * Description : Provides a texture class based on OpenGL                   *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Provides a texture descriptor based on OpenGL               *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - fbx model reader                                           *
  *                                                                          *

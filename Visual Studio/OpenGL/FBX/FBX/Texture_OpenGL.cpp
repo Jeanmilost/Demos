@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Texture_OpenGL ------------------------------------------------------*
  ****************************************************************************
- * Description : Provides a texture descriptor based on OpenGL              *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: Provides a texture descriptor based on OpenGL               *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - fbx model reader                                           *
  *                                                                          *
@@ -92,7 +92,7 @@ void Texture_OpenGL::Delete()
     }
 }
 //---------------------------------------------------------------------------
-void Texture_OpenGL::Select(const  Shader* pShader) const
+void Texture_OpenGL::Select(const Shader* pShader) const
 {
     // no texture?
     if (!m_Index)

@@ -1,8 +1,8 @@
 /****************************************************************************
  * ==> Vector2 -------------------------------------------------------------*
  ****************************************************************************
- * Description : 2D vector                                                  *
- * Developer   : Jean-Milost Reymond                                        *
+ * Description: 2D vector                                                   *
+ * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License - iqm model reader                                           *
  *                                                                          *
@@ -373,7 +373,7 @@ bool Vector2<T>::operator !=(const Vector2& value) const
 template <class T>
 T Vector2<T>::Length() const
 {
-    return (T)sqrt(double(m_X * m_X) + double(m_Y * m_Y));
+    return (T)sqrt((T)(m_X * m_X) + (T)(m_Y * m_Y));
 }
 //---------------------------------------------------------------------------
 template <class T>
