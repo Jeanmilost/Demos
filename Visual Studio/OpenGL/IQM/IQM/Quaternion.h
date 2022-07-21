@@ -480,7 +480,7 @@ Quaternion<T> Quaternion<T>::FromMatrix(const Matrix4x4<T>& matrix, bool& error)
     if (matrix.m_Table[0][0] > matrix.m_Table[1][1] && matrix.m_Table[0][0] > matrix.m_Table[2][2])
     {
         // calculate scale using the first diagonal element and double that value
-        const T scale = sqrt(1.0f + matrix.m_Table[0][0] - matrix.m_Table[1][1] - matrix.m_Table[2][2]) * 2.0f;
+        const T scale = sqrt(T(1.0) + matrix.m_Table[0][0] - matrix.m_Table[1][1] - matrix.m_Table[2][2]) * T(2.0);
 
         // should not happen, but better to verify
         if (!scale)
@@ -499,7 +499,7 @@ Quaternion<T> Quaternion<T>::FromMatrix(const Matrix4x4<T>& matrix, bool& error)
     if (matrix.m_Table[1][1] > matrix.m_Table[2][2])
     {
         // calculate scale using the second diagonal element and double that value
-        const T scale = sqrt(1.0f + matrix.m_Table[1][1] - matrix.m_Table[0][0] - matrix.m_Table[2][2]) * 2.0f;
+        const T scale = sqrt(T(1.0) + matrix.m_Table[1][1] - matrix.m_Table[0][0] - matrix.m_Table[2][2]) * T(2.0);
 
         // should not happen, but better to verify
         if (!scale)
@@ -510,13 +510,13 @@ Quaternion<T> Quaternion<T>::FromMatrix(const Matrix4x4<T>& matrix, bool& error)
 
         // calculate the quaternion values using the respective equation
         return Quaternion((matrix.m_Table[0][1] + matrix.m_Table[1][0]) / scale,
-                          0.25f * scale,
+                          T(0.25) * scale,
                           (matrix.m_Table[1][2] + matrix.m_Table[2][1]) / scale,
                           (matrix.m_Table[2][0] - matrix.m_Table[0][2]) / scale);
     }
 
     // calculate scale using the third diagonal element and double that value
-    const T scale = sqrt(1.0f + matrix.m_Table[2][2] - matrix.m_Table[0][0] - matrix.m_Table[1][1]) * 2.0f;
+    const T scale = sqrt(T(1.0) + matrix.m_Table[2][2] - matrix.m_Table[0][0] - matrix.m_Table[1][1]) * T(2.0);
 
     // should not happen, but better to verify
     if (!scale)
@@ -528,7 +528,7 @@ Quaternion<T> Quaternion<T>::FromMatrix(const Matrix4x4<T>& matrix, bool& error)
     // calculate the quaternion values using the respective equation
     return Quaternion((matrix.m_Table[2][0] + matrix.m_Table[0][2]) / scale,
                       (matrix.m_Table[1][2] + matrix.m_Table[2][1]) / scale,
-                      0.25f * scale,
+                      T(0.25) * scale,
                       (matrix.m_Table[0][1] - matrix.m_Table[1][0]) / scale);
 }
 //---------------------------------------------------------------------------
