@@ -8,7 +8,7 @@ Below is a very simple method to create high quality animated characters which m
 You will need the following applications, all of them are free and may be downloaded from their official website:
 - [Makehuman](http://www.makehumancommunity.org/)
 - [Blender](https://www.blender.org/)
-- The [Inter-Quake Model](https://github.com/lsalzman/iqm) explorer for Blender
+- The [Inter-Quake Model](https://github.com/lsalzman/iqm) exporter for Blender
 - [HxD Editor](https://mh-nexus.de/en/hxd/)
 
 An account to the [Adobe Mixamo](https://www.mixamo.com/) website is also required, you can create one for free if you still don't have one.
