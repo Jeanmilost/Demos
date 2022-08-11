@@ -43,9 +43,9 @@
 #include <GL/glew.h>
 
 //------------------------------------------------------------------------------
+int  g_LastKnownFrame = 0;
 bool g_ShowSkeleton   = false;
 bool g_PauseAnim      = false;
-int  g_LastKnownFrame = 0;
 //------------------------------------------------------------------------------
 const char vertexShader[] = "precision mediump float;"
                             "attribute    vec3 aVertices;"
@@ -120,41 +120,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
 
             break;
-
-        /*REM
-        case WM_SIZE:
-        {
-            if (!g_Initialized)
-                break;
-
-            const int width = ((int)(short)LOWORD(lParam));
-            const int height = ((int)(short)HIWORD(lParam));
-
-            // update the viewport
-            CSR_OpenGLHelper::CreateViewport((float)width,
-                                             (float)height,
-                                             0.1f,
-                                             100.0f,
-                                             g_pShader,
-                                             g_pScene->m_ProjectionMatrix);
-
-        #ifdef SHOW_SKELETON
-            // create the line shader viewport
-            CSR_OpenGLHelper::CreateViewport((float)width,
-                                             (float)height,
-                                             0.1f,
-                                             1000.0f,
-                                             g_pLineShader,
-                                             g_pScene->m_ProjectionMatrix);
-        #endif
-
-            UpdateScene(0.0f);
-            DrawScene();
-
-            ::SwapBuffers(g_hDC);
-            break;
-        }
-        */
 
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
