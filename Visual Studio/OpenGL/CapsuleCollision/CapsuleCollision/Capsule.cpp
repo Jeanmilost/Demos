@@ -94,17 +94,19 @@ bool Capsule::Intersect(const Capsule& other, float& penetrationDepth) const
     bestCandidate = line.ClosestPoint(secondBestCandidate);
 
     // calculate penetration normal and length
-    Vector3F penetrationNormal = bestCandidate - secondBestCandidate;
+    Vector3F     penetrationNormal = bestCandidate - secondBestCandidate;
     const float  len               = penetrationNormal.Length();
 
     if (len == 0.0f)
         return false;
 
+    const float absLen = std::fabsf(len);
+
     // normalize
-    penetrationNormal /= len;
+    penetrationNormal /= absLen;
 
     // calculate the penetration depth
-    penetrationDepth = (m_Radius + other.m_Radius) - len;
+    penetrationDepth = (m_Radius + other.m_Radius) - absLen;
 
     return (penetrationDepth > 0.0f);
 }
