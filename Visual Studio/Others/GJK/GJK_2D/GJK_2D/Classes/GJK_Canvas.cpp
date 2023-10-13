@@ -45,9 +45,11 @@ GJK_Canvas::GJK_Canvas(HWND hWnd) :
 {
     // triangular polygons
     std::vector<GJK_Vector2F> vertices;
+
     vertices.push_back(GJK_Vector2F(-7.0f, 5.0f));
     vertices.push_back(GJK_Vector2F(-5.0f,  3.0f));
     vertices.push_back(GJK_Vector2F(-7.0f, 1.0f));
+
     vertices.push_back(GJK_Vector2F( 5.0f,  4.0f));
     vertices.push_back(GJK_Vector2F( 4.0f,  3.0f));
     vertices.push_back(GJK_Vector2F( 5.0f,  2.0f));
@@ -261,9 +263,11 @@ void GJK_Canvas::OnKeyDown(DWORD key)
 
             // triangular polygons
             std::vector<GJK_Vector2F> vertices;
+
             vertices.push_back(GJK_Vector2F(-7.0f, 5.0f));
             vertices.push_back(GJK_Vector2F(-5.0f, 3.0f));
             vertices.push_back(GJK_Vector2F(-7.0f, 1.0f));
+
             vertices.push_back(GJK_Vector2F(5.0f, 4.0f));
             vertices.push_back(GJK_Vector2F(4.0f, 3.0f));
             vertices.push_back(GJK_Vector2F(5.0f, 2.0f));
@@ -276,18 +280,43 @@ void GJK_Canvas::OnKeyDown(DWORD key)
         {
             m_Polygons.clear();
 
-            // quadratic polygons
+            // square polygons
             std::vector<GJK_Vector2F> vertices;
+
             vertices.push_back(GJK_Vector2F(-7.0f, 5.0f));
             vertices.push_back(GJK_Vector2F(-5.0f, 3.0f));
             vertices.push_back(GJK_Vector2F(-5.0f, 2.0f));
             vertices.push_back(GJK_Vector2F(-7.0f, 1.0f));
+
             vertices.push_back(GJK_Vector2F(5.0f, 4.0f));
             vertices.push_back(GJK_Vector2F(4.0f, 3.0f));
             vertices.push_back(GJK_Vector2F(4.0f, 1.0f));
             vertices.push_back(GJK_Vector2F(5.0f, 2.0f));
 
             AddPolygons(2, 4, vertices);
+            break;
+        }
+
+        case VK_F3:
+        {
+            m_Polygons.clear();
+
+            // 5-sided polygons
+            std::vector<GJK_Vector2F> vertices;
+
+            vertices.push_back(GJK_Vector2F(-7.0f, 5.0f));
+            vertices.push_back(GJK_Vector2F(-5.0f, 3.0f));
+            vertices.push_back(GJK_Vector2F(-5.0f, 2.0f));
+            vertices.push_back(GJK_Vector2F(-7.0f, 1.0f));
+            vertices.push_back(GJK_Vector2F(-8.0f, 0.0f));
+
+            vertices.push_back(GJK_Vector2F(5.0f, 4.0f));
+            vertices.push_back(GJK_Vector2F(6.0f, 3.0f));
+            vertices.push_back(GJK_Vector2F(6.0f, 2.0f));
+            vertices.push_back(GJK_Vector2F(5.0f, 2.0f));
+            vertices.push_back(GJK_Vector2F(3.0f, 1.0f));
+
+            AddPolygons(2, 5, vertices);
             break;
         }
     }
