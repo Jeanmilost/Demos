@@ -1,7 +1,7 @@
 /****************************************************************************
- * ==> Vortex game ---------------------------------------------------------*
+ * ==> GJK 3D --------------------------------------------------------------*
  ****************************************************************************
- * Description : Game project where the gameplay is based on a vortex       *
+ * Description : Test project for the GJK algorithm in 3D                   *
  * Developer   : Jean-Milost Reymond                                        *
  ****************************************************************************
  * MIT License - DwarfStar Game Engine                                      *
@@ -106,6 +106,7 @@ bool     g_Walking       = false;
 bool     g_Jumping       = false;
 bool     g_WasWalking    = false;
 bool     g_ShowSkeleton  = false;
+bool     g_ShowPlayerCap = false;
 //------------------------------------------------------------------------------
 const char texVertShader[] = "#version 120\n"
                              "precision mediump float;\n"
@@ -172,6 +173,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case '1':
                     g_ShowSkeleton = !g_ShowSkeleton;
+                    break;
+
+                case '2':
+                    g_ShowPlayerCap = !g_ShowPlayerCap;
                     break;
 
                 case VK_ESCAPE:
@@ -666,6 +671,9 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
         if (g_ShowSkeleton)
             DrawSkeleton(iqm_jump, modelMatrix, &colShader, &renderer, 0, 24, jumpFrameIndex);
 
+        // calculate the model height (done after model rendering because animation already includes it)
+        modelMatrix.m_Table[3][1] = std::sinf((jumpFrameIndex * (float)M_PI) / 23.0f) * 0.5f;
+
         // jump animation end reached?
         if (jumpFrameIndex >= 23)
         {
@@ -709,13 +717,15 @@ void DrawPlayerCapsule(DWF_Model::Model*              pCapsule,
                  const DWF_Renderer::Shader_OpenGL&   shader,
                  const DWF_Renderer::Renderer_OpenGL& renderer)
 {
+    if (!g_ShowPlayerCap)
+        return;
+
     // place the capsule
     DWF_Math::Matrix4x4F matrix = DWF_Math::Matrix4x4F::Identity();
     matrix.m_Table[3][0]        = playerMatrix.m_Table[3][0];
     matrix.m_Table[3][1]        = playerMatrix.m_Table[3][1];
     matrix.m_Table[3][2]        = playerMatrix.m_Table[3][2];
 
-    //BuildMatrix(DWF_Math::Vector3F(0.0f, 0.0f, -2.0f), (float)M_PI / 2.0f, 0.0f, 0.0f, 1.0f, matrix);
     shader.Use(true);
 
     // draw the capsule
@@ -738,9 +748,9 @@ void DrawBackground(DWF_Model::Model*              pBackground,
 }
 //------------------------------------------------------------------------------
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
-    _In_opt_ HINSTANCE hPrevInstance,
-    _In_     LPWSTR    lpCmdLine,
-    _In_     int       nCmdShow)
+                      _In_opt_ HINSTANCE hPrevInstance,
+                      _In_     LPWSTR    lpCmdLine,
+                      _In_     int       nCmdShow)
 {
     /*
     DWF_Audio::OpenAL* pOpenALInstance = DWF_Audio::OpenAL::GetInstance();
@@ -1062,6 +1072,11 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                                                                   texShader,
                                                                   colShader,
                                                                   renderer);
+
+            // update player collider position
+            playerCollider.m_Pos = DWF_Math::Vector3F(playerMatrix.m_Table[3][0],
+                                                      playerMatrix.m_Table[3][1],
+                                                      playerMatrix.m_Table[3][2]);
 
             // draw the capsule around the player
             DrawPlayerCapsule(pPlayerCapsule.get(), playerMatrix, colShader, renderer);
