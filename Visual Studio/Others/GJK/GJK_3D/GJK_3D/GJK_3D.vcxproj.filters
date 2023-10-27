@@ -1,0 +1,325 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{fd87ded7-a0fb-4d43-ace9-294ae3f5f450}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Audio">
+      <UniqueIdentifier>{ff887080-3d33-4529-8f54-1243096109a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Buffer">
+      <UniqueIdentifier>{bc4ecf9f-bf19-4745-8b43-a32bf04f418f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Colliders">
+      <UniqueIdentifier>{0d47b573-67db-4634-a0d0-abe52c6c8195}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Geometry">
+      <UniqueIdentifier>{e2757d76-9cbd-427d-aa31-d763e04b091a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Math">
+      <UniqueIdentifier>{d127c314-3fa8-45e4-8069-2c190c7cee9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Model">
+      <UniqueIdentifier>{d7010c98-ad8d-4f66-9e8b-116b699893bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Renderer">
+      <UniqueIdentifier>{75d15f59-f02a-496a-9560-bc645870cebc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Audio\MiniAudio">
+      <UniqueIdentifier>{c2ac68a5-c4e8-4792-ac20-09338a2dfb80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Audio\OpenAL">
+      <UniqueIdentifier>{d15ab9e4-35d3-4b63-a0d8-5a61ce935ff0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Renderer\OpenGL">
+      <UniqueIdentifier>{16ae10ab-22fe-4222-a1fd-73aaca75977b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Audio\DWF_Sound.h">
+      <Filter>SDK\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Audio\MiniAudio\DWF_Sound_MiniAudio.h">
+      <Filter>SDK\Audio\MiniAudio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Audio\OpenAL\DWF_OpenAL.h">
+      <Filter>SDK\Audio\OpenAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Audio\OpenAL\DWF_Sound_OpenAL.h">
+      <Filter>SDK\Audio\OpenAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Buffer\DWF_Buffer.h">
+      <Filter>SDK\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Buffer\DWF_FileBuffer.h">
+      <Filter>SDK\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Buffer\DWF_MemoryBuffer.h">
+      <Filter>SDK\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Buffer\DWF_StdFileBuffer.h">
+      <Filter>SDK\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_AABBTree.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Geometry\DWF_GeometryHelper.h">
+      <Filter>SDK\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Geometry\DWF_Line.h">
+      <Filter>SDK\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Geometry\DWF_Plane.h">
+      <Filter>SDK\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Geometry\DWF_Ray.h">
+      <Filter>SDK\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Math\DWF_MathHelper.h">
+      <Filter>SDK\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Math\DWF_Matrix4x4.h">
+      <Filter>SDK\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Math\DWF_Quaternion.h">
+      <Filter>SDK\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Math\DWF_Vector2.h">
+      <Filter>SDK\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Math\DWF_Vector3.h">
+      <Filter>SDK\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Model\DWF_Color.h">
+      <Filter>SDK\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Model\DWF_IQM.h">
+      <Filter>SDK\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Model\DWF_Material.h">
+      <Filter>SDK\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Model\DWF_Model.h">
+      <Filter>SDK\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Model\DWF_ModelFactory.h">
+      <Filter>SDK\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Model\DWF_Texture.h">
+      <Filter>SDK\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Model\DWF_TextureHelper.h">
+      <Filter>SDK\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Renderer\OpenGL\DWF_Renderer_OpenGL.h">
+      <Filter>SDK\Renderer\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Renderer\OpenGL\DWF_Shader_OpenGL.h">
+      <Filter>SDK\Renderer\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Renderer\OpenGL\DWF_Texture_OpenGL.h">
+      <Filter>SDK\Renderer\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Renderer\DWF_Renderer.h">
+      <Filter>SDK\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Renderer\DWF_Shader.h">
+      <Filter>SDK\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Geometry\DWF_Sphere.h">
+      <Filter>SDK\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Geometry\DWF_Polygon.h">
+      <Filter>SDK\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Geometry\DWF_Capsule.h">
+      <Filter>SDK\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Geometry\DWF_AABB.h">
+      <Filter>SDK\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_Collider.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_SphereCollider.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_CylinderCollider.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_CapsuleCollider.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_BoxCollider.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_PolytopeCollider.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_TriangleCollider.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDK\Colliders\DWF_GJK.h">
+      <Filter>SDK\Colliders</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GJK_3D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Audio\DWF_Sound.cpp">
+      <Filter>SDK\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Audio\MiniAudio\DWF_Sound_MiniAudio.cpp">
+      <Filter>SDK\Audio\MiniAudio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Audio\OpenAL\DWF_OpenAL.cpp">
+      <Filter>SDK\Audio\OpenAL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Audio\OpenAL\DWF_Sound_OpenAL.cpp">
+      <Filter>SDK\Audio\OpenAL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Buffer\DWF_Buffer.cpp">
+      <Filter>SDK\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Buffer\DWF_FileBuffer.cpp">
+      <Filter>SDK\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Buffer\DWF_MemoryBuffer.cpp">
+      <Filter>SDK\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Buffer\DWF_StdFileBuffer.cpp">
+      <Filter>SDK\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_AABBTree.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Geometry\DWF_GeometryHelper.cpp">
+      <Filter>SDK\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Geometry\DWF_Line.cpp">
+      <Filter>SDK\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Geometry\DWF_Plane.cpp">
+      <Filter>SDK\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Geometry\DWF_Ray.cpp">
+      <Filter>SDK\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Math\DWF_MathHelper.cpp">
+      <Filter>SDK\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Math\DWF_Matrix4x4.cpp">
+      <Filter>SDK\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Math\DWF_Quaternion.cpp">
+      <Filter>SDK\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Math\DWF_Vector2.cpp">
+      <Filter>SDK\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Math\DWF_Vector3.cpp">
+      <Filter>SDK\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Model\DWF_Color.cpp">
+      <Filter>SDK\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Model\DWF_IQM.cpp">
+      <Filter>SDK\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Model\DWF_Material.cpp">
+      <Filter>SDK\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Model\DWF_Model.cpp">
+      <Filter>SDK\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Model\DWF_ModelFactory.cpp">
+      <Filter>SDK\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Model\DWF_Texture.cpp">
+      <Filter>SDK\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Model\DWF_TextureHelper.cpp">
+      <Filter>SDK\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Renderer\OpenGL\DWF_Renderer_OpenGL.cpp">
+      <Filter>SDK\Renderer\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Renderer\OpenGL\DWF_Shader_OpenGL.cpp">
+      <Filter>SDK\Renderer\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Renderer\OpenGL\DWF_Texture_OpenGL.cpp">
+      <Filter>SDK\Renderer\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Renderer\DWF_Renderer.cpp">
+      <Filter>SDK\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Renderer\DWF_Shader.cpp">
+      <Filter>SDK\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Geometry\DWF_Sphere.cpp">
+      <Filter>SDK\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Geometry\DWF_Polygon.cpp">
+      <Filter>SDK\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Geometry\DWF_Capsule.cpp">
+      <Filter>SDK\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Geometry\DWF_AABB.cpp">
+      <Filter>SDK\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_Collider.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_SphereCollider.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_CylinderCollider.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_CapsuleCollider.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_BoxCollider.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_PolytopeCollider.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_TriangleCollider.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Colliders\DWF_GJK.cpp">
+      <Filter>SDK\Colliders</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GJK_3D.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="DwarfStar.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="DwarfStar_Small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

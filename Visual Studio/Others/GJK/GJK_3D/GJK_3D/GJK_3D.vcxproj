@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{90772d21-bb57-4c73-82de-570b26f15c00}</ProjectGuid>
+    <RootNamespace>GJK3D</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>..\SDK\;..\SDK\Audio\;..\SDK\Audio\OpenAL\;..\SDK\Audio\MiniAudio\;..\SDK\Math\;..\SDK\Geometry\;..\SDK\Buffer\;..\SDK\Colliders\;..\SDK\Model\;..\SDK\Renderer\;..\SDK\Renderer\OpenGL\;..\Third-Party\libpng\include\;..\Third-Party\glew\include\;..\Third-Party\miniaudio\include\;..\Third-Party\openal\include\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\libpng\lib\x86\;..\glew\lib\Release\Win32\;..\Third-Party\openal\libs\Win32\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>..\SDK\;..\SDK\Audio\;..\SDK\Audio\OpenAL\;..\SDK\Audio\MiniAudio\;..\SDK\Math\;..\SDK\Geometry\;..\SDK\Buffer\;..\SDK\Colliders\;..\SDK\Model\;..\SDK\Renderer\;..\SDK\Renderer\OpenGL\;..\Third-Party\libpng\include\;..\Third-Party\glew\include\;..\Third-Party\miniaudio\include\;..\Third-Party\openal\include\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\libpng\lib\x86\;..\glew\lib\Release\Win32\;..\Third-Party\openal\libs\Win32\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>..\SDK\;..\SDK\Audio\;..\SDK\Audio\OpenAL\;..\SDK\Audio\MiniAudio\;..\SDK\Math\;..\SDK\Geometry\;..\SDK\Buffer\;..\SDK\Colliders\;..\SDK\Model\;..\SDK\Renderer\;..\SDK\Renderer\OpenGL\;..\Third-Party\libpng\include\;..\Third-Party\glew\include\;..\Third-Party\miniaudio\include\;..\Third-Party\openal\include\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\Third-Party\libpng\lib\x64\;..\Third-Party\glew\lib\Release\x64\;..\Third-Party\openal\libs\Win64\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>..\SDK\;..\SDK\Audio\;..\SDK\Audio\OpenAL\;..\SDK\Audio\MiniAudio\;..\SDK\Math\;..\SDK\Geometry\;..\SDK\Buffer\;..\SDK\Colliders\;..\SDK\Model\;..\SDK\Renderer\;..\SDK\Renderer\OpenGL\;..\Third-Party\libpng\include\;..\Third-Party\glew\include\;..\Third-Party\miniaudio\include\;..\Third-Party\openal\include\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\Third-Party\libpng\lib\x64\;..\Third-Party\glew\lib\Release\x64\;..\Third-Party\openal\libs\Win64\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>USE_PNG;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libpng16.lib;opengl32.lib;glew32s.lib;openal32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>USE_PNG;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libpng16.lib;opengl32.lib;glew32s.lib;openal32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>USE_PNG;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libpng16.lib;opengl32.lib;glew32s.lib;openal32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>USE_PNG;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libpng16.lib;opengl32.lib;glew32s.lib;openal32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\SDK\Audio\DWF_Sound.h" />
+    <ClInclude Include="..\SDK\Audio\MiniAudio\DWF_Sound_MiniAudio.h" />
+    <ClInclude Include="..\SDK\Audio\OpenAL\DWF_OpenAL.h" />
+    <ClInclude Include="..\SDK\Audio\OpenAL\DWF_Sound_OpenAL.h" />
+    <ClInclude Include="..\SDK\Buffer\DWF_Buffer.h" />
+    <ClInclude Include="..\SDK\Buffer\DWF_FileBuffer.h" />
+    <ClInclude Include="..\SDK\Buffer\DWF_MemoryBuffer.h" />
+    <ClInclude Include="..\SDK\Buffer\DWF_StdFileBuffer.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_AABBTree.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_BoxCollider.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_CapsuleCollider.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_Collider.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_CylinderCollider.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_GJK.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_PolytopeCollider.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_SphereCollider.h" />
+    <ClInclude Include="..\SDK\Colliders\DWF_TriangleCollider.h" />
+    <ClInclude Include="..\SDK\Geometry\DWF_AABB.h" />
+    <ClInclude Include="..\SDK\Geometry\DWF_Capsule.h" />
+    <ClInclude Include="..\SDK\Geometry\DWF_GeometryHelper.h" />
+    <ClInclude Include="..\SDK\Geometry\DWF_Line.h" />
+    <ClInclude Include="..\SDK\Geometry\DWF_Plane.h" />
+    <ClInclude Include="..\SDK\Geometry\DWF_Polygon.h" />
+    <ClInclude Include="..\SDK\Geometry\DWF_Ray.h" />
+    <ClInclude Include="..\SDK\Geometry\DWF_Sphere.h" />
+    <ClInclude Include="..\SDK\Math\DWF_MathHelper.h" />
+    <ClInclude Include="..\SDK\Math\DWF_Matrix4x4.h" />
+    <ClInclude Include="..\SDK\Math\DWF_Quaternion.h" />
+    <ClInclude Include="..\SDK\Math\DWF_Vector2.h" />
+    <ClInclude Include="..\SDK\Math\DWF_Vector3.h" />
+    <ClInclude Include="..\SDK\Model\DWF_Color.h" />
+    <ClInclude Include="..\SDK\Model\DWF_IQM.h" />
+    <ClInclude Include="..\SDK\Model\DWF_Material.h" />
+    <ClInclude Include="..\SDK\Model\DWF_Model.h" />
+    <ClInclude Include="..\SDK\Model\DWF_ModelFactory.h" />
+    <ClInclude Include="..\SDK\Model\DWF_Texture.h" />
+    <ClInclude Include="..\SDK\Model\DWF_TextureHelper.h" />
+    <ClInclude Include="..\SDK\Renderer\DWF_Renderer.h" />
+    <ClInclude Include="..\SDK\Renderer\DWF_Shader.h" />
+    <ClInclude Include="..\SDK\Renderer\OpenGL\DWF_Renderer_OpenGL.h" />
+    <ClInclude Include="..\SDK\Renderer\OpenGL\DWF_Shader_OpenGL.h" />
+    <ClInclude Include="..\SDK\Renderer\OpenGL\DWF_Texture_OpenGL.h" />
+    <ClInclude Include="Resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\SDK\Audio\DWF_Sound.cpp" />
+    <ClCompile Include="..\SDK\Audio\MiniAudio\DWF_Sound_MiniAudio.cpp" />
+    <ClCompile Include="..\SDK\Audio\OpenAL\DWF_OpenAL.cpp" />
+    <ClCompile Include="..\SDK\Audio\OpenAL\DWF_Sound_OpenAL.cpp" />
+    <ClCompile Include="..\SDK\Buffer\DWF_Buffer.cpp" />
+    <ClCompile Include="..\SDK\Buffer\DWF_FileBuffer.cpp" />
+    <ClCompile Include="..\SDK\Buffer\DWF_MemoryBuffer.cpp" />
+    <ClCompile Include="..\SDK\Buffer\DWF_StdFileBuffer.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_AABBTree.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_BoxCollider.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_CapsuleCollider.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_Collider.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_CylinderCollider.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_GJK.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_PolytopeCollider.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_SphereCollider.cpp" />
+    <ClCompile Include="..\SDK\Colliders\DWF_TriangleCollider.cpp" />
+    <ClCompile Include="..\SDK\Geometry\DWF_AABB.cpp" />
+    <ClCompile Include="..\SDK\Geometry\DWF_Capsule.cpp" />
+    <ClCompile Include="..\SDK\Geometry\DWF_GeometryHelper.cpp" />
+    <ClCompile Include="..\SDK\Geometry\DWF_Line.cpp" />
+    <ClCompile Include="..\SDK\Geometry\DWF_Plane.cpp" />
+    <ClCompile Include="..\SDK\Geometry\DWF_Polygon.cpp" />
+    <ClCompile Include="..\SDK\Geometry\DWF_Ray.cpp" />
+    <ClCompile Include="..\SDK\Geometry\DWF_Sphere.cpp" />
+    <ClCompile Include="..\SDK\Math\DWF_MathHelper.cpp" />
+    <ClCompile Include="..\SDK\Math\DWF_Matrix4x4.cpp" />
+    <ClCompile Include="..\SDK\Math\DWF_Quaternion.cpp" />
+    <ClCompile Include="..\SDK\Math\DWF_Vector2.cpp" />
+    <ClCompile Include="..\SDK\Math\DWF_Vector3.cpp" />
+    <ClCompile Include="..\SDK\Model\DWF_Color.cpp" />
+    <ClCompile Include="..\SDK\Model\DWF_IQM.cpp" />
+    <ClCompile Include="..\SDK\Model\DWF_Material.cpp" />
+    <ClCompile Include="..\SDK\Model\DWF_Model.cpp" />
+    <ClCompile Include="..\SDK\Model\DWF_ModelFactory.cpp" />
+    <ClCompile Include="..\SDK\Model\DWF_Texture.cpp" />
+    <ClCompile Include="..\SDK\Model\DWF_TextureHelper.cpp" />
+    <ClCompile Include="..\SDK\Renderer\DWF_Renderer.cpp" />
+    <ClCompile Include="..\SDK\Renderer\DWF_Shader.cpp" />
+    <ClCompile Include="..\SDK\Renderer\OpenGL\DWF_Renderer_OpenGL.cpp" />
+    <ClCompile Include="..\SDK\Renderer\OpenGL\DWF_Shader_OpenGL.cpp" />
+    <ClCompile Include="..\SDK\Renderer\OpenGL\DWF_Texture_OpenGL.cpp" />
+    <ClCompile Include="GJK_3D.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GJK_3D.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="DwarfStar.ico" />
+    <Image Include="DwarfStar_Small.ico" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,75 @@
+# Written by MakeHuman 1.2.0 final
+version v1.2.0
+name Deborah
+camera 8.0 33.0 0.10910141297745901 0.45331089239673655 0.3714397957972837 1.2375000000000003
+modifier head/head-age-decr|incr 0.016000
+modifier head/head-angle-in|out 0.032000
+modifier head/head-fat-decr|incr 0.080000
+modifier head/head-rectangular 0.095000
+modifier head/head-square 0.095000
+modifier head/head-invertedtriangular 0.325000
+modifier head/head-diamond 0.278000
+modifier head/head-scale-horiz-decr|incr -0.142000
+modifier head/head-scale-vert-decr|incr 0.174000
+modifier eyebrows/eyebrows-trans-backward|forward -1.000000
+modifier eyebrows/eyebrows-angle-down|up -0.064000
+modifier eyebrows/eyebrows-trans-down|up 0.350000
+modifier eyes/r-eye-bag-decr|incr -0.476000
+modifier eyes/r-eye-bag-height-decr|incr 0.206000
+modifier eyes/r-eye-eyefold-angle-down|up 0.350000
+modifier mouth/mouth-scale-horiz-decr|incr -0.620000
+modifier mouth/mouth-scale-vert-decr|incr 0.588000
+modifier mouth/mouth-trans-in|out -0.126000
+modifier mouth/mouth-trans-down|up -0.126000
+modifier mouth/mouth-trans-backward|forward -0.350000
+modifier mouth/mouth-lowerlip-height-decr|incr 0.588000
+modifier mouth/mouth-lowerlip-width-decr|incr -0.666000
+modifier mouth/mouth-upperlip-height-decr|incr -0.016000
+modifier mouth/mouth-upperlip-width-decr|incr 0.270000
+modifier mouth/mouth-cupidsbow-width-decr|incr 0.714000
+modifier mouth/mouth-dimples-in|out -0.080000
+modifier mouth/mouth-laugh-lines-in|out -1.000000
+modifier mouth/mouth-lowerlip-ext-down|up 0.588000
+modifier mouth/mouth-angles-down|up -0.048000
+modifier mouth/mouth-lowerlip-middle-down|up -0.206000
+modifier mouth/mouth-lowerlip-volume-decr|incr 1.000000
+modifier mouth/mouth-philtrum-volume-decr|incr 0.142000
+modifier mouth/mouth-upperlip-volume-decr|incr 0.428000
+modifier mouth/mouth-upperlip-ext-down|up -0.254000
+modifier mouth/mouth-upperlip-middle-down|up 0.112000
+modifier mouth/mouth-cupidsbow-decr|incr 0.142000
+modifier torso/torso-scale-depth-decr|incr 0.588000
+modifier torso/torso-scale-horiz-decr|incr 0.286000
+modifier torso/torso-trans-in|out -0.048000
+modifier torso/torso-vshape-decr|incr 0.238000
+modifier torso/torso-muscle-dorsi-decr|incr 0.158000
+modifier breast/BreastSize 0.667000
+modifier breast/BreastFirmness 0.754000
+modifier breast/breast-trans-down|up 0.396000
+modifier breast/breast-dist-decr|incr -0.380000
+modifier breast/breast-point-decr|incr -0.634000
+modifier breast/nipple-size-decr|incr -0.222000
+modifier breast/nipple-point-decr|incr -1.000000
+modifier macrodetails/Gender 0.000000
+modifier macrodetails/Age 0.452000
+modifier macrodetails/African 0.226785
+modifier macrodetails/Asian 0.130215
+modifier macrodetails/Caucasian 0.643000
+modifier macrodetails-universal/Muscle 0.865000
+modifier macrodetails-universal/Weight 0.302000
+modifier macrodetails-height/Height 0.611000
+modifier macrodetails-proportions/BodyProportions 0.579000
+proxy proxy741 549cb59c-dd74-445d-add2-097453bd369e
+hair ponytail01 44e0340e-c7a6-4d22-814c-0632968d2dde
+skeleton game_engine.mhskel
+eyebrows eyebrow001 9c81ec3a-faa5-4c94-9cdb-992300ba3084
+eyes Low-Poly 1cc97a30-85a1-42e6-a9f7-b3e753732baa
+clothes Sleeveless d81d2cec-7bf3-4247-92dc-185aa64e4941
+clothes Flats_ballet 6d183530-92c7-4963-9e83-aedbcce349d0
+clothes JeansSkirt 12772bd6-8cfd-4215-94a9-3447ce47b4f8
+clothesHideFaces True
+skinMaterial skins/middleage_asian_female/middleage_asian_female.mhmat
+material ponytail01 44e0340e-c7a6-4d22-814c-0632968d2dde ponytail01.mhmat
+material Low-Poly 1cc97a30-85a1-42e6-a9f7-b3e753732baa eyes/materials/brown.mhmat
+material eyebrow001 9c81ec3a-faa5-4c94-9cdb-992300ba3084 eyebrow001.mhmat
+subdivide False
