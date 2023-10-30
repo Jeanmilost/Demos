@@ -35,6 +35,7 @@
 #include "DWF_ModelFactory.h"
 #include "DWF_IQM.h"
 #include "DWF_CapsuleCollider.h"
+#include "DWF_GJK.h"
 #include "DWF_Sound_OpenAL.h"
 #include "DWF_Sound_MiniAudio.h"
 
@@ -71,12 +72,12 @@ enum class EMatCombType
 */
 struct Camera
 {
+    EMatCombType       m_MatCombType = EMatCombType::E_CT_Scale_Translate_Rotate;
+    float              m_xAngle      = 0.0f;
+    float              m_yAngle      = 0.0f;
+    float              m_zAngle      = 0.0f;
     DWF_Math::Vector3F m_Position;
-    float              m_xAngle;
-    float              m_yAngle;
-    float              m_zAngle;
     DWF_Math::Vector3F m_Factor;
-    EMatCombType       m_MatCombType;
 };
 //------------------------------------------------------------------------------
 /**
@@ -185,22 +186,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
 
             break;
-
-        /*REM
-        case WM_MOUSEMOVE:
-        {
-            const int xPos = GET_X_LPARAM(lParam);
-            const int yPos = GET_Y_LPARAM(lParam);
-
-            g_XDelta = g_LastMouseXPos - xPos;
-            g_YDelta = g_LastMouseYPos - yPos;
-
-            g_LastMouseXPos = xPos;
-            g_LastMouseYPos = yPos;
-
-            break;
-        }
-        */
 
         default:
             return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -609,7 +594,8 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
                                        int&                           jumpIndex,
                                  const DWF_Renderer::Shader_OpenGL&   texShader,
                                  const DWF_Renderer::Shader_OpenGL&   colShader,
-                                 const DWF_Renderer::Renderer_OpenGL& renderer)
+                                 const DWF_Renderer::Renderer_OpenGL& renderer,
+                                       double                         elapsedTime)
 {
     POINT p;
     
@@ -628,8 +614,8 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
     arcball.m_AngleY -= std::fmodf((float)g_XDelta * 0.01f, (float)M_PI * 2.0f);
 
     // reset the deltas (otherwise the player will turn forever)
-    g_XDelta = 0.0f;
-    g_YDelta = 0.0f;
+    g_XDelta = 0;
+    g_YDelta = 0;
 
     // calculate the next position
     arcball.m_Position = DWF_Math::Vector3F(g_xPos, -0.5f, 2.0f + g_zPos);
@@ -656,13 +642,15 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
     // dispatch the player state
     if (g_Jumping)
     {
+        /*REM
         // was previously walking before jumping?
         if (g_WasWalking)
         {
             // continue to move the player forward
-            g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5));
-            g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5));
+            g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+            g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
         }
+        */
 
         // draw the jump model
         const int jumpFrameIndex = DrawIQM(iqm_jump, modelMatrix, &texShader, &renderer, 0, jumpIndex, 24, false);
@@ -684,9 +672,11 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
     else
     if (g_Walking)
     {
+        /*REM
         // move player forward
-        g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5));
-        g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5));
+        g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+        g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+        */
 
         // draw the walk model
         const int walkFrameIndex = DrawIQM(iqm_walk, modelMatrix, &texShader, &renderer, 0, walkIndex, 30, true);
@@ -745,6 +735,31 @@ void DrawBackground(DWF_Model::Model*              pBackground,
     // draw it
     for (std::size_t i = 0; i < pBackground->m_Mesh.size(); ++i)
         renderer.Draw(*pBackground->m_Mesh[i], matrix, &shader);
+}
+//------------------------------------------------------------------------------
+DWF_Collider::Capsule_Collider DrawCapsule(DWF_Model::Model* pCapsule,
+                                     const DWF_Renderer::Shader_OpenGL&   shader,
+                                     const DWF_Renderer::Renderer_OpenGL& renderer)
+{
+    DWF_Collider::Capsule_Collider collider;
+    collider.m_yBase  = 0.0f;
+    collider.m_yCap   = 0.85f;
+    collider.m_Radius = 0.17f;
+    collider.m_Pos    = DWF_Math::Vector3F(5.0f, 0.0f, -2.0f);
+
+    // place the capsule
+    DWF_Math::Matrix4x4F matrix = DWF_Math::Matrix4x4F::Identity();
+    matrix.m_Table[3][0]        = collider.m_Pos.m_X;
+    matrix.m_Table[3][1]        = collider.m_Pos.m_Y;
+    matrix.m_Table[3][2]        = collider.m_Pos.m_Z;
+
+    shader.Use(true);
+
+    // draw the capsule
+    for (std::size_t i = 0; i < pCapsule->m_Mesh.size(); ++i)
+        renderer.Draw(*pCapsule->m_Mesh[i], matrix, &shader);
+
+    return collider;
 }
 //------------------------------------------------------------------------------
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
@@ -881,8 +896,8 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     DWF_Collider::Capsule_Collider playerCollider;
     playerCollider.m_yBase  = 0.0f;
-    playerCollider.m_yCap   = 1.0f;
-    playerCollider.m_Radius = 1.0f;
+    playerCollider.m_yCap   = 0.85f;
+    playerCollider.m_Radius = 0.17f;
 
     DWF_Model::VertexFormat vf;
     vf.m_Type   = DWF_Model::VertexFormat::IEType::IE_VT_Triangles;
@@ -896,7 +911,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     mat.m_Color.m_R = 0.0f;
     mat.m_Color.m_A = 1.0f;
 
-    std::unique_ptr<DWF_Model::Model> pPlayerCapsule(DWF_Model::Factory::GetCapsule(0.85f, 0.17f, 20.0f, vf, vc, mat));
+    std::unique_ptr<DWF_Model::Model> pPlayerCapsule(DWF_Model::Factory::GetCapsule(0.85f, 0.17f, 16.0f, vf, vc, mat));
 
     vf.m_Type   = DWF_Model::VertexFormat::IEType::IE_VT_Triangles;
     vf.m_Format = (DWF_Model::VertexFormat::IEFormat)((int)DWF_Model::VertexFormat::IEFormat::IE_VF_Colors |
@@ -912,6 +927,15 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     std::unique_ptr<DWF_Model::Model> pBackground(DWF_Model::Factory::GetSurface(20.0f, 20.0f, vf, vc, mat));
     pBackground->m_Mesh[0]->m_VB[0]->m_Material.m_pTexture = OnLoadTexture("background.tga", false);
+
+    vf.m_Format = DWF_Model::VertexFormat::IEFormat::IE_VF_Colors;
+
+    mat.m_Color.m_B = 0.0f;
+    mat.m_Color.m_G = 0.0f;
+    mat.m_Color.m_R = 1.0f;
+    mat.m_Color.m_A = 1.0f;
+
+    std::unique_ptr<DWF_Model::Model> pCapsule(DWF_Model::Factory::GetCapsule(0.85f, 0.17f, 16.0f, vf, vc, mat));
 
     /*
     DWF_Model::VertexFormat vf;
@@ -1055,6 +1079,10 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
         }
         else
         {
+            // calculate the elapsed time
+            double elapsedTime = (double)::GetTickCount64() - lastTime;
+            lastTime           = (double)::GetTickCount64();
+
             // draw the scene
             renderer.BeginScene(bgColor,
                                 (DWF_Renderer::Renderer::IESceneFlags)((unsigned)DWF_Renderer::Renderer::IESceneFlags::IE_SF_ClearColor |
@@ -1071,7 +1099,8 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                                                                   jumpIndex,
                                                                   texShader,
                                                                   colShader,
-                                                                  renderer);
+                                                                  renderer,
+                                                                  elapsedTime);
 
             // update player collider position
             playerCollider.m_Pos = DWF_Math::Vector3F(playerMatrix.m_Table[3][0],
@@ -1083,6 +1112,38 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
             // draw the background
             DrawBackground(pBackground.get(), texShader, renderer);
+
+            // draw the background
+            DWF_Collider::Capsule_Collider capsuleCollider = DrawCapsule(pCapsule.get(), colShader, renderer);
+
+            // dispatch the player state
+            if (g_Jumping)
+            {
+                // was previously walking before jumping?
+                if (g_WasWalking)
+                {
+                    // continue to move the player forward
+                    g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+                    g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+                }
+            }
+            else
+            if (g_Walking)
+            {
+                // move player forward
+                g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+                g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+            }
+
+            DWF_Math::Vector3F mtv;
+
+            while (DWF_Collider::GJK::Resolve(playerCollider, capsuleCollider, mtv))
+            {
+                g_xPos -= g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+                g_zPos -= g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+
+                playerCollider.m_Pos = DWF_Math::Vector3F(-g_xPos, 0.0f, -2.0f - g_zPos);
+            }
 
             /*REM
             DWF_Math::Matrix4x4F capsuleMatrix = DWF_Math::Matrix4x4F::Identity();
@@ -1159,11 +1220,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             */
 
             renderer.EndScene();
-
-            // calculate the elapsed time
-            double elapsedTime = (double)::GetTickCount64() - lastTime;
-            lastTime = (double)::GetTickCount64();
-            //angle = std::fmodf(angle + ((float)elapsedTime * 0.001f), 2.0f * (float)M_PI);
         }
 
     // shutdown OpenGL

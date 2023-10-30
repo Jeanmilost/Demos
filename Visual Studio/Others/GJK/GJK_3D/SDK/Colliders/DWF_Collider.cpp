@@ -34,7 +34,12 @@ using namespace DWF_Collider;
 // Collider
 //---------------------------------------------------------------------------
 Collider::Collider()
-{}
+{
+    m_MatRS = DWF_Math::Matrix4x4F::Identity();
+
+    float determinant = 0.0f;
+    m_InvMatRS        = m_MatRS.Inverse(determinant);
+}
 //---------------------------------------------------------------------------
 Collider::~Collider()
 {}
