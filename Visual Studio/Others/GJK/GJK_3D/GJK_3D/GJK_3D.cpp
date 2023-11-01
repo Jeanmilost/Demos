@@ -35,6 +35,7 @@
 #include "DWF_ModelFactory.h"
 #include "DWF_IQM.h"
 #include "DWF_BoxCollider.h"
+#include "DWF_SphereCollider.h"
 #include "DWF_CapsuleCollider.h"
 #include "DWF_GJK.h"
 #include "DWF_Sound_OpenAL.h"
@@ -938,6 +939,29 @@ DWF_Collider::Box_Collider DrawBox(DWF_Model::Model*              pCapsule,
     return collider;
 }
 //------------------------------------------------------------------------------
+DWF_Collider::Sphere_Collider DrawSphere(DWF_Model::Model*              pCapsule,
+                                   const DWF_Renderer::Shader_OpenGL&   shader,
+                                   const DWF_Renderer::Renderer_OpenGL& renderer)
+{
+    DWF_Collider::Sphere_Collider collider;
+    collider.m_Radius = 1.2f;
+    collider.m_Pos = DWF_Math::Vector3F(-5.0f, 0.2f, -3.5f);
+
+    // place the capsule
+    DWF_Math::Matrix4x4F matrix = DWF_Math::Matrix4x4F::Identity();
+    matrix.m_Table[3][0]        = collider.m_Pos.m_X;
+    matrix.m_Table[3][1]        = collider.m_Pos.m_Y;
+    matrix.m_Table[3][2]        = collider.m_Pos.m_Z;
+
+    shader.Use(true);
+
+    // draw the capsule
+    for (std::size_t i = 0; i < pCapsule->m_Mesh.size(); ++i)
+        renderer.Draw(*pCapsule->m_Mesh[i], matrix, &shader);
+
+    return collider;
+}
+//------------------------------------------------------------------------------
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                       _In_opt_ HINSTANCE hPrevInstance,
                       _In_     LPWSTR    lpCmdLine,
@@ -1093,9 +1117,6 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     vf.m_Format = (DWF_Model::VertexFormat::IEFormat)((int)DWF_Model::VertexFormat::IEFormat::IE_VF_Colors |
                                                       (int)DWF_Model::VertexFormat::IEFormat::IE_VF_TexCoords);
 
-    //vc.m_Face = DWF_Model::VertexCulling::IECullingFace::IE_CF_CCW;
-    //vc.m_Type = DWF_Model::VertexCulling::IECullingType::IE_CT_Back;
-
     mat.m_Color.m_B = 1.0f;
     mat.m_Color.m_G = 1.0f;
     mat.m_Color.m_R = 1.0f;
@@ -1113,12 +1134,21 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     std::unique_ptr<DWF_Model::Model> pCapsule(DWF_Model::Factory::GetCapsule(0.85f, 0.17f, 16.0f, vf, vc, mat));
 
+    vc.m_Type = DWF_Model::VertexCulling::IECullingType::IE_CT_Front;
+
     mat.m_Color.m_B = 0.0f;
     mat.m_Color.m_G = 1.0f;
     mat.m_Color.m_R = 0.0f;
     mat.m_Color.m_A = 1.0f;
 
     std::unique_ptr<DWF_Model::Model> pBox(DWF_Model::Factory::GetBox(0.8f, 0.4f, 0.6f, false, vf, vc, mat));
+
+    mat.m_Color.m_B = 0.0f;
+    mat.m_Color.m_G = 1.0f;
+    mat.m_Color.m_R = 1.0f;
+    mat.m_Color.m_A = 1.0f;
+
+    std::unique_ptr<DWF_Model::Model> pSphere(DWF_Model::Factory::GetSphere(1.2f, 20, 20, vf, vc, mat));
 
     /*
     DWF_Model::VertexFormat vf;
@@ -1299,7 +1329,8 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             // draw the objects
             DWF_Collider::Capsule_Collider capsuleCollider = DrawCapsule (pCapsule.get(), colShader, renderer);
             //DWF_Collider::Capsule_Collider capsuleCollider2 = DrawCapsule2(pCapsule.get(), colShader, renderer);
-            DWF_Collider::Box_Collider boxCollider         = DrawBox(pBox.get(), colShader, renderer);
+            DWF_Collider::Box_Collider     boxCollider     = DrawBox(pBox.get(), colShader, renderer);
+            DWF_Collider::Sphere_Collider  sphereCollider  = DrawSphere(pSphere.get(), colShader, renderer);
 
             // dispatch the player state
             if (g_Jumping)
@@ -1341,6 +1372,14 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             */
 
             while (DWF_Collider::GJK::Resolve(playerCollider, boxCollider, mtv))
+            {
+                g_xPos -= g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+                g_zPos -= g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+
+                playerCollider.m_Pos = DWF_Math::Vector3F(-g_xPos, 0.0f, -2.0f - g_zPos);
+            }
+
+            while (DWF_Collider::GJK::Resolve(playerCollider, sphereCollider, mtv))
             {
                 g_xPos -= g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
                 g_zPos -= g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
