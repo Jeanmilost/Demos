@@ -34,6 +34,7 @@
 #include "DWF_Model.h"
 #include "DWF_ModelFactory.h"
 #include "DWF_IQM.h"
+#include "DWF_BoxCollider.h"
 #include "DWF_CapsuleCollider.h"
 #include "DWF_GJK.h"
 #include "DWF_Sound_OpenAL.h"
@@ -642,16 +643,6 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
     // dispatch the player state
     if (g_Jumping)
     {
-        /*REM
-        // was previously walking before jumping?
-        if (g_WasWalking)
-        {
-            // continue to move the player forward
-            g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-            g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-        }
-        */
-
         // draw the jump model
         const int jumpFrameIndex = DrawIQM(iqm_jump, modelMatrix, &texShader, &renderer, 0, jumpIndex, 24, false);
 
@@ -672,12 +663,6 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
     else
     if (g_Walking)
     {
-        /*REM
-        // move player forward
-        g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-        g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-        */
-
         // draw the walk model
         const int walkFrameIndex = DrawIQM(iqm_walk, modelMatrix, &texShader, &renderer, 0, walkIndex, 30, true);
 
@@ -752,6 +737,197 @@ DWF_Collider::Capsule_Collider DrawCapsule(DWF_Model::Model* pCapsule,
     matrix.m_Table[3][0]        = collider.m_Pos.m_X;
     matrix.m_Table[3][1]        = collider.m_Pos.m_Y;
     matrix.m_Table[3][2]        = collider.m_Pos.m_Z;
+
+    shader.Use(true);
+
+    // draw the capsule
+    for (std::size_t i = 0; i < pCapsule->m_Mesh.size(); ++i)
+        renderer.Draw(*pCapsule->m_Mesh[i], matrix, &shader);
+
+    return collider;
+}
+//------------------------------------------------------------------------------
+/*
+// returns a scalar value with the determinant for a 4x4 matrix
+// see http://www.euclideanspace.com/maths/algebra/matrix/functions/determinant/fourD/index.htm
+inline float determinant(const DWF_Math::Matrix4x4F& mm) {
+    return
+        mm.m_Table[0][3] * mm.m_Table[1][2] * mm.m_Table[2][1] * mm.m_Table[3][0] -
+        mm.m_Table[0][2] * mm.m_Table[1][3] * mm.m_Table[2][1] * mm.m_Table[3][0] -
+        mm.m_Table[0][3] * mm.m_Table[1][1] * mm.m_Table[2][2] * mm.m_Table[3][0] +
+        mm.m_Table[0][1] * mm.m_Table[1][3] * mm.m_Table[2][2] * mm.m_Table[3][0] +
+        mm.m_Table[0][2] * mm.m_Table[1][1] * mm.m_Table[2][3] * mm.m_Table[3][0] -
+        mm.m_Table[0][1] * mm.m_Table[1][2] * mm.m_Table[2][3] * mm.m_Table[3][0] -
+        mm.m_Table[0][3] * mm.m_Table[1][2] * mm.m_Table[2][0] * mm.m_Table[3][1] +
+        mm.m_Table[0][2] * mm.m_Table[1][3] * mm.m_Table[2][0] * mm.m_Table[3][1] +
+        mm.m_Table[0][3] * mm.m_Table[1][0] * mm.m_Table[2][2] * mm.m_Table[3][1] -
+        mm.m_Table[0][0] * mm.m_Table[1][3] * mm.m_Table[2][2] * mm.m_Table[3][1] -
+        mm.m_Table[0][2] * mm.m_Table[1][0] * mm.m_Table[2][3] * mm.m_Table[3][1] +
+        mm.m_Table[0][0] * mm.m_Table[1][2] * mm.m_Table[2][3] * mm.m_Table[3][1] +
+        mm.m_Table[0][3] * mm.m_Table[1][1] * mm.m_Table[2][0] * mm.m_Table[3][2] -
+        mm.m_Table[0][1] * mm.m_Table[1][3] * mm.m_Table[2][0] * mm.m_Table[3][2] -
+        mm.m_Table[0][3] * mm.m_Table[1][0] * mm.m_Table[2][1] * mm.m_Table[3][2] +
+        mm.m_Table[0][0] * mm.m_Table[1][3] * mm.m_Table[2][1] * mm.m_Table[3][2] +
+        mm.m_Table[0][1] * mm.m_Table[1][0] * mm.m_Table[2][3] * mm.m_Table[3][2] -
+        mm.m_Table[0][0] * mm.m_Table[1][1] * mm.m_Table[2][3] * mm.m_Table[3][2] -
+        mm.m_Table[0][2] * mm.m_Table[1][1] * mm.m_Table[2][0] * mm.m_Table[3][3] +
+        mm.m_Table[0][1] * mm.m_Table[1][2] * mm.m_Table[2][0] * mm.m_Table[3][3] +
+        mm.m_Table[0][2] * mm.m_Table[1][0] * mm.m_Table[2][1] * mm.m_Table[3][3] -
+        mm.m_Table[0][0] * mm.m_Table[1][2] * mm.m_Table[2][1] * mm.m_Table[3][3] -
+        mm.m_Table[0][1] * mm.m_Table[1][0] * mm.m_Table[2][2] * mm.m_Table[3][3] +
+        mm.m_Table[0][0] * mm.m_Table[1][1] * mm.m_Table[2][2] * mm.m_Table[3][3];
+}
+
+/ * returns a 16-element array that is the inverse of a 16-element array (4x4
+matrix). see http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm * /
+inline DWF_Math::Matrix4x4F inverse(const DWF_Math::Matrix4x4F& mm) {
+    float det = determinant(mm);
+    / * there is no inverse if determinant is zero (not likely unless scale is
+    broken) * /
+    if (0.0f == det) {
+        //fprintf(stderr, "WARNING. matrix has no determinant. can not invert\n");
+        return mm;
+    }
+    float inv_det = 1.0f / det;
+
+    return DWF_Math::Matrix4x4F(
+        inv_det * (
+            mm.m_Table[1][2] * mm.m_Table[2][3] * mm.m_Table[3][1] - mm.m_Table[1][3] * mm.m_Table[2][2] * mm.m_Table[3][1] +
+            mm.m_Table[1][3] * mm.m_Table[2][1] * mm.m_Table[3][2] - mm.m_Table[1][1] * mm.m_Table[2][3] * mm.m_Table[3][2] -
+            mm.m_Table[1][2] * mm.m_Table[2][1] * mm.m_Table[3][3] + mm.m_Table[1][1] * mm.m_Table[2][2] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[1][3] * mm.m_Table[2][2] * mm.m_Table[3][0] - mm.m_Table[1][2] * mm.m_Table[2][3] * mm.m_Table[3][0] -
+            mm.m_Table[1][3] * mm.m_Table[2][0] * mm.m_Table[3][2] + mm.m_Table[1][0] * mm.m_Table[2][3] * mm.m_Table[3][2] +
+            mm.m_Table[1][2] * mm.m_Table[2][0] * mm.m_Table[3][3] - mm.m_Table[1][0] * mm.m_Table[2][2] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[1][1] * mm.m_Table[2][3] * mm.m_Table[3][0] - mm.m_Table[1][3] * mm.m_Table[2][1] * mm.m_Table[3][0] +
+            mm.m_Table[1][3] * mm.m_Table[2][0] * mm.m_Table[3][1] - mm.m_Table[1][0] * mm.m_Table[2][3] * mm.m_Table[3][1] -
+            mm.m_Table[1][1] * mm.m_Table[2][0] * mm.m_Table[3][3] + mm.m_Table[1][0] * mm.m_Table[2][1] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[1][2] * mm.m_Table[2][1] * mm.m_Table[3][0] - mm.m_Table[1][1] * mm.m_Table[2][2] * mm.m_Table[3][0] -
+            mm.m_Table[1][2] * mm.m_Table[2][0] * mm.m_Table[3][1] + mm.m_Table[1][0] * mm.m_Table[2][2] * mm.m_Table[3][1] +
+            mm.m_Table[1][1] * mm.m_Table[2][0] * mm.m_Table[3][2] - mm.m_Table[1][0] * mm.m_Table[2][1] * mm.m_Table[3][2]
+            ),
+        inv_det * (
+            mm.m_Table[0][3] * mm.m_Table[2][2] * mm.m_Table[3][1] - mm.m_Table[0][2] * mm.m_Table[2][3] * mm.m_Table[3][1] -
+            mm.m_Table[0][3] * mm.m_Table[2][1] * mm.m_Table[3][2] + mm.m_Table[0][1] * mm.m_Table[2][3] * mm.m_Table[3][2] +
+            mm.m_Table[0][2] * mm.m_Table[2][1] * mm.m_Table[3][3] - mm.m_Table[0][1] * mm.m_Table[2][2] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][2] * mm.m_Table[2][3] * mm.m_Table[3][0] - mm.m_Table[0][3] * mm.m_Table[2][2] * mm.m_Table[3][0] +
+            mm.m_Table[0][3] * mm.m_Table[2][0] * mm.m_Table[3][2] - mm.m_Table[0][0] * mm.m_Table[2][3] * mm.m_Table[3][2] -
+            mm.m_Table[0][2] * mm.m_Table[2][0] * mm.m_Table[3][3] + mm.m_Table[0][0] * mm.m_Table[2][2] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][3] * mm.m_Table[2][1] * mm.m_Table[3][0] - mm.m_Table[0][1] * mm.m_Table[2][3] * mm.m_Table[3][0] -
+            mm.m_Table[0][3] * mm.m_Table[2][0] * mm.m_Table[3][1] + mm.m_Table[0][0] * mm.m_Table[2][3] * mm.m_Table[3][1] +
+            mm.m_Table[0][1] * mm.m_Table[2][0] * mm.m_Table[3][3] - mm.m_Table[0][0] * mm.m_Table[2][1] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][1] * mm.m_Table[2][2] * mm.m_Table[3][0] - mm.m_Table[0][2] * mm.m_Table[2][1] * mm.m_Table[3][0] +
+            mm.m_Table[0][2] * mm.m_Table[2][0] * mm.m_Table[3][1] - mm.m_Table[0][0] * mm.m_Table[2][2] * mm.m_Table[3][1] -
+            mm.m_Table[0][1] * mm.m_Table[2][0] * mm.m_Table[3][2] + mm.m_Table[0][0] * mm.m_Table[2][1] * mm.m_Table[3][2]
+            ),
+        inv_det * (
+            mm.m_Table[0][2] * mm.m_Table[1][3] * mm.m_Table[3][1] - mm.m_Table[0][3] * mm.m_Table[1][2] * mm.m_Table[3][1] +
+            mm.m_Table[0][3] * mm.m_Table[1][1] * mm.m_Table[3][2] - mm.m_Table[0][1] * mm.m_Table[1][3] * mm.m_Table[3][2] -
+            mm.m_Table[0][2] * mm.m_Table[1][1] * mm.m_Table[3][3] + mm.m_Table[0][1] * mm.m_Table[1][2] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][3] * mm.m_Table[1][2] * mm.m_Table[3][0] - mm.m_Table[0][2] * mm.m_Table[1][3] * mm.m_Table[3][0] -
+            mm.m_Table[0][3] * mm.m_Table[1][0] * mm.m_Table[3][2] + mm.m_Table[0][0] * mm.m_Table[1][3] * mm.m_Table[3][2] +
+            mm.m_Table[0][2] * mm.m_Table[1][0] * mm.m_Table[3][3] - mm.m_Table[0][0] * mm.m_Table[1][2] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][1] * mm.m_Table[1][3] * mm.m_Table[3][0] - mm.m_Table[0][3] * mm.m_Table[1][1] * mm.m_Table[3][0] +
+            mm.m_Table[0][3] * mm.m_Table[1][0] * mm.m_Table[3][1] - mm.m_Table[0][0] * mm.m_Table[1][3] * mm.m_Table[3][1] -
+            mm.m_Table[0][1] * mm.m_Table[1][0] * mm.m_Table[3][3] + mm.m_Table[0][0] * mm.m_Table[1][1] * mm.m_Table[3][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][2] * mm.m_Table[1][1] * mm.m_Table[3][0] - mm.m_Table[0][1] * mm.m_Table[1][2] * mm.m_Table[3][0] -
+            mm.m_Table[0][2] * mm.m_Table[1][0] * mm.m_Table[3][1] + mm.m_Table[0][0] * mm.m_Table[1][2] * mm.m_Table[3][1] +
+            mm.m_Table[0][1] * mm.m_Table[1][0] * mm.m_Table[3][2] - mm.m_Table[0][0] * mm.m_Table[1][1] * mm.m_Table[3][2]
+            ),
+        inv_det * (
+            mm.m_Table[0][3] * mm.m_Table[1][2] * mm.m_Table[2][1] - mm.m_Table[0][2] * mm.m_Table[1][3] * mm.m_Table[2][1] -
+            mm.m_Table[0][3] * mm.m_Table[1][1] * mm.m_Table[2][2] + mm.m_Table[0][1] * mm.m_Table[1][3] * mm.m_Table[2][2] +
+            mm.m_Table[0][2] * mm.m_Table[1][1] * mm.m_Table[2][3] - mm.m_Table[0][1] * mm.m_Table[1][2] * mm.m_Table[2][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][2] * mm.m_Table[1][3] * mm.m_Table[2][0] - mm.m_Table[0][3] * mm.m_Table[1][2] * mm.m_Table[2][0] +
+            mm.m_Table[0][3] * mm.m_Table[1][0] * mm.m_Table[2][2] - mm.m_Table[0][0] * mm.m_Table[1][3] * mm.m_Table[2][2] -
+            mm.m_Table[0][2] * mm.m_Table[1][0] * mm.m_Table[2][3] + mm.m_Table[0][0] * mm.m_Table[1][2] * mm.m_Table[2][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][3] * mm.m_Table[1][1] * mm.m_Table[2][0] - mm.m_Table[0][1] * mm.m_Table[1][3] * mm.m_Table[2][0] -
+            mm.m_Table[0][3] * mm.m_Table[1][0] * mm.m_Table[2][1] + mm.m_Table[0][0] * mm.m_Table[1][3] * mm.m_Table[2][1] +
+            mm.m_Table[0][1] * mm.m_Table[1][0] * mm.m_Table[2][3] - mm.m_Table[0][0] * mm.m_Table[1][1] * mm.m_Table[2][3]
+            ),
+        inv_det * (
+            mm.m_Table[0][1] * mm.m_Table[1][2] * mm.m_Table[2][0] - mm.m_Table[0][2] * mm.m_Table[1][1] * mm.m_Table[2][0] +
+            mm.m_Table[0][2] * mm.m_Table[1][0] * mm.m_Table[2][1] - mm.m_Table[0][0] * mm.m_Table[1][2] * mm.m_Table[2][1] -
+            mm.m_Table[0][1] * mm.m_Table[1][0] * mm.m_Table[2][2] + mm.m_Table[0][0] * mm.m_Table[1][1] * mm.m_Table[2][2]
+            )
+    );
+}
+
+DWF_Collider::Capsule_Collider DrawCapsule2(DWF_Model::Model*              pCapsule,
+                                      const DWF_Renderer::Shader_OpenGL&   shader,
+                                      const DWF_Renderer::Renderer_OpenGL& renderer)
+{
+    DWF_Collider::Capsule_Collider collider;
+    collider.m_yBase  = 0.0f;
+    collider.m_yCap   = 0.85f + (0.17f * 2.0f);
+    collider.m_Radius = 0.17f;
+    collider.m_Pos    = DWF_Math::Vector3F(7.0f, 0.0f, -3.0f);
+
+    collider.m_MatRS.Rotate((float)(M_PI * 0.25), DWF_Math::Vector3F(0.0f, 0.0f, 1.0f));
+
+    float determinant = 0.0f;
+    collider.m_InvMatRS = collider.m_MatRS.Inverse(determinant);
+
+    // place the capsule
+    DWF_Math::Matrix4x4F matrix = DWF_Math::Matrix4x4F::Identity();
+    matrix.m_Table[3][0]        = collider.m_Pos.m_X;
+    matrix.m_Table[3][1]        = collider.m_Pos.m_Y;
+    matrix.m_Table[3][2]        = collider.m_Pos.m_Z;
+
+    matrix = collider.m_MatRS.Multiply(matrix);
+
+    shader.Use(true);
+
+    // draw the capsule
+    for (std::size_t i = 0; i < pCapsule->m_Mesh.size(); ++i)
+        renderer.Draw(*pCapsule->m_Mesh[i], matrix, &shader);
+
+    return collider;
+}
+*/
+//------------------------------------------------------------------------------
+DWF_Collider::Box_Collider DrawBox(DWF_Model::Model*              pCapsule,
+                             const DWF_Renderer::Shader_OpenGL&   shader,
+                             const DWF_Renderer::Renderer_OpenGL& renderer)
+{
+    DWF_Collider::Box_Collider collider;
+    collider.m_Min = DWF_Math::Vector3F(-0.4f, -0.2f, -0.3f);
+    collider.m_Max = DWF_Math::Vector3F( 0.4f,  0.2f,  0.3f);
+    collider.m_Pos = DWF_Math::Vector3F(-5.0f,  0.0f,  3.5f);
+
+    collider.m_MatRS.Rotate((float)(M_PI * 0.25), DWF_Math::Vector3F(0.0f, 1.0f, 0.0f));
+
+    float determinant = 0.0f;
+    collider.m_InvMatRS = collider.m_MatRS.Inverse(determinant);
+
+    // place the capsule
+    DWF_Math::Matrix4x4F matrix = DWF_Math::Matrix4x4F::Identity();
+    matrix.m_Table[3][0]        = collider.m_Pos.m_X;
+    matrix.m_Table[3][1]        = collider.m_Pos.m_Y;
+    matrix.m_Table[3][2]        = collider.m_Pos.m_Z;
+
+    matrix = collider.m_MatRS.Multiply(matrix);
 
     shader.Use(true);
 
@@ -937,6 +1113,13 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     std::unique_ptr<DWF_Model::Model> pCapsule(DWF_Model::Factory::GetCapsule(0.85f, 0.17f, 16.0f, vf, vc, mat));
 
+    mat.m_Color.m_B = 0.0f;
+    mat.m_Color.m_G = 1.0f;
+    mat.m_Color.m_R = 0.0f;
+    mat.m_Color.m_A = 1.0f;
+
+    std::unique_ptr<DWF_Model::Model> pBox(DWF_Model::Factory::GetBox(0.8f, 0.4f, 0.6f, false, vf, vc, mat));
+
     /*
     DWF_Model::VertexFormat vf;
     vf.m_Type = DWF_Model::VertexFormat::IEType::IE_VT_Triangles;
@@ -1108,13 +1291,15 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
                                                       playerMatrix.m_Table[3][2]);
 
             // draw the capsule around the player
-            DrawPlayerCapsule(pPlayerCapsule.get(), playerMatrix, colShader, renderer);
+            DrawPlayerCapsule (pPlayerCapsule.get(), playerMatrix, colShader, renderer);
 
             // draw the background
             DrawBackground(pBackground.get(), texShader, renderer);
 
-            // draw the background
-            DWF_Collider::Capsule_Collider capsuleCollider = DrawCapsule(pCapsule.get(), colShader, renderer);
+            // draw the objects
+            DWF_Collider::Capsule_Collider capsuleCollider = DrawCapsule (pCapsule.get(), colShader, renderer);
+            //DWF_Collider::Capsule_Collider capsuleCollider2 = DrawCapsule2(pCapsule.get(), colShader, renderer);
+            DWF_Collider::Box_Collider boxCollider         = DrawBox(pBox.get(), colShader, renderer);
 
             // dispatch the player state
             if (g_Jumping)
@@ -1138,6 +1323,24 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             DWF_Math::Vector3F mtv;
 
             while (DWF_Collider::GJK::Resolve(playerCollider, capsuleCollider, mtv))
+            {
+                g_xPos -= g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+                g_zPos -= g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+
+                playerCollider.m_Pos = DWF_Math::Vector3F(-g_xPos, 0.0f, -2.0f - g_zPos);
+            }
+
+            /*
+            while (DWF_Collider::GJK::Resolve(playerCollider, capsuleCollider2, mtv))
+            {
+                g_xPos -= g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+                g_zPos -= g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+
+                playerCollider.m_Pos = DWF_Math::Vector3F(-g_xPos, 0.0f, -2.0f - g_zPos);
+            }
+            */
+
+            while (DWF_Collider::GJK::Resolve(playerCollider, boxCollider, mtv))
             {
                 g_xPos -= g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
                 g_zPos -= g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
