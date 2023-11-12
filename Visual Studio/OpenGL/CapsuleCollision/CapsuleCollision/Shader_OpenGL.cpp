@@ -29,6 +29,7 @@
 #include "Shader_OpenGL.h"
 
 // std
+#include <vector>
 #include <fstream>
 #include <sstream>
 
@@ -150,7 +151,19 @@ bool Shader_OpenGL::Link(bool use) const
 
     // succeeded?
     if (!linked)
+    {
+        // use below code to debug shader compilation errors
+        /*
+        GLint maxLength = 0;
+        glGetProgramiv(m_ProgramID, GL_INFO_LOG_LENGTH, &maxLength);
+
+        // The maxLength includes the NULL character
+        std::vector<GLchar> infoLog(maxLength);
+        glGetProgramInfoLog(m_ProgramID, maxLength, &maxLength, &infoLog[0]);
+        */
+
         return false;
+    }
 
     // do use linked program immediately?
     if (use)

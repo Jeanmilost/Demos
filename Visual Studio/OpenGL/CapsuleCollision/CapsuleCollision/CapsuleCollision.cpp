@@ -54,7 +54,8 @@ const Vector3F g_DefCapsule2Bottom(  0.0f,   0.0f,    0.0f);
       Vector3F g_Capsule2Pos      ( 15.0f, -20.0f, -100.0f);
       bool     g_Rotate = false;
 //------------------------------------------------------------------------------
-const char vertexShader[] = "precision mediump float;"
+const char vertexShader[] = "#version 120\n"
+                            "precision mediump float;\n"
                             "attribute    vec3 aVertices;"
                             "attribute    vec4 aColor;"
                             "attribute    vec2 aTexCoord;"
@@ -70,7 +71,8 @@ const char vertexShader[] = "precision mediump float;"
                             "    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
                             "}";
 //------------------------------------------------------------------------------
-const char colTestVertShader[] = "precision mediump float;"
+const char colTestVertShader[] = "#version 120\n"
+                                 "precision mediump float;\n"
                                  "attribute    vec3 aVertices;"
                                  "attribute    vec4 aColor;"
                                  "uniform      int  uIsColliding;"
@@ -87,7 +89,8 @@ const char colTestVertShader[] = "precision mediump float;"
                                  "    gl_Position = uProjection * uView * uModel * vec4(aVertices, 1.0);"
                                  "}";
 //------------------------------------------------------------------------------
-const char fragmentShader[] = "precision mediump float;"
+const char fragmentShader[] = "#version 120\n"
+                              "precision mediump float;\n"
                               "uniform      sampler2D sTexture;"
                               "varying lowp vec4      vColor;"
                               "varying      vec2      vTexCoord;"
@@ -99,7 +102,8 @@ const char fragmentShader[] = "precision mediump float;"
                               "        discard;"
                               "}";
 //------------------------------------------------------------------------------
-const char colTestFragShader[] = "precision mediump float;"
+const char colTestFragShader[] = "#version 120\n"
+                                 "precision mediump float;\n"
                                  "varying lowp vec4 vColor;"
                                  "void main(void)"
                                  "{"
