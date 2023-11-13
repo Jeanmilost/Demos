@@ -52,62 +52,30 @@ bool Capsule::Intersect(const Capsule& other, float& penetrationDepth) const
     if (m_Top == other.m_Top || m_Bottom == other.m_Bottom)
         return true;
 
-    // this capsule
-    const Vector3F firstLineDir       = (m_Top       - m_Bottom).Normalize();
+    // calculate first capsule top and bottom positions from which the calculation should be applied
+    const Vector3F firstLineDir       = (m_Top - m_Bottom).Normalize();
     const Vector3F firstLineEndOffset = firstLineDir * m_Radius;
     const Vector3F firstTop           = m_Top        - firstLineEndOffset;
     const Vector3F firstBottom        = m_Bottom     + firstLineEndOffset;
 
-    // second capsule
-    const Vector3F secondLineDir       = (other.m_Top   - other.m_Bottom).Normalize();
+    // calculate second capsule top and bottom positions from which the calculation should be applied
+    const Vector3F secondLineDir       = (other.m_Top - other.m_Bottom).Normalize();
     const Vector3F secondLineEndOffset = secondLineDir  * other.m_Radius;
     const Vector3F secondTop           = other.m_Top    - secondLineEndOffset;
     const Vector3F secondBottom        = other.m_Bottom + secondLineEndOffset;
 
-    // vectors between line endpoints
-    const Vector3F v0 = secondBottom - firstBottom;
-    const Vector3F v1 = secondTop    - firstBottom;
-    const Vector3F v2 = secondBottom - firstTop;
-    const Vector3F v3 = secondTop    - firstTop;
+    // get lines in the center of each capsules
+    const Line3F firstLine(firstTop, firstBottom);
+    const Line3F secondLine(secondTop, secondBottom);
 
-    // squared distances
-    const float d0 = v0.Dot(v0);
-    const float d1 = v1.Dot(v1);
-    const float d2 = v2.Dot(v2);
-    const float d3 = v3.Dot(v3);
-
-    Vector3F bestCandidate;
-
-    // select best candidate for endpoint on first capsule
-    if (d2 < d0 || d2 < d1 || d3 < d0 || d3 < d1)
-        bestCandidate = firstTop;
-    else
-        bestCandidate = firstBottom;
-
-    const Line3F line      (firstBottom,  firstTop);
-    const Line3F secondLine(secondBottom, secondTop);
-
-    // select best candidate for point on second capsule line segment nearest to best potential endpoint on first capsule
-    const Vector3F secondBestCandidate = secondLine.ClosestPoint(bestCandidate);
-
-    // do the same for first capsule segment
-    bestCandidate = line.ClosestPoint(secondBestCandidate);
-
-    // calculate penetration normal and length
-    Vector3F     penetrationNormal = bestCandidate - secondBestCandidate;
-    const float  len               = penetrationNormal.Length();
-
-    if (len == 0.0f)
-        return false;
-
-    const float absLen = std::fabsf(len);
-
-    // normalize
-    penetrationNormal /= absLen;
+    // check if closest distance between lines composed by capsules top and bottom points
+    // is smaller than capsules radius
+    const float len = firstLine.GetShortestDistance(secondLine);
 
     // calculate the penetration depth
-    penetrationDepth = (m_Radius + other.m_Radius) - absLen;
+    penetrationDepth = (m_Radius + other.m_Radius) - std::fabsf(len);
 
+    // are capsules colliding?
     return (penetrationDepth > 0.0f);
 }
 //---------------------------------------------------------------------------
