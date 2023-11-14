@@ -104,8 +104,8 @@ float    g_zPos          = 0.0f;
 float    g_Velocity      = 0.025f;
 int      g_LastMouseXPos = 0;
 int      g_LastMouseYPos = 0;
-int      g_XDelta        = 0;
-int      g_YDelta        = 0;
+int      g_xDelta        = 0;
+int      g_yDelta        = 0;
 bool     g_Walking       = false;
 bool     g_Jumping       = false;
 bool     g_WasWalking    = false;
@@ -587,42 +587,88 @@ DWF_Math::Matrix4x4F ArcBallToMatrix(const ArcBall& arcball)
     return cameraPos.Multiply(cameraMatrixXY.Multiply(cameraMatrix));
 }
 //------------------------------------------------------------------------------
-DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
-                                       DWF_Math::Matrix4x4F&          viewMatrix,
-                                 const DWF_Model::IQM&                iqm_idle,
-                                       int&                           idleIndex,
-                                 const DWF_Model::IQM&                iqm_walk,
-                                       int&                           walkIndex,
-                                 const DWF_Model::IQM&                iqm_jump,
-                                       int&                           jumpIndex,
-                                 const DWF_Renderer::Shader_OpenGL&   texShader,
-                                 const DWF_Renderer::Shader_OpenGL&   colShader,
-                                 const DWF_Renderer::Renderer_OpenGL& renderer,
-                                       double                         elapsedTime)
+void MovePlayer(ArcBall&                              arcball,
+                DWF_Collider::Capsule_Collider&       playerCollider,
+                std::vector<DWF_Collider::Collider*>& colliders,
+                double                                elapsedTime)
 {
     POINT p;
-    
+
     // get current mouse position
     ::GetCursorPos(&p);
 
     // calculate delta on x and y axis
-    g_XDelta = g_LastMouseXPos - p.x;
-    g_YDelta = g_LastMouseYPos - p.y;
+    g_xDelta = g_LastMouseXPos - p.x;
+    g_yDelta = g_LastMouseYPos - p.y;
 
     // update the last known position
     g_LastMouseXPos = p.x;
     g_LastMouseYPos = p.y;
 
     // calculate the new direction from last mouse move
-    arcball.m_AngleY -= std::fmodf((float)g_XDelta * 0.01f, (float)M_PI * 2.0f);
+    arcball.m_AngleY -= std::fmodf((float)g_xDelta * 0.01f, (float)M_PI * 2.0f);
 
     // reset the deltas (otherwise the player will turn forever)
-    g_XDelta = 0;
-    g_YDelta = 0;
+    g_xDelta = 0;
+    g_yDelta = 0;
 
-    // calculate the next position
+    // get the pressed key, if any, and convert it to the matching player state
+    if (::GetKeyState(VK_SPACE) & 0x8000)
+        g_Jumping = true;
+    else
+    if ((::GetKeyState(VK_UP) & 0x8000) || (::GetKeyState(87) & 0x8000) || (::GetKeyState(119) & 0x8000))
+        g_Walking = true;
+    else
+        g_Walking = false;
+
+    // is player walking or was previously walking before jumping?
+    if (g_Walking || (g_Jumping && g_WasWalking))
+    {
+        // move player forward
+        g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+        g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+    }
+
+    // update player collider position
+    playerCollider.m_Pos = DWF_Math::Vector3F(-g_xPos, playerCollider.m_Pos.m_Y, -2.0f - g_zPos);
+
+    DWF_Math::Vector3F mtv;
+
+    // iterate through colliders to check
+    for (std::size_t i = 0; i < colliders.size(); ++i)
+        // found a collision?
+        while (DWF_Collider::GJK::Resolve(playerCollider, *colliders[i], mtv))
+        {
+            // EXPERIMENTAL calculate the slope limit against which the player will fall
+            //float ground_slope = RAD2DEG(acos(dot(normalise(mtv), vec3(0, 1, 0))));
+
+            // revert to previous position
+            g_xPos -= (g_Velocity * 0.01f) * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+            g_zPos -= (g_Velocity * 0.01f) * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
+
+            // update the player collider
+            playerCollider.m_Pos = DWF_Math::Vector3F(-g_xPos, 0.0f, -2.0f - g_zPos);
+        }
+
+    // calculate the next arcball position
     arcball.m_Position = DWF_Math::Vector3F(g_xPos, -0.5f, 2.0f + g_zPos);
-
+}
+//------------------------------------------------------------------------------
+DWF_Math::Matrix4x4F DrawPlayer(ArcBall&                        arcball,
+                                DWF_Collider::Capsule_Collider& playerCollider,
+                                DWF_Math::Matrix4x4F&           viewMatrix,
+                          const DWF_Model::IQM&                 iqm_idle,
+                                int&                            idleIndex,
+                          const DWF_Model::IQM&                 iqm_walk,
+                                int&                            walkIndex,
+                          const DWF_Model::IQM&                 iqm_jump,
+                                int&                            jumpIndex,
+                                DWF_Audio::Sound_OpenAL&        sound,
+                          const DWF_Renderer::Shader_OpenGL&    texShader,
+                          const DWF_Renderer::Shader_OpenGL&    colShader,
+                          const DWF_Renderer::Renderer_OpenGL&  renderer,
+                                double                          elapsedTime)
+{
     // calculate the resulting view matrix and connect it to the shaders
     viewMatrix = ArcBallToMatrix(arcball);
     renderer.ConnectViewMatrixToShader(&texShader, viewMatrix);
@@ -631,7 +677,7 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
     DWF_Math::Matrix4x4F modelMatrix;
 
     // calculate the model matrix
-    BuildModelMatrix(DWF_Math::Vector3F(-g_xPos, 0.0f, -2.0f - g_zPos), 0.0f, -arcball.m_AngleY, 0.0f, 0.005f, modelMatrix);
+    BuildModelMatrix(playerCollider.m_Pos, 0.0f, -arcball.m_AngleY, 0.0f, 0.005f, modelMatrix);
 
     // dispatch the player state
     if (g_Jumping)
@@ -644,7 +690,7 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
             DrawSkeleton(iqm_jump, modelMatrix, &colShader, &renderer, 0, 24, jumpFrameIndex);
 
         // calculate the model height (done after model rendering because animation already includes it)
-        modelMatrix.m_Table[3][1] = std::sinf((jumpFrameIndex * (float)M_PI) / 23.0f) * 0.5f;
+        modelMatrix.m_Table[3][1] = playerCollider.m_Pos.m_Y + std::sinf((jumpFrameIndex * (float)M_PI) / 23.0f) * 0.5f;
 
         // jump animation end reached?
         if (jumpFrameIndex >= 23)
@@ -652,6 +698,8 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
             g_Jumping = false;
             jumpIndex = 0;
         }
+
+        sound.Stop();
     }
     else
     if (g_Walking)
@@ -664,6 +712,9 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
             DrawSkeleton(iqm_walk, modelMatrix, &colShader, &renderer, 0, 30, walkFrameIndex);
 
         g_WasWalking = true;
+
+        if (!sound.IsPlaying())
+            sound.Play();
     }
     else
     {
@@ -675,6 +726,8 @@ DWF_Math::Matrix4x4F MoveAndDrawPlayer(ArcBall&                       arcball,
             DrawSkeleton(iqm_idle, modelMatrix, &colShader, &renderer, 0, 180, idleFrameIndex);
 
         g_WasWalking = false;
+
+        sound.Stop();
     }
 
     return modelMatrix;
@@ -1093,85 +1146,29 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             double elapsedTime = (double)::GetTickCount64() - lastTime;
             lastTime           = (double)::GetTickCount64();
 
-            // get the pressed key, if any, and convert it to the matching player state
-            if (::GetKeyState(VK_SPACE) & 0x8000)
-                g_Jumping = true;
-            else
-            if ((::GetKeyState(VK_UP) & 0x8000) || (::GetKeyState(87) & 0x8000) || (::GetKeyState(119) & 0x8000))
-                g_Walking = true;
-            else
-                g_Walking = false;
-
-            // dispatch the player state
-            if (g_Jumping)
-            {
-                // was previously walking before jumping?
-                if (g_WasWalking)
-                {
-                    // continue to move the player forward
-                    g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-                    g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-                }
-
-                sound.Stop();
-            }
-            else
-            if (g_Walking)
-            {
-                // move player forward
-                g_xPos += g_Velocity * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-                g_zPos += g_Velocity * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-
-                if (!sound.IsPlaying())
-                    sound.Play();
-            }
-            else
-                sound.Stop();
-
-            // update player collider position
-            playerCollider.m_Pos = DWF_Math::Vector3F(-g_xPos, playerCollider.m_Pos.m_Y, -2.0f - g_zPos);
-
-            DWF_Math::Vector3F mtv;
-
-            // iterate through colliders to check
-            for (std::size_t i = 0; i < colliders.size(); ++i)
-                // found a collision?
-                while (DWF_Collider::GJK::Resolve(playerCollider, *colliders[i], mtv))
-                {
-                    // EXPERIMENTAL calculate the slope limit against which the player will fall
-                    //float ground_slope = RAD2DEG(acos(dot(normalise(mtv), vec3(0, 1, 0))));
-
-                    // revert to previous position
-                    g_xPos -= (g_Velocity * 0.01f) * std::cosf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-                    g_zPos -= (g_Velocity * 0.01f) * std::sinf(arcball.m_AngleY + (float)(M_PI * 0.5)) * (float)(elapsedTime * 0.025);
-
-                    // update the player collider
-                    playerCollider.m_Pos = DWF_Math::Vector3F(-g_xPos, 0.0f, -2.0f - g_zPos);
-                }
-
             // draw the scene
             renderer.BeginScene(bgColor,
                                 (DWF_Renderer::Renderer::IESceneFlags)((unsigned)DWF_Renderer::Renderer::IESceneFlags::IE_SF_ClearColor |
                                                                        (unsigned)DWF_Renderer::Renderer::IESceneFlags::IE_SF_ClearDepth));
 
-            // move and draw the player
-            DWF_Math::Matrix4x4F playerMatrix = MoveAndDrawPlayer(arcball,
-                                                                  viewMatrix,
-                                                                  iqm_idle,
-                                                                  idleIndex,
-                                                                  iqm_walk,
-                                                                  walkIndex,
-                                                                  iqm_jump,
-                                                                  jumpIndex,
-                                                                  texShader,
-                                                                  colShader,
-                                                                  renderer,
-                                                                  elapsedTime);
+            // move the player
+            MovePlayer(arcball, playerCollider, colliders, elapsedTime);
 
-            // update player collider position
-            playerCollider.m_Pos = DWF_Math::Vector3F(playerMatrix.m_Table[3][0],
-                                                      playerMatrix.m_Table[3][1],
-                                                      playerMatrix.m_Table[3][2]);
+            // draw the player
+            DWF_Math::Matrix4x4F playerMatrix = DrawPlayer(arcball,
+                                                           playerCollider,
+                                                           viewMatrix,
+                                                           iqm_idle,
+                                                           idleIndex,
+                                                           iqm_walk,
+                                                           walkIndex,
+                                                           iqm_jump,
+                                                           jumpIndex,
+                                                           sound,
+                                                           texShader,
+                                                           colShader,
+                                                           renderer,
+                                                           elapsedTime);
 
             // draw the capsule around the player
             DrawPlayerCapsule (pPlayerCapsule.get(), playerMatrix, colShader, renderer);
