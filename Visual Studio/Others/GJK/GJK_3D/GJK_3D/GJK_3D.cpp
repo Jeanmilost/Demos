@@ -587,6 +587,8 @@ DWF_Math::Matrix4x4F ArcBallToMatrix(const ArcBall& arcball)
     return cameraPos.Multiply(cameraMatrixXY.Multiply(cameraMatrix));
 }
 //------------------------------------------------------------------------------
+// FIXME the way the next position is calculated is incorrect, the sliding and sloping isn't working,
+//       and the jumping state doesn't reflect the real position on the player
 void MovePlayer(ArcBall&                              arcball,
                 DWF_Collider::Capsule_Collider&       playerCollider,
                 std::vector<DWF_Collider::Collider*>& colliders,
@@ -1029,7 +1031,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     mat.m_Color.m_A = 1.0f;
 
     // create the box
-    std::unique_ptr<DWF_Model::Model> pBox(DWF_Model::Factory::GetBox(0.8f, 0.4f, 0.6f, false, vf, vc, mat));
+    std::unique_ptr<DWF_Model::Model> pBox(DWF_Model::Factory::GetBox(0.8f, 3.4f, 2.6f, false, vf, vc, mat));
 
     // set material
     mat.m_Color.m_B = 0.0f;
@@ -1062,10 +1064,11 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
 
     // box collider
     std::unique_ptr<DWF_Collider::Box_Collider> pBoxCol = std::make_unique<DWF_Collider::Box_Collider>();
-    pBoxCol->m_Min                                      = DWF_Math::Vector3F(-0.4f, -0.2f, -0.3f);
-    pBoxCol->m_Max                                      = DWF_Math::Vector3F(0.4f, 0.2f, 0.3f);
-    pBoxCol->m_Pos                                      = DWF_Math::Vector3F(-5.0f, 0.0f, 3.5f);
+    pBoxCol->m_Min                                      = DWF_Math::Vector3F(-0.4f, -1.7f, -1.3f);
+    pBoxCol->m_Max                                      = DWF_Math::Vector3F( 0.4f,  1.7f,  1.3f);
+    pBoxCol->m_Pos                                      = DWF_Math::Vector3F(-5.0f,  0.0f,  3.5f);
     pBoxCol->m_MatRS.Rotate((float)(M_PI * 0.25), DWF_Math::Vector3F(0.0f, 1.0f, 0.0f));
+    pBoxCol->m_MatRS.Rotate((float)(M_PI * 0.15), DWF_Math::Vector3F(0.0f, 0.0f, 1.0f));
 
     float determinant = 0.0f;
     pBoxCol->m_InvMatRS = pBoxCol->m_MatRS.Inverse(determinant);
