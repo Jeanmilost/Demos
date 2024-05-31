@@ -23,11 +23,11 @@
 //   except for two key differences:
 //   -> A method is implicitly passed data to operate on by the object on which it was called
 //   -> A method is able to operate on data that is contained within the class (remembering that an object is an instance of a class - the
-//      class is the definition, the object is an instance of that data).
+//      class is the definition, the object is an instance of that data)
 // This is a simplified explanation, ignoring issues of scope, etc...
 
 /**
-* Simple callback (c++ 98 and higher)
+* Simple C callback
 */
 class SimpleCallback
 {
