@@ -348,7 +348,7 @@ class BoostSignal
         std::string OnSignal(const std::string& caption);
 
     private:
-        mutable ITfOnSignal m_Signal;
+        ITfOnSignal m_Signal;
 };
 
 //---------------------------------------------------------------------------
