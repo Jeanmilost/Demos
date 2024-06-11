@@ -27,9 +27,9 @@
 // This is a simplified explanation, ignoring issues of scope, etc...
 
 /**
-* Simple C callback
+* C callback
 */
-class SimpleCallback
+class CCallback
 {
     public:
         /**
@@ -37,8 +37,8 @@ class SimpleCallback
         */
         typedef std::string (*ITfOnCallback)(const std::string& caption);
 
-        SimpleCallback();
-        virtual ~SimpleCallback();
+        CCallback();
+        virtual ~CCallback();
 
         /**
         * Calls the callback
@@ -63,31 +63,31 @@ class SimpleCallback
 };
 
 //---------------------------------------------------------------------------
-// SimpleCallback
+// CCallback
 //---------------------------------------------------------------------------
-SimpleCallback::SimpleCallback()
+CCallback::CCallback()
 {}
 //---------------------------------------------------------------------------
-SimpleCallback::~SimpleCallback()
+CCallback::~CCallback()
 {}
 //---------------------------------------------------------------------------
-void SimpleCallback::Call()
+void CCallback::Call()
 {
     if (m_Callback)
     {
-        std::cout << m_Callback("SimpleCallback").c_str();
+        std::cout << m_Callback("CCallback").c_str();
         return;
     }
 
-    std::cout << "SimpleCallback - ERROR - callback not defined";
+    std::cout << "CCallback - ERROR - callback not defined";
 }
 //---------------------------------------------------------------------------
-void SimpleCallback::Set_Callback(const ITfOnCallback& callback)
+void CCallback::Set_Callback(const ITfOnCallback& callback)
 {
     m_Callback = callback;
 }
 //---------------------------------------------------------------------------
-std::string SimpleCallback::OnCallback(const std::string& caption)
+std::string CCallback::OnCallback(const std::string& caption)
 {
     std::ostringstream sstr;
     sstr << "Called from: " << caption << "\n";
@@ -240,14 +240,17 @@ std::string BoostCallback::OnCallback(const std::string& caption)
 //---------------------------------------------------------------------------
 int main()
 {
-    SimpleCallback simpleCallback;
-    simpleCallback.Set_Callback(SimpleCallback::OnCallback);
-    simpleCallback.Call();
+    // c callback. The callback function can be a static member of a class or a standalone function, but not a method
+    CCallback cCallback;
+    cCallback.Set_Callback(CCallback::OnCallback);
+    cCallback.Call();
 
+    // std callback, supports methods, and similar to boost callbacks
     StdCallback stdCallback;
     stdCallback.Set_Callback(std::bind(&StdCallback::OnCallback, &stdCallback, std::placeholders::_1));
     stdCallback.Call();
 
+    // boost callback, supports methods, and similar to std callbacks
     BoostCallback boostCallback;
     boostCallback.Set_Callback(boost::bind(&BoostCallback::OnCallback, &boostCallback, boost::placeholders::_1));
     boostCallback.Call();
