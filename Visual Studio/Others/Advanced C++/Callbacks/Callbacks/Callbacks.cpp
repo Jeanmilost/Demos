@@ -10,10 +10,13 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
+#include <csignal>
 
 // libraries
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <boost/signals2/signal.hpp>
+#include <boost/optional/optional_io.hpp>
 
 // NOTE about the difference between a function and a method:
 // (from https://stackoverflow.com/questions/155609/whats-the-difference-between-a-method-and-a-function)
@@ -237,6 +240,151 @@ std::string BoostCallback::OnCallback(const std::string& caption)
 }
 //---------------------------------------------------------------------------
 
+/**
+* Std signal, since c++ 17
+*/
+class StdSignal
+{
+    public:
+        /**
+        * Signal function definition, need to be of type void(int)
+        */
+        typedef void (*ITfOnSignal)(int signal);
+
+        StdSignal();
+        virtual ~StdSignal();
+
+        /**
+        * Emits the signal
+        */
+        void Emit();
+
+        /**
+        * Sets the signal to emit
+        *@param channel - signal channel, may be a macro like SIGINT or an implementation-defined value
+        *@param signal - signal handle
+        */
+        void Set_Signal(int channel, const ITfOnSignal& signal);
+
+        /**
+        * Signal method to call
+        *@param channel - signal channel
+        */
+        static void OnSignal(int channel);
+
+    private:
+        int         m_Channel = 0;
+        ITfOnSignal m_Signal  = nullptr;
+};
+
+//---------------------------------------------------------------------------
+// StdSignal
+//---------------------------------------------------------------------------
+StdSignal::StdSignal()
+{}
+//---------------------------------------------------------------------------
+StdSignal::~StdSignal()
+{}
+//---------------------------------------------------------------------------
+void StdSignal::Emit()
+{
+    if (m_Signal)
+    {
+        std::raise(m_Channel);
+        return;
+    }
+
+    std::cout << "StdSignal - ERROR - callback not defined";
+}
+//---------------------------------------------------------------------------
+void StdSignal::Set_Signal(int channel, const ITfOnSignal& signal)
+{
+    m_Signal  = signal;
+    m_Channel = channel;
+
+    std::signal(m_Channel, m_Signal);
+}
+//---------------------------------------------------------------------------
+void StdSignal::OnSignal(int channel)
+{
+    std::ostringstream sstr;
+    sstr << "Called from: StdSignal, channel = " << channel << "\n";
+    std::cout << sstr.str();
+}
+//---------------------------------------------------------------------------
+
+/**
+* Boost signal
+*/
+class BoostSignal
+{
+    public:
+        /**
+        * Signal function definition
+        */
+        typedef boost::signals2::signal<std::string(const std::string& caption)> ITfOnSignal;
+
+        BoostSignal();
+        virtual ~BoostSignal();
+
+        /**
+        * Emits the signal
+        */
+        void Emit();
+
+        /**
+        * Sets the signal to emit
+        *@param signal - signal handle
+        *@note The signal to emit should be bind in the following manner:
+        *      Set_Signal(boost::bind(&method_to_call, &method_owner, param_1, ...))
+        */
+        void Set_Signal(const ITfOnSignal::slot_type& signal);
+
+        /**
+        * Signal method to call
+        *@param caption - caption
+        *@return string to write to output stream
+        */
+        std::string OnSignal(const std::string& caption);
+
+    private:
+        mutable ITfOnSignal m_Signal;
+};
+
+//---------------------------------------------------------------------------
+// BoostSignal
+//---------------------------------------------------------------------------
+BoostSignal::BoostSignal() :
+    m_Signal()
+{}
+//---------------------------------------------------------------------------
+BoostSignal::~BoostSignal()
+{}
+//---------------------------------------------------------------------------
+void BoostSignal::Emit()
+{
+    if (!m_Signal.empty())
+    {
+        std::cout << m_Signal("BoostSignal").value().c_str();
+        return;
+    }
+
+    std::cout << "BoostSignal - ERROR - callback not defined";
+}
+//---------------------------------------------------------------------------
+void BoostSignal::Set_Signal(const ITfOnSignal::slot_type& signal)
+{
+    m_Signal.connect(signal);
+}
+//---------------------------------------------------------------------------
+std::string BoostSignal::OnSignal(const std::string& caption)
+{
+    std::ostringstream sstr;
+    sstr << "Called from: " << caption << "\n";
+    return sstr.str();
+}
+//---------------------------------------------------------------------------
+
 //---------------------------------------------------------------------------
 int main()
 {
@@ -254,5 +402,15 @@ int main()
     BoostCallback boostCallback;
     boostCallback.Set_Callback(boost::bind(&BoostCallback::OnCallback, &boostCallback, boost::placeholders::_1));
     boostCallback.Call();
+
+    // std signal. The callback function can be a static member of a class or a standalone function, but not a method
+    StdSignal stdSignal;
+    stdSignal.Set_Signal(SIGINT, StdSignal::OnSignal);
+    stdSignal.Emit();
+
+    // boost signal, supports methods
+    BoostSignal boostSignal;
+    boostSignal.Set_Signal(boost::bind(&BoostSignal::OnSignal, &boostSignal, boost::placeholders::_1));
+    boostSignal.Emit();
 }
 //---------------------------------------------------------------------------
