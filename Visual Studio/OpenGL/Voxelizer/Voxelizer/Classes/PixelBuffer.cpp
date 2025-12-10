@@ -92,7 +92,7 @@ bool PixelBuffer::FromBitmap(Buffer& buffer)
 
     // is bitmap signature correct?
     if (signature[0] != 'B' || signature[1] != 'M')
-        return 0;
+        return false;
 
     // skip 8 next bytes
     buffer.Seek(buffer.GetOffset(), 8);
@@ -190,6 +190,11 @@ bool PixelBuffer::FromBitmap(Buffer& buffer)
 
             break;
         }
+
+        // Windows V5
+        case 124:
+            // unsupported bitmap format
+            return false;
 
         default:
             // unsupported bitmap format
