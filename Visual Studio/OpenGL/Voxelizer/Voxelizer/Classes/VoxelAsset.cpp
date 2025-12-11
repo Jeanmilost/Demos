@@ -4,7 +4,7 @@
  * Description: Voxel asset                                                 *
  * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
- * MIT License - Capsule collision demo                                     *
+ * MIT License                                                              *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -78,7 +78,7 @@ bool VoxelAsset::Load(const PixelBuffer& bitmap)
 
                 VertexBuffer::IFormat format;
                 format.m_Format = (VertexBuffer::IFormat::IEFormat)((std::int32_t)VertexBuffer::IFormat::IEFormat::IE_VF_Colors);
-                format.m_Type   = VertexBuffer::IFormat::IEType::IE_VT_TriangleStrip;
+                format.m_Type   =  VertexBuffer::IFormat::IEType::IE_VT_TriangleStrip;
 
                 std::unique_ptr<Mesh> pBoxMesh = std::make_unique<Mesh>();
                 MeshFactory::GetBox(1.0f, 1.0f, 1.0f, false, format, culling, material, *pBoxMesh);
