@@ -41,6 +41,7 @@
 
 // classes
 #include "AMG_Core.h"
+#include "AMG_Rand.h"
 #include "AMG_Star.h"
 
 /*
@@ -86,22 +87,7 @@ static          UBYTE*      g_pDisplayBuffer[M_BitPlanes];
 static volatile short       g_SwapRequested  = 0;
 static          USHORT*     g_pBplPtrLoc     = NULL; // location in copper list where bitplane pointers are
 //---------------------------------------------------------------------------
-// Randomization
-//---------------------------------------------------------------------------
-static          ULONG       g_RandSeed       = 1;
-//---------------------------------------------------------------------------
 // Functions
-//---------------------------------------------------------------------------
-void srand(ULONG seed)
-{
-    g_RandSeed = seed;
-}
-//---------------------------------------------------------------------------
-ULONG rand(void)
-{
-    g_RandSeed = g_RandSeed * 1103515245UL + 12345UL;
-    return (g_RandSeed >> 16) & 0x7FFF;
-}
 //---------------------------------------------------------------------------
 static APTR GetVBR()
 {
@@ -391,16 +377,16 @@ int main()
     g_pCustom->intreq = (1 << INTB_VERTB);
 
     // initialize random seed using amiga timer
-    srand(0xFE4dF5FF);
+    amgSrand(0xFE4dF5FF);
 
     AMG_Star3D stars3D[M_Star_Count];
     AMG_Star2D star2D;
 
     for (UWORD i = 0; i < M_Star_Count; ++i)
     {
-        stars3D[i].m_X = ((rand() % 3200) - 1600) * 2;
-        stars3D[i].m_Y = ((rand() % 2560) - 1280) * 2;
-        stars3D[i].m_Z =  (rand() % M_Star_Deep) + 1;
+        stars3D[i].m_X = ((amgRand() % 3200) - 1600) * 2;
+        stars3D[i].m_Y = ((amgRand() % 2560) - 1280) * 2;
+        stars3D[i].m_Z =  (amgRand() % M_Star_Deep) + 1;
     }
 
     // animation loop
