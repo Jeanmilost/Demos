@@ -1,0 +1,9 @@
+{
+    "[m68k]": {
+        "editor.rulers": []
+    },
+    "m68k.includePaths": [
+        "c:\\Users\\jean_\\.vscode\\extensions\\bartmanabyss.amiga-debug-1.7.9\\bin\\win32\\opt\\m68k-amiga-elf\\sys-include"
+    ],
+    "m68k.vasm.provideDiagnostics": false
+}
