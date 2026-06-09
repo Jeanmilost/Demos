@@ -91,10 +91,10 @@ static          USHORT*     g_pBplPtrLoc     = NULL; // location in copper list 
 //---------------------------------------------------------------------------
 static APTR GetVBR()
 {
-    APTR  pVbr      = 0;
+    APTR  pVbr     = 0;
     UWORD getvbr[] = { 0x4e7a, 0x0801, 0x4e73 }; // MOVEC.L VBR,D0 RTE
 
-    if (SysBase->AttnFlags & AFF_68010) 
+    if (SysBase->AttnFlags & AFF_68010)
         pVbr = (APTR)Supervisor((ULONG(*)())getvbr);
 
     return pVbr;
