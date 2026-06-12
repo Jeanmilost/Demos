@@ -26,7 +26,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
  ****************************************************************************/
 
-// amiga lib
+// amiga sdk
 #include "support/gcc8_c_support.h" //REM?
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -89,57 +89,6 @@ static          USHORT*     g_pBplPtrLoc     = NULL; // location in copper list 
 //---------------------------------------------------------------------------
 // Functions
 //---------------------------------------------------------------------------
-static APTR GetVBR()
-{
-    APTR  pVbr     = 0;
-    UWORD getvbr[] = { 0x4e7a, 0x0801, 0x4e73 }; // MOVEC.L VBR,D0 RTE
-
-    if (SysBase->AttnFlags & AFF_68010)
-        pVbr = (APTR)Supervisor((ULONG(*)())getvbr);
-
-    return pVbr;
-}
-//---------------------------------------------------------------------------
-void SetInterruptHandler(APTR pInterrupt)
-{
-    *(volatile APTR*)(((UBYTE*)g_pVBR) + 0x6c) = pInterrupt;
-}
-//---------------------------------------------------------------------------
-APTR GetInterruptHandler()
-{
-    return *(volatile APTR*)(((UBYTE*)g_pVBR) + 0x6c);
-}
-//---------------------------------------------------------------------------
-void WaitVbl()
-{
-    while (1)
-    {
-        volatile ULONG vPos = *(volatile ULONG*)0xDFF004;
-        vPos               &= 0x1ff00;
-
-        if (vPos != (311 << 8))
-            break;
-    }
-
-    while (1)
-    {
-        volatile ULONG vPos = *(volatile ULONG*)0xDFF004;
-        vPos               &= 0x1ff00;
-
-        if (vPos == (311 << 8))
-            break;
-    }
-}
-//---------------------------------------------------------------------------
-__attribute__((always_inline)) inline void WaitBlt()
-{
-    UWORD tst = *(volatile UWORD*)&g_pCustom->dmaconr;
-    (void)tst;
-
-    while (*(volatile UWORD*)&g_pCustom->dmaconr&(1 << 14))
-    {}
-}
-//---------------------------------------------------------------------------
 void TakeSystem()
 {
     Forbid();
@@ -153,37 +102,37 @@ void TakeSystem()
     WaitTOF();
     WaitTOF();
 
-    WaitVbl();
-    WaitVbl();
+    amgWaitVbl();
+    amgWaitVbl();
 
     OwnBlitter();
     WaitBlit();
     Disable();
-    
+
     g_pCustom->intena = 0x7fff;
     g_pCustom->intreq = 0x7fff;
     g_pCustom->dmacon = 0x7fff;
 
     for (int a = 0; a < 32; ++a)
-        g_pCustom->color[a]=0;
+        g_pCustom->color[a] = 0;
 
-    WaitVbl();
-    WaitVbl();
+    amgWaitVbl();
+    amgWaitVbl();
 
-    g_pVBR       = GetVBR();
-    g_pSystemIrq = GetInterruptHandler();
+    g_pVBR       = amgGetVBR();
+    g_pSystemIrq = amgGetInterruptHandler(g_pVBR);
 }
 //---------------------------------------------------------------------------
 void FreeSystem()
 {
-    WaitVbl();
+    amgWaitVbl();
     WaitBlit();
 
     g_pCustom->intena = 0x7fff;
     g_pCustom->intreq = 0x7fff;
     g_pCustom->dmacon = 0x7fff;
 
-    SetInterruptHandler(g_pSystemIrq);
+    amgSetInterruptHandler(g_pVBR, g_pSystemIrq);
 
     g_pCustom->cop1lc  = (ULONG)GfxBase->copinit;
     g_pCustom->cop2lc  = (ULONG)GfxBase->LOFlist;
@@ -202,11 +151,6 @@ void FreeSystem()
     WaitTOF();
 
     Permit();
-}
-//---------------------------------------------------------------------------
-__attribute__((always_inline)) inline short MouseLeft()
-{
-    return !((*(volatile UBYTE*)0xbfe001) & 64);
 }
 //---------------------------------------------------------------------------
 static __attribute__((interrupt)) void interruptHandler(void)
@@ -284,7 +228,7 @@ int main()
         Exit(0);
 
     TakeSystem();
-    WaitVbl();
+    amgWaitVbl();
 
     const USHORT lineSize = 320 / 8;
 
@@ -372,7 +316,7 @@ int main()
     g_pCustom->dmacon  = DMAF_SETCLR | DMAF_MASTER | DMAF_RASTER | DMAF_COPPER | DMAF_BLITTER;
 
     // set up VBL interrupt for buffer swapping
-    SetInterruptHandler((APTR)interruptHandler);
+    amgSetInterruptHandler(g_pVBR, (APTR)interruptHandler);
     g_pCustom->intena = INTF_SETCLR | INTF_INTEN | INTF_VERTB;
     g_pCustom->intreq = (1 << INTB_VERTB);
 
@@ -390,7 +334,7 @@ int main()
     }
 
     // animation loop
-    while (!MouseLeft())
+    while (!amgMouseLeft())
     {
         // clear the draw buffer
         amgClearDrawBuffer(lineSize, M_BitPlanes, g_pDrawBuffer);

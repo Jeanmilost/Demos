@@ -1,7 +1,7 @@
 /****************************************************************************
- * ==> AMG_Rand ------------------------------------------------------------*
+ * ==> AMG_CopperBar -------------------------------------------------------*
  ****************************************************************************
- * Description: Amiga project - Random functions                            *
+ * Description: Amiga project - Copper bars functions and resources         *
  * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************
  * MIT License                                                              *
@@ -36,13 +36,30 @@
 //-------------------------------------------------------------------
 
 /**
-* Sets the random seed
-*@param seed - random seed to set
+* Gets the copper bar address into the copper list at the first WAIT word of the bar block
+*@return the copper bar address
+*@note The interrupt handler walks this pointer each VBL to update scanline waits
 */
-void amgSrand(ULONG seed);
+USHORT* amgCopperBarGetBar();
 
 /**
-* Gets a random number
-*@return a random number
+* Sets the copper bar address into the copper list at the first WAIT word of the bar block
+*@param pBar -  the new copper bar address to set
+*@note The interrupt handler walks this pointer each VBL to update scanline waits
 */
-ULONG amgRand(void);
+void amgCopperBarSetBar(USHORT* pBar);
+
+/**
+* Precomputes the per-scanline color values for the gradient bar
+*@param height - copper bar height in pixels
+*@param pBarColors - bar color table
+*/
+void amgCopperBarBuildRedGradient(USHORT height, USHORT* pBarColors);
+
+/**
+* Writes the initial copper bar block into chip RAM starting at bar address
+*@param startLine - bar start line in pixels
+*@param height - copper bar height in pixels
+*@param pBarColors - bar color table
+*/
+void amgCopperBarBuild(USHORT startLine, USHORT height, USHORT* pBarColors);

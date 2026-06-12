@@ -28,7 +28,7 @@
 
 #include "AMG_Star.h"
 
-// amiga lib
+// amiga sdk
 #include <proto/exec.h>
 
 //---------------------------------------------------------------------------
