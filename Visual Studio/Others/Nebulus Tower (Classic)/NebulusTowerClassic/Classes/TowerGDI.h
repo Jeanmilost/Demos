@@ -6,6 +6,10 @@
 // libraries
 #include <windows.h>
 
+/**
+* GDI based Nebulus tower
+*@author Jean-Milost Reymond
+*/
 class TowerGDI : public Tower
 {
     public:
@@ -21,6 +25,11 @@ class TowerGDI : public Tower
 
         virtual ~TowerGDI();
 
+        /**
+        * Sets the device context
+        *@param hWnd - Windows handle from which the device context was get
+        *@param hDC - device context to set
+        */
         virtual void SetDC(HWND hWnd, HDC hDC);
 
     protected:

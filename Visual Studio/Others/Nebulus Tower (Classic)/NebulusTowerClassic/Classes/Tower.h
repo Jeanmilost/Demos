@@ -3,6 +3,10 @@
 // std
 #include <string>
 
+/**
+* Nebulus tower
+*@author Jean-Milost Reymond
+*/
 class Tower
 {
     public:
