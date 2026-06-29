@@ -24,6 +24,24 @@
     <ClInclude Include="Classes\TowerGDI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Classes\Platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\Player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\PlatformGDI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\PlayerGDI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\PlatformsGDI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\Platforms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NebulusTowerClassic.cpp">
@@ -33,6 +51,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Classes\TowerGDI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\Platform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\Player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\PlatformGDI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\PlayerGDI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\Platforms.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\PlatformsGDI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -46,6 +82,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="NebulusTowerClassic.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Resources\Commodore 64 - Nebulus - Playable Characters - Player.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

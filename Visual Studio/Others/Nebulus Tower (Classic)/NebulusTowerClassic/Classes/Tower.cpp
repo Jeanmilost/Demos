@@ -6,6 +6,8 @@
 #include <algorithm>
 
 //------------------------------------------------------------------------------
+// Tower
+//------------------------------------------------------------------------------
 Tower::Tower()
 {}
 //------------------------------------------------------------------------------
@@ -44,6 +46,11 @@ void Tower::RotateLeft(float velocity)
 
     while (m_Angle < 0.0f)
         m_Angle += (float)M_PI;
+
+    m_TowerAngle -= velocity;
+
+    while (m_TowerAngle < 0.0f)
+        m_TowerAngle += (float)(M_PI * 2.0);
 }
 //------------------------------------------------------------------------------
 void Tower::RotateRight(float velocity)
@@ -52,5 +59,10 @@ void Tower::RotateRight(float velocity)
 
     while (m_Angle >= (float)M_PI)
         m_Angle -= (float)M_PI;
+
+    m_TowerAngle += velocity;
+
+    while (m_TowerAngle >= (float)(M_PI * 2.0))
+        m_TowerAngle -= (float)(M_PI * 2.0);
 }
 //------------------------------------------------------------------------------

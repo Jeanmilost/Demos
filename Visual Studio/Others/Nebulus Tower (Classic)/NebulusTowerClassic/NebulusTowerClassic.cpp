@@ -26,8 +26,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                   *
  ****************************************************************************/
 
+// std
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 // classes
 #include "TowerGDI.h"
+#include "PlatformsGDI.h"
+#include "PlayerGDI.h"
 
 // libraries
 #define WIN32_LEAN_AND_MEAN
@@ -37,7 +43,9 @@
 #include "Resource.h"
 
 //------------------------------------------------------------------------------
-TowerGDI g_Tower;
+TowerGDI     g_Tower;
+PlatformsGDI g_Platforms;
+PlayerGDI    g_Player;
 //------------------------------------------------------------------------------
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -66,14 +74,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case VK_ESCAPE:
                     ::PostQuitMessage(0);
                     break;
-
-                case VK_LEFT:
-                    g_Tower.RotateLeft();
-                    break;
-
-                case VK_RIGHT:
-                    g_Tower.RotateRight();
-                    break;
             }
 
             break;
@@ -83,6 +83,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     return 0;
+}
+//------------------------------------------------------------------------------
+void OnBeforeDrawTower(double elapsedTime, float angle, HDC hDC, const RECT& clientRect, const RECT& towerRect)
+{
+    g_Platforms.Draw(elapsedTime, angle, hDC, clientRect, towerRect, true);
+}
+//------------------------------------------------------------------------------
+void OnAfterDrawTower(double elapsedTime, float angle, HDC hDC, const RECT& clientRect, const RECT& towerRect)
+{
+    g_Platforms.Draw(elapsedTime, angle, hDC, clientRect, towerRect, false);
+}
+//------------------------------------------------------------------------------
+void OnDrawPlayer(double elapsedTime, HDC hDC, const RECT& clientRect, const RECT& towerRect)
+{
+    g_Player.Draw(elapsedTime, hDC, clientRect, towerRect);
 }
 //------------------------------------------------------------------------------
 int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
@@ -138,6 +153,23 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     // initialize tower graphical system
     g_Tower.SetDC(hWnd, hDC);
 
+    // bind callbacks
+    g_Tower.m_fOnBeforeDrawTower = std::bind(&OnBeforeDrawTower, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+    g_Tower.m_fOnAfterDrawTower  = std::bind(&OnAfterDrawTower,  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+    g_Tower.m_fOnDrawPlayer      = std::bind(&OnDrawPlayer,      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+    // load the player
+    g_Player.Load(L"..\\Resources\\Commodore 64 - Nebulus - Playable Characters - Player.png");
+
+    float step = (float)(M_PI * 2.0) / 16.0f;
+
+    // add the platforms
+    for (std::size_t i = 0; i < 16; ++i)
+    {
+        Platform* pPlatform = g_Platforms.Add();
+        pPlatform->SetAngle(step * (float)i);
+    }
+
     double lastTime = 0.0f;
 
     // program main loop
@@ -164,6 +196,24 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
             if (elapsedTime >= 16.0)
             {
                 lastTime = (double)::GetTickCount64();
+
+                // is player turning?
+                if (!g_Player.IsTurning())
+                    // left (or "A") or right (or "D") key pressed?
+                    if ((::GetKeyState(VK_LEFT) & 0x8000) || (::GetKeyState(65) & 0x8000))
+                    {
+                        g_Tower.RotateLeft();
+                        g_Player.MoveLeft();
+                    }
+                    else
+                    if ((::GetKeyState(VK_RIGHT) & 0x8000) || (::GetKeyState(68) & 0x8000))
+                    {
+                        g_Tower.RotateRight();
+                        g_Player.MoveRight();
+                    }
+                    else
+                        g_Player.Stop();
+
                 g_Tower.Draw(elapsedTime);
             }
             else

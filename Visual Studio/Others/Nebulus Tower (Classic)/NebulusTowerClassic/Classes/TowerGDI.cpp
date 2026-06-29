@@ -3,6 +3,7 @@
 // std
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <cmath>
 
 //------------------------------------------------------------------------------
 // TowerGDI
@@ -70,8 +71,8 @@ void TowerGDI::SetDC(HWND hWnd, HDC hDC)
     m_hOldBitmap = (HBITMAP)::SelectObject(m_hMemDC, m_hCanvas);
 
     // create brushes
-    m_hBlack = ::CreateSolidBrush(RGB(0, 0, 0));
-    m_hBlue  = ::CreateSolidBrush(RGB(0, 0, 255));
+    m_hBlack = ::CreateSolidBrush(RGB(0,  0,  0));
+    m_hBlue  = ::CreateSolidBrush(RGB(60, 57, 169));
 }
 //------------------------------------------------------------------------------
 void TowerGDI::DrawTower(double elapsedTime, float angle) const
@@ -105,6 +106,9 @@ void TowerGDI::DrawTower(double elapsedTime, float angle) const
     towerRect.top    = m_ClientRect.top;
     towerRect.bottom = m_ClientRect.bottom;
 
+    if (m_fOnBeforeDrawTower)
+        m_fOnBeforeDrawTower(elapsedTime, m_TowerAngle, m_hMemDC, m_ClientRect, towerRect);
+
     // draw the tower background rect
     ::FillRect(m_hMemDC, &towerRect, m_hBlue);
 
@@ -129,13 +133,13 @@ void TowerGDI::DrawTower(double elapsedTime, float angle) const
         for (std::size_t j = 0; j < (std::size_t)division; ++j)
         {
             // calculate current angle sinus
-            const float sinAngle = sinf(curAngle);
+            const float sinAngle = std::sinf(curAngle);
 
             // is brick located on the not visible tower face?
             if (sinAngle >= 0.0f)
             {
                 // calculate the brick x position
-                const int x = (halfX - halfWidth) + (int)roundf(curAngle < ((float)M_PI / 2.0f)
+                const int x = (halfX - halfWidth) + (int)std::roundf(curAngle < ((float)M_PI / 2.0f)
                         ? (float)halfWidth * (1.0f - sinAngle) : (float)halfWidth + ((float)halfWidth * sinAngle));
 
                 // draw brick horizontal line
@@ -144,9 +148,15 @@ void TowerGDI::DrawTower(double elapsedTime, float angle) const
             }
 
             // increase the current angle and clamp it between 0 and 2 * PI
-            curAngle = fmodf(curAngle + step, (float)M_PI * 2.0f);
+            curAngle = std::fmodf(curAngle + step, (float)M_PI * 2.0f);
         }
     }
+
+    if (m_fOnAfterDrawTower)
+        m_fOnAfterDrawTower(elapsedTime, m_TowerAngle, m_hMemDC, m_ClientRect, towerRect);
+
+    if (m_fOnDrawPlayer)
+        m_fOnDrawPlayer(elapsedTime, m_hMemDC, m_ClientRect, towerRect);
 
     // draw the back buffer onto the main one
     ::BitBlt(m_hDC,

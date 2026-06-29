@@ -143,11 +143,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Classes\Platform.h" />
+    <ClInclude Include="Classes\PlatformGDI.h" />
+    <ClInclude Include="Classes\Platforms.h" />
+    <ClInclude Include="Classes\PlatformsGDI.h" />
+    <ClInclude Include="Classes\Player.h" />
+    <ClInclude Include="Classes\PlayerGDI.h" />
     <ClInclude Include="Classes\Tower.h" />
     <ClInclude Include="Classes\TowerGDI.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Classes\Platform.cpp" />
+    <ClCompile Include="Classes\PlatformGDI.cpp" />
+    <ClCompile Include="Classes\Platforms.cpp" />
+    <ClCompile Include="Classes\PlatformsGDI.cpp" />
+    <ClCompile Include="Classes\Player.cpp" />
+    <ClCompile Include="Classes\PlayerGDI.cpp" />
     <ClCompile Include="Classes\Tower.cpp" />
     <ClCompile Include="Classes\TowerGDI.cpp" />
     <ClCompile Include="NebulusTowerClassic.cpp" />
@@ -156,6 +168,7 @@
     <ResourceCompile Include="NebulusTowerClassic.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\Resources\Commodore 64 - Nebulus - Playable Characters - Player.png" />
     <Image Include="NebulusTowerClassic.ico" />
     <Image Include="small.ico" />
   </ItemGroup>

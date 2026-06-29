@@ -44,13 +44,13 @@ class Tower
         * Rotates the tower on the left
         *@param velocity - rotation velocity
         */
-        virtual void RotateLeft(float velocity = 0.05f);
+        virtual void RotateLeft(float velocity = 0.025f);
 
         /**
         * Rotates the tower on the right
         *@param velocity - rotation velocity
         */
-        virtual void RotateRight(float velocity = 0.05f);
+        virtual void RotateRight(float velocity = 0.025f);
 
         /**
         * Draws the tower
@@ -59,6 +59,8 @@ class Tower
         virtual void Draw(double elapsedTime) const;
 
     protected:
+        float m_TowerAngle = 0.0f;
+
         /**
         * Draws the tower
         *@param elapsedTime - elapsed time since latest draw
@@ -67,8 +69,8 @@ class Tower
         virtual void DrawTower(double elapsedTime, float angle) const = 0;
 
     private:
-        std::size_t m_Width     = 400;
-        std::size_t m_RowHeight = 24;
-        float       m_Division  = 20.0f;
-        float       m_Angle     = 0.0f;
+        std::size_t m_Width      = 350;
+        std::size_t m_RowHeight  = 24;
+        float       m_Division   = 20.0f;
+        float       m_Angle      = 0.0f;
 };

@@ -1,5 +1,8 @@
 #pragma once
 
+// std
+#include <functional>
+
 // classes
 #include "Tower.h"
 
@@ -13,6 +16,41 @@
 class TowerGDI : public Tower
 {
     public:
+        /**
+        * Called before the tower is drawn
+        *@param elapsedTime - elapsed time since latest draw
+        *@param angle - current tower angle
+        *@param hDC - device context on which the tower is drawn
+        *@param clientRect - client rectangle
+        *@param towerRect - tower rectangle
+        */
+        using ITfOnBeforeDrawTower = std::function<void(double elapsedTime, float angle, HDC hDC, const RECT& clientRect,
+                const RECT& towerRect)>;
+
+        /**
+        * Called after the tower is drawn
+        *@param elapsedTime - elapsed time since latest draw
+        *@param angle - current tower angle
+        *@param hDC - device context on which the tower is drawn
+        *@param clientRect - client rectangle
+        *@param towerRect - tower rectangle
+        */
+        using ITfOnAfterDrawTower = std::function<void(double elapsedTime, float angle, HDC hDC, const RECT& clientRect,
+                const RECT& towerRect)>;
+
+        /**
+        * Called when the player should be drawn
+        *@param elapsedTime - elapsed time since latest draw
+        *@param hDC - device context on which the tower is drawn
+        *@param clientRect - client rectangle
+        *@param towerRect - tower rectangle
+        */
+        using ITfOnDrawPlayer = std::function<void(double elapsedTime, HDC hDC, const RECT& clientRect, const RECT& towerRect)>;
+
+        ITfOnBeforeDrawTower m_fOnBeforeDrawTower = nullptr;
+        ITfOnAfterDrawTower  m_fOnAfterDrawTower  = nullptr;
+        ITfOnDrawPlayer      m_fOnDrawPlayer      = nullptr;
+
         TowerGDI();
 
         /**
