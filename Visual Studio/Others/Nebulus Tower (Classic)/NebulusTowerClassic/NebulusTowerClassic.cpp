@@ -168,6 +168,7 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     {
         Platform* pPlatform = g_Platforms.Add();
         pPlatform->SetAngle(step * (float)i);
+        pPlatform->SetY(clientRect.bottom - 100);
     }
 
     double lastTime = 0.0f;

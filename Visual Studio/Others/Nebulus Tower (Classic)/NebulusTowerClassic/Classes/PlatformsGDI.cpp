@@ -1,6 +1,7 @@
 #include "PlatformsGDI.h"
 
 // std
+#include <algorithm>
 #include <memory>
 #include <cmath>
 #define _USE_MATH_DEFINES
@@ -9,6 +10,18 @@
 // classes
 #include "PlatformGDI.h"
 
+//------------------------------------------------------------------------------
+// Global functions
+//------------------------------------------------------------------------------
+bool OnSortPlatforms(Platform* pFirst, Platform* pSecond)
+{
+    // calculate current angles
+    const float firstAngle  = pFirst->m_TowerAngle  + pFirst->GetAngle();
+    const float secondAngle = pSecond->m_TowerAngle + pSecond->GetAngle();
+
+    // smaller cos = further back (assuming 0° faces the camera)
+    return std::cosf(firstAngle) < std::cosf(secondAngle);
+}
 //------------------------------------------------------------------------------
 // PlatformsGDI
 //------------------------------------------------------------------------------
@@ -45,13 +58,16 @@ void PlatformsGDI::Draw(double elapsedTime, float angle, HDC hDC, const RECT& cl
     // calculate the half width of the tower
     const LONG halfWidth = (LONG)((towerRect.right - towerRect.left) >> 1);
 
+    IPlatforms platforms;
+    platforms.reserve(m_Platforms.size());
+
     for (std::size_t i = 0; i < m_Platforms.size(); ++i)
     {
         const int   platformWidth = m_Platforms[i]->GetWidth();
         const float platformAngle = m_Platforms[i]->GetAngle() + (float)M_PI;
 
         // clamp current angle between 0 and 2 * PI
-        const float curAngle      = std::fmodf(angle + platformAngle, (float)M_PI * 2.0f);
+        const float curAngle = std::fmodf(angle + platformAngle, (float)M_PI * 2.0f);
 
         // check if platform is located on tower back or front face
         const bool isBackFace = (curAngle <= (float)(M_PI / 2.0) || curAngle >= (float)(M_PI + (M_PI / 2.0)));
@@ -83,7 +99,16 @@ void PlatformsGDI::Draw(double elapsedTime, float angle, HDC hDC, const RECT& cl
             // front pass, draw all front-face platforms
             continue;
 
-        static_cast<PlatformGDI*>(m_Platforms[i])->Draw(elapsedTime, hDC, clientRect, towerRect, x);
+        // set platform position and update tower angle
+        m_Platforms[i]->SetX(x);
+        m_Platforms[i]->m_TowerAngle = angle;
+
+        platforms.push_back(m_Platforms[i]);
     }
+
+    std::sort(platforms.begin(), platforms.end(), OnSortPlatforms);
+
+    for (std::size_t i = 0; i < platforms.size(); ++i)
+        static_cast<PlatformGDI*>(platforms[i])->Draw(elapsedTime, hDC);
 }
 //------------------------------------------------------------------------------

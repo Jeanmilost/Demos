@@ -28,11 +28,8 @@ class PlatformGDI : public Platform
         * Draws the platform
         *@param elapsedTime - elapsed time since latest draw
         *@param hDC - device context on which the player should be drawn
-        *@param clientRect - client rectangle
-        *@param towerRect - tower rectangle
-        *@param x - platform x position (located at the platform middle)
         */
-        virtual void Draw(double elapsedTime, HDC hDC, const RECT& clientRect, const RECT& towerRect, int x) const;
+        virtual void Draw(double elapsedTime, HDC hDC) const;
 
     private:
         HBRUSH m_hBlack     = nullptr;

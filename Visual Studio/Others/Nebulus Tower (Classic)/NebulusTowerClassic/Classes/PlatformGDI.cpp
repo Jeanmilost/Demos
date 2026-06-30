@@ -41,7 +41,7 @@ PlatformGDI::~PlatformGDI()
         ::DeleteObject(m_hWhite);
 }
 //------------------------------------------------------------------------------
-void PlatformGDI::Draw(double elapsedTime, HDC hDC, const RECT& clientRect, const RECT& towerRect, int x) const
+void PlatformGDI::Draw(double elapsedTime, HDC hDC) const
 {
     if (!hDC)
         return;
@@ -50,8 +50,8 @@ void PlatformGDI::Draw(double elapsedTime, HDC hDC, const RECT& clientRect, cons
         return;
 
     RECT platformRect;
-    platformRect.left   = x                 - (m_Width >> 1);//REM  towerRect.left + ((towerRect.right - towerRect.left) >> 1) - (m_Width >> 1);
-    platformRect.top    = towerRect.bottom  - 100;
+    platformRect.left   = m_X - (m_Width >> 1);
+    platformRect.top    = m_Y;
     platformRect.right  = platformRect.left + m_Width;
     platformRect.bottom = platformRect.top  + m_Height;
 
