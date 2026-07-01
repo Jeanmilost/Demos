@@ -166,9 +166,18 @@ int APIENTRY wWinMain(_In_     HINSTANCE hInstance,
     // add the platforms
     for (std::size_t i = 0; i < 16; ++i)
     {
+        // first platform
         Platform* pPlatform = g_Platforms.Add();
         pPlatform->SetAngle(step * (float)i);
         pPlatform->SetY(clientRect.bottom - 100);
+
+        // second platform
+        if ((i >= 3 && i < 6) || (i >= 11 && i < 15))
+        {
+            Platform* pPlatform = g_Platforms.Add();
+            pPlatform->SetAngle(step * (float)i);
+            pPlatform->SetY(clientRect.bottom - 200);
+        }
     }
 
     double lastTime = 0.0f;
