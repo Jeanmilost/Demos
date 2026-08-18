@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Thread Concurrency Example.cpp">
+    <ClCompile Include="Atomic Compare-And-Swap (CAS).cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

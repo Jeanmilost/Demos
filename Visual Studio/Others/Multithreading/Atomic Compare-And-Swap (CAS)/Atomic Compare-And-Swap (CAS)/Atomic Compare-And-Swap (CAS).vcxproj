@@ -21,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{0e1b9325-494e-4a3a-ab5b-4ddb2078ca83}</ProjectGuid>
-    <RootNamespace>ThreadConcurrencyExample</RootNamespace>
+    <ProjectGuid>{b43ced9d-b29b-468d-8361-38f55eb67e7c}</ProjectGuid>
+    <RootNamespace>AtomicCompareAndSwap)</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Thread Concurrency Example</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -140,7 +139,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Thread Concurrency Example.cpp" />
+    <ClCompile Include="Atomic Compare-And-Swap (CAS).cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

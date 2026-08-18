@@ -1,7 +1,0 @@
-<Solution>
-  <Configurations>
-    <Platform Name="x64" />
-    <Platform Name="x86" />
-  </Configurations>
-  <Project Path="Thread Concurrency Example/Thread Concurrency Example.vcxproj" Id="0e1b9325-494e-4a3a-ab5b-4ddb2078ca83" />
-</Solution>

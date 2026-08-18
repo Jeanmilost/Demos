@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Atomic Compare-And-Swap (CAS)/Atomic Compare-And-Swap (CAS).vcxproj" Id="b43ced9d-b29b-468d-8361-38f55eb67e7c" />
+</Solution>
