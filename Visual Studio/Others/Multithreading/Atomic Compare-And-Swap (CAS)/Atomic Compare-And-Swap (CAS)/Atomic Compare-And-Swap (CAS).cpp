@@ -12,7 +12,7 @@
 #include <iostream>
 #include <atomic>
 
- //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 void DemonstrateCompareExchangeStrong()
 {
     std::cout << "--- compare_exchange_strong Demo ---\n";
