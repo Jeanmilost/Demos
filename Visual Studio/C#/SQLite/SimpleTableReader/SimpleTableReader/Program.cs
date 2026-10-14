@@ -102,7 +102,7 @@ class Program
 
             Console.WriteLine("\nNow apply a filter...\n");
 
-            // open the database and get the apple ID cells from account table
+            // get the apple ID cells from account table, but also apply a filter
             names = GetCells("..\\..\\..\\..\\Database\\MediaLibrary.sqlitedb", "apple_id", "account", "dsid=1014958110");
 
             // print out the fetched results
