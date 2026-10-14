@@ -41,7 +41,7 @@ class Program
     /// <param name="column">Column name from which the cells should be get.</param>
     /// <param name="table">Table name from which the cells should be get.</param>
     /// <returns>Cells, empty list on error.</returns>
-    public static List<string> GetCells(string fileName, string column, string table)
+    public static List<string> GetCells(string fileName, string column, string table, string filter = "")
     {
         List<string> cells = new List<string>();
 
@@ -60,8 +60,13 @@ class Program
         {
             connection.Open();
 
+            string query;
+
             // build the SQLite query
-            string query = "SELECT " + column + " FROM " + table + ";";
+            if (filter == "")
+                query = "SELECT " + column + " FROM " + table + ";";
+            else
+                query = "SELECT " + column + " FROM " + table + " WHERE " + filter + ";";
 
             // create the command object
             using (SqliteCommand command = new SqliteCommand(query, connection))
@@ -82,12 +87,23 @@ class Program
     /// <param name="args">argument list.</param>
     static void Main(string[] args)
     {
-        Console.WriteLine("Executing SQLite query...");
+        Console.WriteLine("Executing SQLite query...\n");
 
         try
         {
             // open the database and get the apple ID cells from account table
             List<string> names = GetCells("..\\..\\..\\..\\Database\\MediaLibrary.sqlitedb", "apple_id", "account");
+
+            // print out the fetched results
+            Console.WriteLine($"Retrieved {names.Count} names:");
+
+            foreach (string name in names)
+                Console.WriteLine($"- {name}");
+
+            Console.WriteLine("\nNow apply a filter...\n");
+
+            // open the database and get the apple ID cells from account table
+            names = GetCells("..\\..\\..\\..\\Database\\MediaLibrary.sqlitedb", "apple_id", "account", "dsid=1014958110");
 
             // print out the fetched results
             Console.WriteLine($"Retrieved {names.Count} names:");
