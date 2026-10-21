@@ -1,0 +1,58 @@
+﻿<UserControl x:Class="SimpleGameAssetInterface.GameResourceItem"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:SimpleGameAssetInterface"
+        mc:Ignorable="d"
+        x:Name="Root"
+        Cursor="Hand"
+        MouseLeftButtonDown="UserControl_MouseLeftButtonDown"
+        d:DesignWidth="400"
+        d:DesignHeight="60">
+    <Border Background="#121212"
+            BorderBrush="#222"
+            BorderThickness="0, 0, 0, 1"
+            Padding="15, 10">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left icon -->
+            <Image x:Name="ItemLeftIcon"
+                    Grid.Column="0"
+                    Source="{Binding LeftIcon, ElementName=Root}"
+                    d:Source="pack://application:,,,/Resources/square-library.png"
+                    Width="24"
+                    Height="24"
+                    Margin="0, 0, 15, 0"/>
+
+            <!-- Title and subtitle -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock x:Name="ItemTitle"
+                        Text="{Binding Title, ElementName=Root}"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        Foreground="#e0e0e0"
+                        d:Text="Press articles (3)"/>
+                <TextBlock x:Name="ItemSubtitle"
+                        Text="{Binding Subtitle, ElementName=Root}"
+                        FontSize="11"
+                        Foreground="#888"
+                        Margin="0, 2, 0, 0"
+                        d:Text="3 references - 1 local document"/>
+            </StackPanel>
+
+            <!-- Right icon -->
+            <Image x:Name="ItemRightIcon"
+                    Grid.Column="2"
+                    Source="pack://application:,,,/Resources/chevron-right.png"
+                    Width="24"
+                    Height="24"
+                    Margin="15, 0, 0, 0"/>
+        </Grid>
+    </Border>
+</UserControl>
