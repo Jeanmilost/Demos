@@ -76,10 +76,19 @@ namespace SimpleGameAssetInterface.MVVM
             }
         }
 
+        /// <summary>
+        /// Gets if game info has articles.
+        /// </summary>
         public bool HasArticles => Articles != null && Articles.Count > 0;
 
+        /// <summary>
+        /// Gets the articles summary title to show on the UI.
+        /// </summary>
         public string ArticlesSummaryTitle => $"Press articles ({Articles?.Count ?? 0})";
 
+        /// <summary>
+        /// Gets the articles summary subtitle to show on the UI.
+        /// </summary>
         public string ArticlesSummarySubtitle
         {
             get
@@ -87,26 +96,33 @@ namespace SimpleGameAssetInterface.MVVM
                 if (Articles == null || Articles.Count == 0)
                     return "No references - No local documents";
 
-                // Compte les URLs valides/renseignées
-                int referencesCount = Articles.Count(a => !string.IsNullOrWhiteSpace(a.URL));
-
-                // Compte les fichiers locaux renseignés
-                int localDocsCount = Articles.Count(a => !string.IsNullOrWhiteSpace(a.FileName));
-
-                // Gestion du pluriel pour une finition professionnelle
-                string refPlural = referencesCount > 1 ? "references"      : "reference";
-                string docPlural = localDocsCount  > 1 ? "local documents" : "local document";
+                int    referencesCount = Articles.Count(a => !string.IsNullOrWhiteSpace(a.URL));
+                int    localDocsCount  = Articles.Count(a => !string.IsNullOrWhiteSpace(a.FileName));
+                string refPlural       = referencesCount > 1 ? "references"      : "reference";
+                string docPlural       = localDocsCount  > 1 ? "local documents" : "local document";
 
                 return $"{referencesCount} {refPlural} • {localDocsCount} {docPlural}";
             }
         }
 
+        /// <summary>
+        /// Gets or sets the game articles.
+        /// </summary>
         public ObservableCollection<WPFGameArticleInfo> Articles { get; set; } = new ObservableCollection<WPFGameArticleInfo>();
 
+        /// <summary>
+        /// Gets if game info has source code.
+        /// </summary>
         public bool HasSourceCode => Articles != null && Articles.Count > 0;
 
+        /// <summary>
+        /// Gets the source code summary title to show on the UI.
+        /// </summary>
         public string SourceCodeSummaryTitle => $"Source code";
 
+        /// <summary>
+        /// Gets the source code summary subtitle to show on the UI.
+        /// </summary>
         public string SourceCodeSummarySubtitle
         {
             get
@@ -121,6 +137,9 @@ namespace SimpleGameAssetInterface.MVVM
             }
         }
 
+        /// <summary>
+        /// Gets the game source code.
+        /// </summary>
         public WPFGameSourceCodeInfo SourceCode => m_SourceCodeInfo;
 
         /// <summary>
