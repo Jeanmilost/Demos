@@ -5,18 +5,9 @@
  * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************/
 
+using System.Windows;
 using SimpleGameAssetInterface.MVVM;
 using SimpleGameAssetInterface.WPF;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SimpleGameAssetInterface
 {
@@ -32,17 +23,17 @@ namespace SimpleGameAssetInterface
         {
             InitializeComponent();
 
-            // Force le chargement graphique initial des composants des frames
+            // force the initial graphics component frames loading
             InfoPage.UpdateLayout();
             SourceCodePage.UpdateLayout();
 
-            // On attend que la page principale ait fini d'initialiser son ViewModel
+            // wait for the main page to finish to initialize its ViewModel
             if (InfoPage.DataContext is WPFGameInfo sharedViewModel)
             {
-                // On extrait le sous-modèle du code source et on le transmet à la deuxième page
+                // extract the source code sub-model and bind the second page
                 SourceCodePage.DataContext = sharedViewModel.SourceCode;
 
-                // Bonus : Si vous voulez que vos articles partagent aussi ce contexte globale :
+                // extract the articles sub-models and bind the pages
                 //ArticlesPage.DataContext = sharedViewModel;
             }
         }
