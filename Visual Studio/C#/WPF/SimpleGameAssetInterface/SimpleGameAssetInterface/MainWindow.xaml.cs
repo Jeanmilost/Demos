@@ -1,4 +1,13 @@
-﻿using System.Text;
+﻿/****************************************************************************
+ * ==> MainWindow ----------------------------------------------------------*
+ ****************************************************************************
+ * Description: The game main window.                                       *
+ * Developer:   Jean-Milost Reymond                                         *
+ ****************************************************************************/
+
+using SimpleGameAssetInterface.MVVM;
+using SimpleGameAssetInterface.WPF;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -8,7 +17,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using SimpleGameAssetInterface.WPF;
 
 namespace SimpleGameAssetInterface
 {
@@ -17,47 +25,64 @@ namespace SimpleGameAssetInterface
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
+
+            // Force le chargement graphique initial des composants des frames
+            InfoPage.UpdateLayout();
+            SourceCodePage.UpdateLayout();
+
+            // On attend que la page principale ait fini d'initialiser son ViewModel
+            if (InfoPage.DataContext is WPFGameInfo sharedViewModel)
+            {
+                // On extrait le sous-modèle du code source et on le transmet à la deuxième page
+                SourceCodePage.DataContext = sharedViewModel.SourceCode;
+
+                // Bonus : Si vous voulez que vos articles partagent aussi ce contexte globale :
+                //ArticlesPage.DataContext = sharedViewModel;
+            }
         }
 
+        /// <summary>
+        /// Scroll the main interface to a given page.
+        /// </summary>
+        /// <param name="targetIndex">Page index to scroll to.</param>
         public void ScrollToPage(int targetIndex)
         {
-            // Récupère la largeur visible d'une page
+            // get the page visible height
             double pageWidth         = MainScrollViewer.ActualWidth;
             double currentOffset     = MainScrollViewer.HorizontalOffset;
             double finalTargetOffset = pageWidth * targetIndex;
 
-            // Si on est déjà calé sur la bonne page, on ignore l'appel
-            if (Math.Abs(currentOffset - finalTargetOffset) < 1) return;
+            // if already on the right page, ignore the call
+            if (Math.Abs(currentOffset - finalTargetOffset) < 1)
+                return;
 
-            // --- SHORTCUT TELEPORTATION TRICK ---
-            // Pour donner l'illusion d'un scroll sur une seule page de distance :
+            // make the scroll to be performed only on a single page
             if (finalTargetOffset > currentOffset)
-            {
-                // On avance : On téléporte le scroll instantanément 1 page AVANT la page visée
+                // go forward, move the offset to the previous page before the target one
                 MainScrollViewer.ScrollToHorizontalOffset(finalTargetOffset - pageWidth);
-            }
             else
-            {
-                // On recule : On téléporte le scroll instantanément 1 page APRÈS la page visée
+                // go backward, move the offset to the previous page after the target one
                 MainScrollViewer.ScrollToHorizontalOffset(finalTargetOffset + pageWidth);
-            }
 
-            // Force la réactualisation de la disposition graphique avant de lancer l'animation
+            // update the graphic layout before running the animation
             MainScrollViewer.UpdateLayout();
 
-            // Animation fluide sur la largeur finale d'une unique page
-            System.Windows.Media.Animation.DoubleAnimation scrollAnimation = new System.Windows.Media.Animation.DoubleAnimation
+            // scroll on the final width of a single page
+            System.Windows.Media.Animation.DoubleAnimation scrollAnimation = new()
             {
-                From = MainScrollViewer.HorizontalOffset,
-                To = finalTargetOffset,
-                Duration = TimeSpan.FromSeconds(0.5),
+                From           = MainScrollViewer.HorizontalOffset,
+                To             = finalTargetOffset,
+                Duration       = TimeSpan.FromSeconds(0.5),
                 EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut }
             };
 
-            // Déclenchement de l'animation sur la propriété attachée de votre ScrollAnimator
+            // start animation on the ScrollAnimator attached property
             ScrollAnimator.AnimateScroll(MainScrollViewer, scrollAnimation);
         }
     }

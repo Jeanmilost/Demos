@@ -113,7 +113,7 @@ namespace SimpleGameAssetInterface.MVVM
         /// <summary>
         /// Gets if game info has source code.
         /// </summary>
-        public bool HasSourceCode => Articles != null && Articles.Count > 0;
+        public bool HasSourceCode => !m_SourceCodeInfo.Empty();
 
         /// <summary>
         /// Gets the source code summary title to show on the UI.
@@ -222,6 +222,20 @@ namespace SimpleGameAssetInterface.MVVM
             m_GameInfo         = gameInfo;
             GameArtworkSource  = m_GameInfo.Artwork.GetBitmap();
             m_SourceCodeInfo   = new WPFGameSourceCodeInfo(m_GameInfo.SourceCode);
+
+            Articles.Clear();
+
+            if (m_GameInfo.Articles != null)
+                foreach (var coreArticle in m_GameInfo.Articles)
+                    Articles.Add(new WPFGameArticleInfo(coreArticle));
+
+            OnPropertyChanged(nameof(HasArticles));
+            OnPropertyChanged(nameof(ArticlesSummaryTitle));
+            OnPropertyChanged(nameof(ArticlesSummarySubtitle));
+
+            OnPropertyChanged(nameof(SourceCode));
+            OnPropertyChanged(nameof(HasSourceCode));
+            OnPropertyChanged(nameof(SourceCodeSummarySubtitle));
         }
     }
 }

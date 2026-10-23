@@ -1,4 +1,11 @@
-﻿using System;
+﻿/****************************************************************************
+ * ==> ScrollAnimator ------------------------------------------------------*
+ ****************************************************************************
+ * Description: Helper class to scroll between pages onto the main          *
+ *              interface.                                                  *
+ * Developer:   Jean-Milost Reymond                                         *
+ ****************************************************************************/
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -6,42 +13,59 @@ using System.Windows.Media.Animation;
 namespace SimpleGameAssetInterface.WPF
 {
     /// <summary>
-    /// Classe utilitaire permettant d'animer le HorizontalOffset d'un ScrollViewer en WPF.
+    /// Helper class to scroll between pages onto the main interface.
     /// </summary>
     public static class ScrollAnimator
     {
-        // Enregistrement de la propriété attachée magique pour le système d'animation de WPF
-        public static readonly DependencyProperty ScrollOffsetProperty =
-            DependencyProperty.RegisterAttached(
-                "ScrollOffset",
-                typeof(double),
-                typeof(ScrollAnimator),
-                new FrameworkPropertyMetadata(0.0, OnScrollOffsetChanged));
+        /// <summary>
+        /// Scroll offset property
+        /// </summary>
+        /// <remarks>Registers the magic property for the WPF animation system.</remarks>
+        public static readonly DependencyProperty ScrollOffsetProperty = DependencyProperty.RegisterAttached
+                (
+                    "ScrollOffset",
+                    typeof(double),
+                    typeof(ScrollAnimator),
+                    new FrameworkPropertyMetadata(0.0, OnScrollOffsetChanged)
+                );
 
+        /// <summary>
+        /// Gets the scroll offset
+        /// </summary>
+        /// <param name="obj">Dependency object.</param>
+        /// <returns></returns>
         public static double GetScrollOffset(DependencyObject obj) => (double)obj.GetValue(ScrollOffsetProperty);
+
+        /// <summary>
+        /// Sets the scroll offset
+        /// </summary>
+        /// <param name="obj">Dependency object.</param>
+        /// <param name="value">Scroll offset value.</param>
         public static void SetScrollOffset(DependencyObject obj, double value) => obj.SetValue(ScrollOffsetProperty, value);
 
         /// <summary>
-        /// Méthode déclenchée à chaque micro-étape de l'animation pour déplacer le scroll.
+        /// Starts the scroll animation.
         /// </summary>
-        private static void OnScrollOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        /// <param name="scrollViewer">Viewert on which the scroll will be performed.</param>
+        /// <param name="animation">Scroll animation.</param>
+        public static void AnimateScroll(ScrollViewer scrollViewer, DoubleAnimation animation)
         {
-            if (d is ScrollViewer scrollViewer)
-            {
-                scrollViewer.ScrollToHorizontalOffset((double)e.NewValue);
-            }
+            // calculate the start value from the current scroll position
+            scrollViewer.SetValue(ScrollOffsetProperty, scrollViewer.HorizontalOffset);
+
+            // call WPF in order to apply the virtual property in a fluid manner
+            scrollViewer.BeginAnimation(ScrollOffsetProperty, animation);
         }
 
         /// <summary>
-        /// Lance l'animation fluide sur le ScrollViewer spécifié.
+        /// Called when the scroll offset changed.
         /// </summary>
-        public static void AnimateScroll(ScrollViewer scrollViewer, DoubleAnimation animation)
+        /// <param name="d">Dependency object.</param>
+        /// <param name="e">Dependency object event arguments.</param>
+        private static void OnScrollOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            // On cale la valeur de départ sur la position actuelle du scroll
-            scrollViewer.SetValue(ScrollOffsetProperty, scrollViewer.HorizontalOffset);
-
-            // On demande à WPF de faire varier notre propriété virtuelle de manière fluide
-            scrollViewer.BeginAnimation(ScrollOffsetProperty, animation);
+            if (d is ScrollViewer scrollViewer)
+                scrollViewer.ScrollToHorizontalOffset((double)e.NewValue);
         }
     }
 }

@@ -23,12 +23,14 @@ namespace SimpleGameAssetInterface.Core
         private        GameImageAsset                 m_Artwork;
         private        GameInstallInfo                m_Installation;
         private        GameSourceCodeInfo             m_SourceCode;
-    #if DEBUG
         private static readonly JsonSerializerOptions m_JsonOptions = new()
         {
-            WriteIndented = true
+        #if DEBUG
+            WriteIndented = true,
+        #endif
+            PropertyNameCaseInsensitive = true,
+            PreferredObjectCreationHandling = JsonObjectCreationHandling.Populate
         };
-    #endif
 
         /// <summary>
         /// The game title.
@@ -88,7 +90,8 @@ namespace SimpleGameAssetInterface.Core
         /// <summary>
         /// The press articles related to the game.
         /// </summary>
-        public List<GameArticleInfo> Articles { get; } = [];
+        [JsonInclude]
+        public List<GameArticleInfo> Articles { get; private set; } = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GameInfo"/> class.
@@ -117,11 +120,7 @@ namespace SimpleGameAssetInterface.Core
                 if (File.Exists(fileName))
                     File.Delete(fileName);
 
-            #if DEBUG
                 string jsonString = JsonSerializer.Serialize(this, m_JsonOptions);
-            #else
-                string jsonString = JsonSerializer.Serialize(this);
-            #endif
 
                 File.WriteAllText(fileName, jsonString);
             }
@@ -151,7 +150,7 @@ namespace SimpleGameAssetInterface.Core
 
                 string jsonString = File.ReadAllText(fileName);
 
-                return JsonSerializer.Deserialize<GameInfo>(jsonString);
+                return JsonSerializer.Deserialize<GameInfo>(jsonString, m_JsonOptions);
             }
             catch (Exception ex)
             {

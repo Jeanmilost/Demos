@@ -1,9 +1,17 @@
-﻿#define ExportToJSON
+﻿/****************************************************************************
+ * ==> GameInfoPage --------------------------------------------------------*
+ ****************************************************************************
+ * Description: The game info page, it exposes the game information and the *
+ *              associated resources.                                       *
+ * Developer:   Jean-Milost Reymond                                         *
+ ****************************************************************************/
 
-using SimpleGameAssetInterface.MVVM;
+//#define ExportToJSON
+
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using SimpleGameAssetInterface.MVVM;
 
 namespace SimpleGameAssetInterface.WPF
 {
@@ -56,8 +64,10 @@ namespace SimpleGameAssetInterface.WPF
         /// <param name="e">Event arguments.</param>
         private void SourceCodeItem_Click(object sender, EventArgs e)
         {
+            // get main window
             var mainWindow = Window.GetWindow(this) as MainWindow;
 
+            // open the source code page
             mainWindow?.ScrollToPage(1);
         }
     }
