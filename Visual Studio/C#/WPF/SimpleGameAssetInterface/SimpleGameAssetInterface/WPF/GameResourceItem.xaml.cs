@@ -7,14 +7,12 @@
  * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************/
 
-using System.Drawing;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace SimpleGameAssetInterface
+namespace SimpleGameAssetInterface.WPF
 {
     /// <summary>
     /// Interaction logic for GameResourceItem.xaml

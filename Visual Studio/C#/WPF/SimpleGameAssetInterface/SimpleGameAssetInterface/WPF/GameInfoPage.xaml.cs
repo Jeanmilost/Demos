@@ -5,17 +5,17 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace SimpleGameAssetInterface
+namespace SimpleGameAssetInterface.WPF
 {
     /// <summary>
-    /// Interaction logic for GameAsset.xaml
+    /// Interaction logic for GameInfoPage.xaml
     /// </summary>
-    public partial class GameAsset : Page
+    public partial class GameInfoPage : Page
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public GameAsset()
+        public GameInfoPage()
         {
             InitializeComponent();
 
@@ -27,7 +27,7 @@ namespace SimpleGameAssetInterface
             try
             {
             #if ExportToJSON
-                WPFGameInfo gameInfo = new WPFGameInfo();
+                WPFGameInfo gameInfo = new();
                 DataContext          = gameInfo;
 
                 gameInfo.Model.ExportToJSON("Agony.json");
@@ -42,7 +42,7 @@ namespace SimpleGameAssetInterface
         }
 
         /// <summary>
-        /// Called when the used clicked on the articles item.
+        /// Called when the user clicked on the articles item.
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event arguments.</param>
@@ -50,31 +50,15 @@ namespace SimpleGameAssetInterface
         {}
 
         /// <summary>
-        /// Called when the used clicked on the source code item.
+        /// Called when the user clicked on the source code item.
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event arguments.</param>
         private void SourceCodeItem_Click(object sender, EventArgs e)
-        {}
-
-        /*REM FIXME
-        private void ButtonArticle_Click(object sender, RoutedEventArgs e)
         {
-            // Récupération de l'article lié au bouton cliqué
-            var button = sender as Button;
-            var articleViewModel = button?.DataContext as WPFGameArticleInfo;
+            var mainWindow = Window.GetWindow(this) as MainWindow;
 
-            if (articleViewModel != null)
-            {
-                // On cherche sa position dans la liste
-                var mainViewModel = this.DataContext as WPFGameInfo;
-                int articleIndex = mainViewModel.Articles.IndexOf(articleViewModel);
-
-                // L'index de la page cible sera l'index de l'article + 1
-                // (car l'index 0 est occupé par le menu/la page de présentation globale)
-                //ScrollToPage(articleIndex + 1);
-            }
+            mainWindow?.ScrollToPage(1);
         }
-        */
     }
 }

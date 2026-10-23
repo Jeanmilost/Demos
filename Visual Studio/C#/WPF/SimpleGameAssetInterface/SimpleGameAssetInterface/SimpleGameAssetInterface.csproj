@@ -12,6 +12,7 @@
     <None Remove="Resources\chevron-right.png" />
     <None Remove="Resources\code-xml.png" />
     <None Remove="Resources\Default_Artwork.jpg" />
+    <None Remove="Resources\github.png" />
     <None Remove="Resources\square-library.png" />
   </ItemGroup>
 
@@ -19,6 +20,7 @@
     <Resource Include="Resources\chevron-right.png" />
     <Resource Include="Resources\code-xml.png" />
     <Resource Include="Resources\default_artwork.jpg" />
+    <Resource Include="Resources\github.png" />
     <Resource Include="Resources\square-library.png" />
   </ItemGroup>
 

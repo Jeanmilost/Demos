@@ -59,7 +59,7 @@ namespace SimpleGameAssetInterface.MVVM
         /// <summary>
         /// Gets the game release info (composed by the editor and the year.
         /// </summary>
-        public string ReleaseInfo { get => $"{m_GameInfo.Editor} • {m_GameInfo.ReleaseDate.Year.ToString()}"; }
+        public string ReleaseInfo { get => $"{m_GameInfo.Editor} • {m_GameInfo.ReleaseDate.Year}"; }
 
         /// <summary>
         /// Gets the game artwork source.
@@ -108,7 +108,7 @@ namespace SimpleGameAssetInterface.MVVM
         /// <summary>
         /// Gets or sets the game articles.
         /// </summary>
-        public ObservableCollection<WPFGameArticleInfo> Articles { get; set; } = new ObservableCollection<WPFGameArticleInfo>();
+        public ObservableCollection<WPFGameArticleInfo> Articles { get; set; } = [];
 
         /// <summary>
         /// Gets if game info has source code.
@@ -118,7 +118,7 @@ namespace SimpleGameAssetInterface.MVVM
         /// <summary>
         /// Gets the source code summary title to show on the UI.
         /// </summary>
-        public string SourceCodeSummaryTitle => $"Source code";
+        public static string SourceCodeSummaryTitle => $"Source code";
 
         /// <summary>
         /// Gets the source code summary subtitle to show on the UI.
@@ -153,10 +153,12 @@ namespace SimpleGameAssetInterface.MVVM
         /// <exception cref="System.IO.InvalidDataException">Thrown if the artwork could not be loaded.</exception>
         public WPFGameInfo()
         {
-            GameInfo gameInfo    = new GameInfo("Agony");
-            gameInfo.Description = "Acanthropsis discovers Cosmic Power after years of research, realizing the fatal cost is his life and deciding to pass his knowledge to a worthy successor. He devises a test for his two skilled apprentices, Alestes and Mentor, hoping one will fail.\r\n\r\nYou control Alestes transformed into a mystical owl, battling through six dangerous levels to reach the secret of Cosmic Power while fighting Mentor's creatures and collecting helpful spells and potions.";
-            gameInfo.Editor      = "Psygnosys";
-            gameInfo.ReleaseDate = new DateOnly(1992, 1, 1);
+            GameInfo gameInfo = new("Agony")
+            {
+                Description = "Acanthropsis discovers Cosmic Power after years of research, realizing the fatal cost is his life and deciding to pass his knowledge to a worthy successor. He devises a test for his two skilled apprentices, Alestes and Mentor, hoping one will fail.\r\n\r\nYou control Alestes transformed into a mystical owl, battling through six dangerous levels to reach the secret of Cosmic Power while fighting Mentor's creatures and collecting helpful spells and potions.",
+                Editor      = "Psygnosys",
+                ReleaseDate = new DateOnly(1992, 1, 1)
+            };
 
             // is code executed in design time or in runtime?
             string processName = System.Diagnostics.Process.GetCurrentProcess().ProcessName.ToLower();
@@ -216,14 +218,10 @@ namespace SimpleGameAssetInterface.MVVM
             if (string.IsNullOrWhiteSpace(fileName))
                 throw new ArgumentException("File name cannot be empty", nameof(fileName));
 
-            GameInfo? gameInfo = GameInfo.ImportFromJSON(fileName);
-
-            if (gameInfo == null)
-                throw new System.IO.InvalidDataException($"Failed to import game data - file name - {fileName}");
-
-            m_GameInfo        = gameInfo;
-            GameArtworkSource = m_GameInfo.Artwork.GetBitmap();
-            m_SourceCodeInfo  = new WPFGameSourceCodeInfo(m_GameInfo.SourceCode);
+            GameInfo? gameInfo = GameInfo.ImportFromJSON(fileName) ?? throw new System.IO.InvalidDataException($"Failed to import game data - file name - {fileName}");
+            m_GameInfo         = gameInfo;
+            GameArtworkSource  = m_GameInfo.Artwork.GetBitmap();
+            m_SourceCodeInfo   = new WPFGameSourceCodeInfo(m_GameInfo.SourceCode);
         }
     }
 }

@@ -4,9 +4,35 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimpleGameAssetInterface"
+        xmlns:wpf="clr-namespace:SimpleGameAssetInterface.WPF"
         mc:Ignorable="d"
         Title="Simple game asset interface" Height="600" Width="800">
     <Grid>
-        <Frame x:Name="GameInfoPage" Source="WPF/GameAsset.xaml" />
+        <!-- Main ScrollViewer which will handle the horizontal scrolling (hidden tabs) -->
+        <ScrollViewer x:Name="MainScrollViewer"
+                HorizontalScrollBarVisibility="Hidden"
+                VerticalScrollBarVisibility="Disabled"
+                PanningMode="HorizontalOnly">
+
+            <!-- StackPanel which aligns the pages horizontally side by side -->
+            <StackPanel Orientation="Horizontal">
+
+                <!-- Index 0, Main Game Info page  -->
+                <Frame Width="{Binding ElementName=MainScrollViewer, Path=ActualWidth}"
+                       NavigationUIVisibility="Hidden">
+                    <Frame.Content>
+                        <wpf:GameInfoPage x:Name="InfoPage"/>
+                    </Frame.Content>
+                </Frame>
+
+                <!-- Index 1 : Game Source Code page -->
+                <Frame Width="{Binding ElementName=MainScrollViewer, Path=ActualWidth}"
+                       NavigationUIVisibility="Hidden">
+                    <Frame.Content>
+                        <wpf:GameSourceCodePage x:Name="SourceCodePage"/>
+                    </Frame.Content>
+                </Frame>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>

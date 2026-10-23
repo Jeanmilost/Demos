@@ -78,9 +78,14 @@ namespace SimpleGameAssetInterface.MVVM
         /// <summary>
         /// Default constructor.
         /// </summary>
-        WPFGameSourceCodeInfo()
+        public WPFGameSourceCodeInfo()
         {
             m_GameSourceCodeInfo = new GameSourceCodeInfo();
+
+            // agony source code
+            URL     = "https://aminet.net/package/game/shoot/YvesGrolet-sources";
+            Path    = "..\\..\\..\\..\\Common\\Source codes\\YvesGrolet-sources.zip";
+            License = "Public domain";
         }
 
         /// <summary>

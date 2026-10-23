@@ -5,7 +5,6 @@
  * Developer:   Jean-Milost Reymond                                         *
  ****************************************************************************/
 
-using SimpleGameAssetInterface.Core;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -19,11 +18,17 @@ namespace SimpleGameAssetInterface.Core
     /// </summary>
     public class GameInfo
     {
-        private string             m_Title       = string.Empty;
-        private string             m_Description = string.Empty;
-        private GameImageAsset     m_Artwork;
-        private GameInstallInfo    m_Installation;
-        private GameSourceCodeInfo m_SourceCode;
+        private        string                         m_Title       = string.Empty;
+        private        readonly string                m_Description = string.Empty;
+        private        GameImageAsset                 m_Artwork;
+        private        GameInstallInfo                m_Installation;
+        private        GameSourceCodeInfo             m_SourceCode;
+    #if DEBUG
+        private static readonly JsonSerializerOptions m_JsonOptions = new()
+        {
+            WriteIndented = true
+        };
+    #endif
 
         /// <summary>
         /// The game title.
@@ -83,7 +88,7 @@ namespace SimpleGameAssetInterface.Core
         /// <summary>
         /// The press articles related to the game.
         /// </summary>
-        public List<GameArticleInfo> Articles { get; } = new List<GameArticleInfo>();
+        public List<GameArticleInfo> Articles { get; } = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GameInfo"/> class.
@@ -113,8 +118,7 @@ namespace SimpleGameAssetInterface.Core
                     File.Delete(fileName);
 
             #if DEBUG
-                var    options    = new JsonSerializerOptions { WriteIndented = true };
-                string jsonString = JsonSerializer.Serialize(this, options);
+                string jsonString = JsonSerializer.Serialize(this, m_JsonOptions);
             #else
                 string jsonString = JsonSerializer.Serialize(this);
             #endif

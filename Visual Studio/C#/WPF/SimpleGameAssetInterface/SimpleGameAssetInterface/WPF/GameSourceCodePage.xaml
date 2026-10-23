@@ -1,0 +1,196 @@
+﻿<Page x:Class="SimpleGameAssetInterface.WPF.GameSourceCodePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:SimpleGameAssetInterface.WPF"
+      xmlns:mvvm="clr-namespace:SimpleGameAssetInterface.MVVM"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance Type=mvvm:WPFGameSourceCodeInfo, IsDesignTimeCreatable=True}"
+      d:DesignWidth="800"
+      d:DesignHeight="600"
+      Title="Game Source Code Information">
+
+    <Grid Background="#202020">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <!-- Magic converter which allows WPF to transform a boolean into a visibility (Visible/Collapsed) -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        </Grid.Resources>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top" Margin="10">
+            <!-- Source code icon -->
+            <Image Source="pack://application:,,,/Resources/code-xml.png"
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Margin="10, 4, 0, 0" />
+
+            <!-- Source code label -->
+            <Label Content="Source code"
+                    Foreground="#e0e0e0"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    VerticalAlignment="Center"
+                    Margin="10, 0, 0, 0" />
+        </StackPanel>
+
+        <!-- Gradient separator -->
+        <Rectangle Grid.Row="1" Height="1" Margin="0,8,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Top" >
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#202020" Offset="0.0"/>
+                    <GradientStop Color="#e0e0e0" Offset="0.5"/>
+                    <GradientStop Color="#202020" Offset="1.0"/>
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <!-- Distant repo label -->
+        <Label Grid.Row="2"
+                Content="Distant repository"
+                Foreground="#e0e0e0"
+                FontSize="16"
+                VerticalAlignment="Center"
+                Margin="10, 20, 0, 0" />
+
+        <!-- Distant repo URL label -->
+        <DockPanel Grid.Row="3"
+                LastChildFill="True"
+                VerticalAlignment="Top"
+                Margin="10">
+            <!-- Open URL button -->
+            <Button Content="Open"
+                    DockPanel.Dock="Right"
+                    Width="80"
+                    Height="28"
+                    Cursor="Hand"
+                    Margin="10,0,10,0"
+                    Visibility="{Binding HasURL, Converter={StaticResource BoolToVis}}"
+                    Click="URLBtn_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#505050"/>
+                        <Setter Property="Foreground" Value="#e0e0e0"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="ButtonBorder"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="4">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#656565"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#404040"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <!-- Distant repo URL -->
+            <!-- NOTE need to be placed at the end, otherwise the button will not be aligned to the right -->
+            <Label Content="{Binding URL, FallbackValue='https://aminet.net/package/game/shoot/YvesGrolet-sources (Design)'}"
+                    Foreground="#888"
+                    FontSize="14"
+                    VerticalAlignment="Center" />
+        </DockPanel>
+
+        <!-- Local installation label -->
+        <Label Grid.Row="4"
+                Content="Local installation"
+                Foreground="#e0e0e0"
+                FontSize="16"
+                VerticalAlignment="Center"
+                Margin="10, 20, 0, 0" />
+
+        <!-- Local installation path label -->
+        <DockPanel Grid.Row="5"
+                LastChildFill="True"
+                VerticalAlignment="Top"
+                Margin="10">
+            <!-- Open folder button -->
+            <Button Content="Open"
+                    DockPanel.Dock="Right"
+                    Width="80"
+                    Height="28"
+                    Cursor="Hand"
+                    Margin="10,0,10,0"
+                    Visibility="{Binding HasPath, Converter={StaticResource BoolToVis}}"
+                    Click="PathBtn_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#505050"/>
+                        <Setter Property="Foreground" Value="#e0e0e0"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="ButtonBorder"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="4">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#656565"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#404040"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <!-- Distant repo URL -->
+            <!-- NOTE need to be placed at the end, otherwise the button will not be aligned to the right -->
+            <Label Content="{Binding Path, FallbackValue='..\\..\\..\\..\\Common\\Source codes\\YvesGrolet-sources.zip (Design)'}"
+                    Foreground="#888"
+                    FontSize="14"
+                    VerticalAlignment="Center" />
+        </DockPanel>
+
+        <!-- License type label -->
+        <Label Grid.Row="6"
+                Content="License type"
+                Foreground="#e0e0e0"
+                FontSize="16"
+                VerticalAlignment="Center"
+                Margin="10, 20, 0, 0" />
+
+        <!-- License type content label -->
+        <Label Grid.Row="7"
+                Content="{Binding License, FallbackValue='Public domain (Design)'}"
+                Foreground="#888"
+                FontSize="16"
+                VerticalAlignment="Center"
+                Margin="10, 0, 0, 0" />
+    </Grid>
+</Page>
