@@ -20,7 +20,6 @@
     <Resource Include="Resources\chevron-right.png" />
     <Resource Include="Resources\code-xml.png" />
     <Resource Include="Resources\default_artwork.jpg" />
-    <Resource Include="Resources\github.png" />
     <Resource Include="Resources\square-library.png" />
   </ItemGroup>
 

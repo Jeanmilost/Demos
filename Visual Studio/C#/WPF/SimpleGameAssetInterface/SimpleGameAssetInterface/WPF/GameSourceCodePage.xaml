@@ -71,43 +71,15 @@
                 VerticalAlignment="Top"
                 Margin="10">
             <!-- Open URL button -->
-            <Button Content="Open"
+            <Button Style="{StaticResource ModernRoundedButton}"
+                    Content="Open"
                     DockPanel.Dock="Right"
                     Width="80"
                     Height="28"
                     Cursor="Hand"
                     Margin="10, 0, 10, 0"
                     Visibility="{Binding HasURL, Converter={StaticResource BoolToVis}}"
-                    Click="URLBtn_Click">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="#505050"/>
-                        <Setter Property="Foreground" Value="#e0e0e0"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="ButtonBorder"
-                                            Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="4">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#656565"/>
-                                        </Trigger>
-                                        <Trigger Property="IsPressed" Value="True">
-                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#404040"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Button.Style>
-            </Button>
+                    Click="URLBtn_Click" />
 
             <!-- Distant repo URL -->
             <!-- NOTE need to be placed at the end, otherwise the button will not be aligned to the right -->
@@ -131,43 +103,15 @@
                 VerticalAlignment="Top"
                 Margin="10">
             <!-- Open folder button -->
-            <Button Content="Open"
+            <Button Style="{StaticResource ModernRoundedButton}"
+                    Content="Open"
                     DockPanel.Dock="Right"
                     Width="80"
                     Height="28"
                     Cursor="Hand"
                     Margin="10, 0, 10, 0"
                     Visibility="{Binding HasPath, Converter={StaticResource BoolToVis}}"
-                    Click="PathBtn_Click">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="#505050"/>
-                        <Setter Property="Foreground" Value="#e0e0e0"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="ButtonBorder"
-                                            Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="4">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#656565"/>
-                                        </Trigger>
-                                        <Trigger Property="IsPressed" Value="True">
-                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#404040"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Button.Style>
-            </Button>
+                    Click="PathBtn_Click" />
 
             <!-- Distant repo URL -->
             <!-- NOTE need to be placed at the end, otherwise the button will not be aligned to the right -->
@@ -194,7 +138,8 @@
                 Margin="10, 0, 0, 0" />
 
         <!-- Back button -->
-        <Button Content="&lt; Back"
+        <Button Style="{StaticResource ModernRoundedButton}"
+                Content="&lt; Back"
                 Grid.Row="8"
                 Width="80"
                 Height="32"
@@ -202,37 +147,6 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Margin="0, 0, 20, 20"
-                Click="BackBtn_Click">
-            <Button.Style>
-                <Style TargetType="Button">
-                    <Setter Property="Background" Value="#505050"/>
-                    <Setter Property="Foreground" Value="#e0e0e0"/>
-                    <Setter Property="BorderThickness" Value="0"/>
-                    <Setter Property="FontSize" Value="13"/>
-                    <Setter Property="FontWeight" Value="SemiBold"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="ButtonBorder"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="4">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="ButtonBorder" Property="Background" Value="#656565"/>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="ButtonBorder" Property="Background" Value="#404040"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </Button.Style>
-        </Button>
+                Click="BackBtn_Click" />
     </Grid>
 </Page>

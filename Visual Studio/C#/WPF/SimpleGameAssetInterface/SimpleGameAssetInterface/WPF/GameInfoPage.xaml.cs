@@ -55,7 +55,13 @@ namespace SimpleGameAssetInterface.WPF
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event arguments.</param>
         private void ArticlesItem_Click(object sender, EventArgs e)
-        {}
+        {
+            // get main window
+            var mainWindow = Window.GetWindow(this) as MainWindow;
+
+            // open the articles page
+            mainWindow?.ScrollToPage(2);
+        }
 
         /// <summary>
         /// Called when the user clicked on the source code item.

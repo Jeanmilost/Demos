@@ -6,6 +6,9 @@
  ****************************************************************************/
 
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using SimpleGameAssetInterface.MVVM;
 using SimpleGameAssetInterface.WPF;
 
@@ -24,57 +27,130 @@ namespace SimpleGameAssetInterface
             InitializeComponent();
 
             // force the initial graphics component frames loading
-            InfoPage.UpdateLayout();
-            SourceCodePage.UpdateLayout();
+            GameInfoPage.UpdateLayout();
+            GameSourceCodePage.UpdateLayout();
+            GameArticlesPage.UpdateLayout();
 
             // wait for the main page to finish to initialize its ViewModel
-            if (InfoPage.DataContext is WPFGameInfo sharedViewModel)
+            if (GameInfoPage.DataContext is WPFGameInfo sharedViewModel)
             {
                 // extract the source code sub-model and bind the second page
-                SourceCodePage.DataContext = sharedViewModel.SourceCode;
+                GameSourceCodePage.DataContext = sharedViewModel.SourceCode;
 
                 // extract the articles sub-models and bind the pages
-                //ArticlesPage.DataContext = sharedViewModel;
+                GameArticlesPage.DataContext = sharedViewModel;
             }
         }
 
         /// <summary>
-        /// Scroll the main interface to a given page.
+        /// Scrolls the main interface between the current page to the target page at index.
         /// </summary>
         /// <param name="targetIndex">Page index to scroll to.</param>
         public void ScrollToPage(int targetIndex)
         {
-            // get the page visible height
+            // get the page visible height and calculate the final target offset
             double pageWidth         = MainScrollViewer.ActualWidth;
             double currentOffset     = MainScrollViewer.HorizontalOffset;
             double finalTargetOffset = pageWidth * targetIndex;
 
-            // if already on the right page, ignore the call
+            // already on the page to reach?
             if (Math.Abs(currentOffset - finalTargetOffset) < 1)
                 return;
 
-            // make the scroll to be performed only on a single page
-            if (finalTargetOffset > currentOffset)
-                // go forward, move the offset to the previous page before the target one
-                MainScrollViewer.ScrollToHorizontalOffset(finalTargetOffset - pageWidth);
-            else
-                // go backward, move the offset to the previous page after the target one
-                MainScrollViewer.ScrollToHorizontalOffset(finalTargetOffset + pageWidth);
+            int currentIndex = (int)Math.Round(currentOffset / pageWidth);
 
-            // update the graphic layout before running the animation
-            MainScrollViewer.UpdateLayout();
+            // aren't the start and target pages side by side?
+            if (Math.Abs(targetIndex - currentIndex) > 1)
+            {
+                // identify the both start and target visual components
+                FrameworkElement? currentControl = currentIndex == 0 ? GameInfoPage : (currentIndex == 1 ? GameSourceCodePage : GameArticlesPage);
+                FrameworkElement? targetControl  = targetIndex  == 0 ? GameInfoPage : (targetIndex  == 1 ? GameSourceCodePage : GameArticlesPage);
 
-            // scroll on the final width of a single page
-            System.Windows.Media.Animation.DoubleAnimation scrollAnimation = new()
+                // found them?
+                if (currentControl != null && targetControl != null)
+                {
+                    // create texture brushes that captures the exact rendering of the 2 pages
+                    VisualBrush currentBrush = new(currentControl) { Stretch = Stretch.UniformToFill };
+                    VisualBrush targetBrush  = new(targetControl)  { Stretch = Stretch.UniformToFill };
+
+                    CurrentPageCapture.Fill = currentBrush;
+                    TargetPageCapture.Fill  = targetBrush;
+
+                    // do scroll on the left?
+                    if (targetIndex > currentIndex)
+                    {
+                        // go forward (0 -> 2). Start photo is located at index 0, the target photo is located on its right
+                        Canvas.SetLeft(CurrentPageCapture, 0);
+                        Canvas.SetLeft(TargetPageCapture, pageWidth);
+
+                        // perform the canvas animation to the left
+                        AnimateCanvasTransition(0, -pageWidth, targetIndex);
+                    }
+                    else
+                    {
+                        // go backward (2 -> 0). Start photo is located at index 0, the target photo is located on its left
+                        Canvas.SetLeft(CurrentPageCapture, 0);
+                        Canvas.SetLeft(TargetPageCapture, -pageWidth);
+
+                        // perform the canvas animation to the right
+                        AnimateCanvasTransition(0, pageWidth, targetIndex);
+                    }
+
+                    return;
+                }
+            }
+
+            // start and target page are side by side, use the classic ScrollViewer
+            DoubleAnimation scrollAnimation = new()
             {
                 From           = MainScrollViewer.HorizontalOffset,
                 To             = finalTargetOffset,
-                Duration       = TimeSpan.FromSeconds(0.5),
-                EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut }
+                Duration       = TimeSpan.FromSeconds(0.4),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
             };
 
-            // start animation on the ScrollAnimator attached property
             ScrollAnimator.AnimateScroll(MainScrollViewer, scrollAnimation);
+        }
+
+        /// <summary>
+        /// Animates the canvas transition between distant pages.
+        /// </summary>
+        /// <param name="from">From position on the X axis.</param>
+        /// <param name="to">To position on the X axis.</param>
+        /// <param name="finalTargetIndex">Final target index.</param>
+        private void AnimateCanvasTransition(double from, double to, int finalTargetIndex)
+        {
+            double pageWidth = MainScrollViewer.ActualWidth;
+
+            // calculate the overlay transition start point
+            TranslateTransform canvasTransform = new(from, 0);
+            TransitionCanvas.RenderTransform   = canvasTransform;
+
+            // turn the canvas transition overlay visible above the ScrollViewer
+            TransitionCanvas.Visibility = Visibility.Visible;
+
+            DoubleAnimation canvasAnimation = new()
+            {
+                From           = from,
+                To             = to,
+                Duration       = TimeSpan.FromSeconds(0.4),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            // as soon as the photo slide ends, hide the overlay
+            canvasAnimation.Completed += (s, e) =>
+            {
+                // hide the canvas
+                TransitionCanvas.Visibility = Visibility.Collapsed;
+                CurrentPageCapture.Fill     = null;
+                TargetPageCapture.Fill      = null;
+
+                // move instantly and silently the ScrollViever current page to the target page
+                MainScrollViewer.ScrollToHorizontalOffset(pageWidth * finalTargetIndex);
+                MainScrollViewer.UpdateLayout();
+            };
+
+            canvasTransform.BeginAnimation(TranslateTransform.XProperty, canvasAnimation);
         }
     }
 }

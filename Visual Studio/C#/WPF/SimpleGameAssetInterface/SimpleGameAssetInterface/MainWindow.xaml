@@ -21,7 +21,7 @@
                 <Frame Width="{Binding ElementName=MainScrollViewer, Path=ActualWidth}"
                        NavigationUIVisibility="Hidden">
                     <Frame.Content>
-                        <wpf:GameInfoPage x:Name="InfoPage"/>
+                        <wpf:GameInfoPage x:Name="GameInfoPage"/>
                     </Frame.Content>
                 </Frame>
 
@@ -29,10 +29,31 @@
                 <Frame Width="{Binding ElementName=MainScrollViewer, Path=ActualWidth}"
                        NavigationUIVisibility="Hidden">
                     <Frame.Content>
-                        <wpf:GameSourceCodePage x:Name="SourceCodePage"/>
+                        <wpf:GameSourceCodePage x:Name="GameSourceCodePage"/>
+                    </Frame.Content>
+                </Frame>
+
+                <!-- Index 2 : Game Articles page -->
+                <Frame Width="{Binding ElementName=MainScrollViewer, Path=ActualWidth}"
+                       NavigationUIVisibility="Hidden">
+                    <Frame.Content>
+                        <wpf:GameArticlesPage x:Name="GameArticlesPage"/>
                     </Frame.Content>
                 </Frame>
             </StackPanel>
         </ScrollViewer>
+
+        <!-- Scrolling overlays -->
+        <Canvas x:Name="TransitionCanvas" IsHitTestVisible="False" Visibility="Collapsed">
+            <!-- Start page overlay -->
+            <Rectangle x:Name="CurrentPageCapture"
+                    Width="{Binding ElementName=MainScrollViewer, Path=ActualWidth}"
+                    Height="{Binding ElementName=MainScrollViewer, Path=ActualHeight}"/>
+
+            <!-- Target page overlay -->
+            <Rectangle x:Name="TargetPageCapture"
+                    Width="{Binding ElementName=MainScrollViewer, Path=ActualWidth}"
+                    Height="{Binding ElementName=MainScrollViewer, Path=ActualHeight}"/>
+        </Canvas>
     </Grid>
 </Window>
