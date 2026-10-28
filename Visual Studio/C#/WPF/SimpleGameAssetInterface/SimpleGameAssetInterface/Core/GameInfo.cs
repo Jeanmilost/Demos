@@ -58,7 +58,7 @@ namespace SimpleGameAssetInterface.Core
         public DateOnly ReleaseDate { get; set; } = new DateOnly();
 
         /// <summary>
-        /// The game artwork (may be the cover, a screenshot, ...).
+        /// The game artwork.
         /// </summary>
         [JsonInclude]
         public GameImageAsset Artwork

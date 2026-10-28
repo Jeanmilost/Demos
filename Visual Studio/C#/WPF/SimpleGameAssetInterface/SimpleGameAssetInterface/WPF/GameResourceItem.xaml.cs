@@ -85,7 +85,7 @@ namespace SimpleGameAssetInterface.WPF
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Mouse button event arguments.</param>
-        private void UserControl_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             Click?.Invoke(this, EventArgs.Empty);
         }

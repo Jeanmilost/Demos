@@ -51,10 +51,36 @@
             </Rectangle.Fill>
         </Rectangle>
 
+        <!-- Dynamic Articles List Container -->
+        <!-- NOTE row 2 captures the remaining vertical space and allows scrolling if the list is long -->
+        <!-- NOTE margin bottom leaves room for the Back button -->
+        <ScrollViewer Grid.Row="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Margin="10,15,10,70">
+
+            <!-- ItemsControl populates controls dynamically based on the ViewModel collection -->
+            <ItemsControl ItemsSource="{Binding Articles}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type mvvm:WPFGameArticleInfo}">
+
+                        <!-- Reusable article item component -->
+                        <!-- WPF will instantiate a GameArticleItem for each article. -->
+                        <!-- The properties are dynamically binded. -->
+                        <local:GameArticleItem ArticleIcon="{Binding ArticleArtworkSource}"
+                                ArticleTitle="{Binding Title, FallbackValue='Agony (Design)'}"
+                                OpenDocVisibility="{Binding HasLocalArticle}"
+                                Margin="10, 4"/>
+
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
         <!-- Back button -->
         <Button Style="{StaticResource ModernRoundedButton}"
                 Content="&lt; Back"
-                Grid.Row="8"
+                Grid.Row="2"
                 Width="80"
                 Height="32"
                 Cursor="Hand"

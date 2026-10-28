@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         x:Name="Root"
         Cursor="Hand"
-        MouseLeftButtonDown="UserControl_MouseLeftButtonDown"
+        MouseLeftButtonDown="OnMouseLeftButtonDown"
         d:DesignWidth="400"
         d:DesignHeight="60">
     <Border Background="#121212"

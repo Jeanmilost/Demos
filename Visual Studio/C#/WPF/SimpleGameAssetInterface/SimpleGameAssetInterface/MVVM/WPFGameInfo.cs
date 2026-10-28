@@ -166,7 +166,7 @@ namespace SimpleGameAssetInterface.MVVM
                                  processName.Contains("devenv")     ||
                                  processName.Contains("xdproc");
 
-            // load the image only in runtime
+            // load the game artwork only in runtime
             if (!designTime)
             {
                 string artworkFileName = "..\\..\\..\\..\\Common\\Assets\\Images\\Agony_Coverart.jpg";
@@ -180,12 +180,44 @@ namespace SimpleGameAssetInterface.MVVM
             m_GameInfo = gameInfo;
 
             // agony game dev article
-            var agonyDevArticle = new GameArticleInfo { URL = "https://francksauer.com/index.php/games?view=article&id=10:agony&catid=15:published-games" };
+            var agonyDevArticle = new GameArticleInfo
+            {
+                Title = "Frank Sauer - Agony",
+                URL   = "https://francksauer.com/index.php/games?view=article&id=10:agony&catid=15:published-games"
+            };
+
+            // load the article artwork only in runtime
+            if (!designTime)
+            {
+                string artworkFileName = "..\\..\\..\\..\\Common\\Assets\\Images\\franck_sauer_logo.png";
+
+                if (!agonyDevArticle.Artwork.Load(artworkFileName))
+                    throw new System.IO.InvalidDataException($"Failed to import game data.");
+
+                GameArtworkSource = gameInfo.Artwork.GetBitmap();
+            }
+
             Articles.Add(new WPFGameArticleInfo(agonyDevArticle));
             m_GameInfo.Articles.Add(agonyDevArticle);
 
             // agony game review article
-            var agonyReviewArticle = new GameArticleInfo { URL = "https://www.lemonamiga.com/game/agony" };
+            var agonyReviewArticle = new GameArticleInfo
+            {
+                Title = "Lemon Amiga - Agony",
+                URL   = "https://www.lemonamiga.com/game/agony"
+            };
+
+            // load the article artwork only in runtime
+            if (!designTime)
+            {
+                string artworkFileName = "..\\..\\..\\..\\Common\\Assets\\Images\\lemonamiga_logo.jpg";
+
+                if (!agonyReviewArticle.Artwork.Load(artworkFileName))
+                    throw new System.IO.InvalidDataException($"Failed to import game data.");
+
+                GameArtworkSource = gameInfo.Artwork.GetBitmap();
+            }
+
             Articles.Add(new WPFGameArticleInfo(agonyReviewArticle));
             m_GameInfo.Articles.Add(agonyReviewArticle);
 

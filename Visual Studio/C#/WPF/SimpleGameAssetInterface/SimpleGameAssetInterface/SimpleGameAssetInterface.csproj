@@ -12,7 +12,9 @@
     <None Remove="Resources\chevron-right.png" />
     <None Remove="Resources\code-xml.png" />
     <None Remove="Resources\Default_Artwork.jpg" />
+    <None Remove="Resources\franck_sauer_logo.png" />
     <None Remove="Resources\github.png" />
+    <None Remove="Resources\lemonamiga_logo.jpg" />
     <None Remove="Resources\square-library.png" />
   </ItemGroup>
 
